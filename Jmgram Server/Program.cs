@@ -51,6 +51,8 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+builder.Services.AddScoped<IUpdateUserProfileUseCase, UpdateUserProfileUseCase>(); // Ќаиболее распространенный вариант
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddDbContext<JMgramDbContext>(options =>

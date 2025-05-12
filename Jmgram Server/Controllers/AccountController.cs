@@ -71,11 +71,12 @@ public class AccountController : ControllerBase
 
             var userProfile = new UserProfile
             {
-                UserId = user.Id, // Id пользователя (GUID в виде строки)
+                UserId = user.Id,
                 FirstName = registration.FirstName,
                 LastName = registration.LastName,
                 LastSeen = DateTime.UtcNow
             };
+
 
             context.UserProfiles.Add(userProfile);
 

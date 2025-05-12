@@ -30,7 +30,7 @@ public class UserController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    [HttpGet("get-profile")]
+    [HttpGet("GetProfile")]
     [Authorize]
     public async Task<IActionResult> GetProfile(string? userId = null)
     {
@@ -62,54 +62,35 @@ public class UserController : ControllerBase
         return Ok(response.Profile);
     }
     [Authorize]
-    [HttpPatch("/User/UpdateProfile")]
+    [HttpPatch("/UpdateProfile")]
     public async Task<IActionResult> UpdateProfile(
     [FromBody] UpdateUserProfileRequest request,
-    [FromServices] JMgramDbContext _context,
-    [FromServices] ILogger<AccountController> _logger)
+    [FromServices] ILogger<AccountController> _logger,
+    [FromServices] IUpdateUserProfileUseCase _updateUserProfileUseCase) // Внедряем UseCase
     {
-        if (request?.Profile == null)
-        {
-            return BadRequest("Profile data is required.");
-        }
-
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
 
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId == null)
-        {
-            return Unauthorized();
-        }
-
-        var userProfile = await _context.UserProfiles.FindAsync(userId);
-
-        if (userProfile == null)
-        {
-            return NotFound();
-        }
-
-        // Обновляем поля профиля пользователя
-        if (request.Profile.FirstName is not null)
-            userProfile.FirstName = request.Profile.FirstName;
-
-        if (request.Profile.LastName is not null)
-            userProfile.LastName = request.Profile.LastName;
-        // ... другие поля
-        userProfile.LastSeen = DateTime.UtcNow;
-
         try
         {
-            await _context.SaveChangesAsync();
-            return Ok(new UpdateUserProfileResponse { IsSuccess = true });
+            var response = await _updateUserProfileUseCase.Execute(request); // Вызываем UseCase
+
+            if (response.IsSuccess)
+            {
+                return Ok(); // Или Ok(response), если хотите вернуть что-то еще
+            }
+            else
+            {
+                _logger.LogError(response.ErrorMessage);
+                return StatusCode(500, response.ErrorMessage); // Или BadRequest, если это ошибка валидации
+            }
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating user profile");
-            return StatusCode(500, new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Internal server error" });
+            return StatusCode(500, "Internal server error");
         }
     }
 

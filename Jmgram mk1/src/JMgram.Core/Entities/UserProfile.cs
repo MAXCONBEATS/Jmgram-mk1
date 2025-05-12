@@ -7,7 +7,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
     {
         [Key]
         [ForeignKey("User")]
-        public string UserId { get; set; } // Тип - string
+        public string UserId { get; init; }
 
         public string FirstName { get; set; }
         public string LastName { get; set; }
