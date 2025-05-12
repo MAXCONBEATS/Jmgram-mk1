@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Jmgram_mk1.src.JMgram.Core.Storage
 {
-    public class JMgramDbContext : DbContext
+    public class JMgramDbContext : IdentityDbContext<AppIdentityUser>
     {
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<Chat> Chats { get; set; } = null!;
@@ -17,19 +18,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
         public JMgramDbContext(DbContextOptions<JMgramDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Связь один к одному между User и UserProfile
-            modelBuilder.Entity<User>()
-                .HasOne(u => u.Profile)
-                .WithOne(p => p.User)  // Добавим обратную ссылку
+            modelBuilder.Entity<UserProfile>()
+        .HasKey(up => up.UserId);
+
+            modelBuilder.Entity<AppIdentityUser>()
+                .HasOne(u => u.UserProfile)
+                .WithOne(p => p.User)
                 .HasForeignKey<UserProfile>(p => p.UserId);
-
-            modelBuilder.Entity<UserProfile>()
-           .HasKey(up => up.UserId); // Устанавливаем UserId как первичный ключ
-
-            modelBuilder.Entity<UserProfile>()
-                .HasOne<AppIdentityUser>()
-                .WithOne()
-                .HasForeignKey<UserProfile>(up => up.UserId);
 
             // Связь один ко многим между User и Contact (по UserId)
             modelBuilder.Entity<Contact>()

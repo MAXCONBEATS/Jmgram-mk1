@@ -35,23 +35,22 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
             }
 
-            if (request.UserId <= 0)
+            if (string.IsNullOrEmpty(request.UserId))
             {
-                _logger.LogError("UserId is not valid. Must be greater than 0.");
+                _logger.LogError("UserId is null or empty.");
                 return new GetUserProfileResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = "UserId is not valid. Must be greater than 0.",
+                    ErrorMessage = "UserId cannot be null or empty.",
                     Profile = null
                 };
             }
 
             try
             {
-                // 2. Получение профиля пользователя из репозитория
+                _logger.LogInformation($"Attempting to retrieve user profile with UserId: {request.UserId}");
                 var userProfile = await _userRepository.GetUserProfileById(request.UserId);
 
-                // 3. Проверка, найден ли профиль пользователя
                 if (userProfile == null)
                 {
                     _logger.LogWarning($"UserProfile with UserId {request.UserId} not found.");
@@ -62,6 +61,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                         Profile = null
                     };
                 }
+
+                _logger.LogInformation($"UserProfile retrieved successfully for UserId: {request.UserId}");
 
                 // 4. Формирование DTO
                 var profileDto = new UserProfileDto

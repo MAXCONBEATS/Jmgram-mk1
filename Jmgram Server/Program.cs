@@ -8,10 +8,10 @@ using Jmgram_mk1.src.JMgram.Core.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<JMgramDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly("Jmgram mk1")));
+
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -22,10 +22,17 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.None;
     });
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = IdentityConstants.ApplicationScheme;
+    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
+})
+.AddIdentityCookies();
 
+builder.Services.AddAuthorization();
 builder.Services.AddIdentityCore<AppIdentityUser>(options => { })
     .AddSignInManager()
-    .AddEntityFrameworkStores<AppDbContext>();
+    .AddEntityFrameworkStores<JMgramDbContext>();
 
 builder.Services.ConfigureApplicationCookie(options => {
     options.Cookie.Name = ".AspNetCore.Identity.Application";
@@ -75,11 +82,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-
-
-//builder.Services.AddAuthorization(options =>
-//{
-//    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
-//    options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User"));
-//});

@@ -15,13 +15,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     {
         Task<bool> IsPhoneTaken(string phone);
         Task Add(User user);
+        Task CreateUserProfile(UserProfile userProfile);
         Task UpdateProfile(UserProfile profile);
         Task Update(User user);
         Task Delete(User user);
         Task<User?> GetById(int id);
         Task<User?> GetByPhone(string phone);
         Task<List<User?>> GetByIds(List<int> userIds);
-        Task<UserProfile?> GetUserProfileById(int userId);
+        Task<UserProfile?> GetUserProfileById(string userId);
 
     }
     public class UserRepository : IUserRepository
@@ -44,6 +45,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
         }
+        public async Task CreateUserProfile(UserProfile userProfile)
+        {
+            _dbContext.UserProfiles.Add(userProfile);
+            await _dbContext.SaveChangesAsync();
+        }
         public async Task Update(User user)
         {
             if (user != null)
@@ -63,7 +69,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         }
         public async Task UpdateProfile(UserProfile profile)
         {
-            _dbContext.Entry(profile).State = EntityState.Modified;
+            _dbContext.UserProfiles.Update(profile);
             await _dbContext.SaveChangesAsync();
         }
         public async Task<User?> GetByPhone(string phone)
@@ -78,7 +84,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
         }
-        public async Task<UserProfile?> GetUserProfileById(int userId)
+        public async Task<UserProfile?> GetUserProfileById(string userId)
         {
             return await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
         }

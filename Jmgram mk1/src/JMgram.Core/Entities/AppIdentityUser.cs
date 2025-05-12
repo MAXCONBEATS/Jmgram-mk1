@@ -7,5 +7,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public string FirstName { get; set; } = "";
         public string LastName { get; set; } = "";
         public string Phone { get; set; } = "";
+        public virtual UserProfile UserProfile { get; set; }
     }
 }

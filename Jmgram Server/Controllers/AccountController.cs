@@ -11,6 +11,8 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Jmgram_mk1.src.JMgram.Core.Storage;
 [Route("[controller]/[action]")]
 [ApiController]
 public class AccountController : ControllerBase
@@ -26,29 +28,71 @@ public class AccountController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost]
-    public async Task<Results<Ok, ValidationProblem>> Register([FromBody] RegisterUserRequest registration)
+    [HttpPost("Register")]
+    public async Task<Results<Ok, ValidationProblem>> Register(
+    [FromBody] RegisterUserRequest registration,
+    JMgramDbContext context,
+    UserManager<AppIdentityUser> userManager,
+    SignInManager<AppIdentityUser> signInManager)
     {
-        var user = new AppIdentityUser
+        // Check if user with the same phone number already exists
+        var existingUser = await userManager.FindByNameAsync(registration.Phone);
+        if (existingUser != null)
         {
-            UserName = registration.Phone,
-            Email = registration.Phone,
-            PhoneNumber = registration.Phone,
-            FirstName = registration.FirstName,
-            LastName = registration.LastName,
-            Phone = registration.Phone
-        };
-
-        var result = await _userManager.CreateAsync(user, registration.Password);
-
-        if (!result.Succeeded)
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
         {
-            return CreateValidationProblem(result);
+            { "Phone", new[] { "Phone number already exists." } }
+        });
         }
 
-        await _signInManager.SignInAsync(user, isPersistent: false);
+        try
+        {
+            var user = new AppIdentityUser
+            {
+                UserName = registration.Phone,
+                Email = registration.Phone,
+                PhoneNumber = registration.Phone,
+                FirstName = registration.FirstName,
+                LastName = registration.LastName,
+                Phone = registration.Phone
+            };
 
-        return TypedResults.Ok();
+            var result = await userManager.CreateAsync(user, registration.Password);
+
+            if (!result.Succeeded)
+            {
+                var errors = result.Errors.ToDictionary(
+                    e => e.Code,
+                    e => new[] { e.Description });
+                return TypedResults.ValidationProblem(errors);
+            }
+
+            await userManager.AddClaimAsync(user, new Claim(ClaimTypes.NameIdentifier, user.Id));
+
+            var userProfile = new UserProfile
+            {
+                UserId = user.Id, // Id пользователя (GUID в виде строки)
+                FirstName = registration.FirstName,
+                LastName = registration.LastName,
+                LastSeen = DateTime.UtcNow
+            };
+
+            context.UserProfiles.Add(userProfile);
+
+            // Сохраняем изменения
+            await context.SaveChangesAsync();
+
+            await signInManager.SignInAsync(user, isPersistent: false);
+
+            return TypedResults.Ok();
+        }
+        catch (Exception ex)
+        {
+            return TypedResults.ValidationProblem(new Dictionary<string, string[]>
+        {
+            { "error", new[] { ex.Message } }
+        });
+        }
     }
     [HttpPost("Login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest login)
@@ -70,12 +114,11 @@ public class AccountController : ControllerBase
             _logger.LogInformation($"User {login.Phone} successfully logged in with Id: {user.Id}");
 
 
-            // Создаем Claims
             var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Sid, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.UserName)
-        };
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+        new Claim(ClaimTypes.Name, user.UserName)
+    };
             _logger.LogInformation($"Claims created: {string.Join(", ", claims.Select(c => $"{c.Type}: {c.Value}"))}");
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);

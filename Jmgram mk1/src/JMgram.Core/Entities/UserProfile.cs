@@ -1,18 +1,21 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Jmgram_mk1.src.JMgram.Core.Entities
 {
     public class UserProfile
     {
         [Key]
-        public int UserId { get; set; }
+        [ForeignKey("User")]
+        public string UserId { get; set; } // Тип - string
+
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string? AvatarPath { get; set; }
         public string? Bio { get; set; }
         public DateTime LastSeen { get; set; }
-        public User? User { get; set; }
 
+        public virtual AppIdentityUser User { get; set; }
     }
 
 }

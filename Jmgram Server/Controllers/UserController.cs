@@ -26,23 +26,30 @@ public class UserController : ControllerBase
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    [HttpPost]
+    [HttpGet("get-profile")]
     [Authorize]
-    public async Task<IActionResult> GetProfile()
+    public async Task<IActionResult> GetProfile(string? userId = null)
     {
-        // 1. Пытаемся получить ID пользователя из Claims
-        if (!TryGetUserId(out int userId))
+        string currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // получаем id текущего пользователя
+
+        if (string.IsNullOrEmpty(currentUserId))
         {
-            return Unauthorized("Invalid user ID.");
+            _logger.LogError("Unable to retrieve user ID from claims.");
+            return Unauthorized("Unable to retrieve user ID from claims.");
+        }
+        // Если userId не указан, получаем профиль текущего пользователя
+        if (string.IsNullOrEmpty(userId))
+        {
+            userId = currentUserId;
         }
 
-        // 2. Формирование запроса
+        // Формирование запроса
         var request = new GetUserProfileRequest { UserId = userId };
 
-        // 3. Вызов use case
+        // Вызов use case
         var response = await _getUserProfileUseCase.Execute(request);
 
-        // 4. Обработка результата
+        // Обработка результата
         if (!response.IsSuccess)
         {
             return BadRequest(response.ErrorMessage);
@@ -51,26 +58,4 @@ public class UserController : ControllerBase
         return Ok(response.Profile);
     }
 
-
-    // Вспомогательный метод для получения идентификатора пользователя из Claims
-    private bool TryGetUserId(out int userId)
-    {
-        userId = 0; // Initialize userId
-
-        var userIdClaim = User.FindFirst(ClaimTypes.Sid); // Изменено: используем ClaimTypes.Sid
-
-        if (userIdClaim == null)
-        {
-            _logger.LogWarning("User ID Claim not found.");
-            return false;
-        }
-
-        if (!int.TryParse(userIdClaim.Value, out userId))
-        {
-            _logger.LogError("Failed to parse user id from claim: {UserIdClaimValue}", userIdClaim.Value);
-            return false;
-        }
-
-        return true;
-    }
 }
