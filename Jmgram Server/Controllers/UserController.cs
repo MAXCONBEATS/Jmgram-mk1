@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
+using Jmgram_mk1.src.JMgram.Core.Responses;
+using Microsoft.EntityFrameworkCore;
+using Jmgram_mk1.src.JMgram.Core.Storage;
+
 
 [ApiController]
 [Route("[controller]/[action]")]
@@ -56,6 +60,57 @@ public class UserController : ControllerBase
         }
 
         return Ok(response.Profile);
+    }
+    [Authorize]
+    [HttpPatch("/User/UpdateProfile")]
+    public async Task<IActionResult> UpdateProfile(
+    [FromBody] UpdateUserProfileRequest request,
+    [FromServices] JMgramDbContext _context,
+    [FromServices] ILogger<AccountController> _logger)
+    {
+        if (request?.Profile == null)
+        {
+            return BadRequest("Profile data is required.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var userProfile = await _context.UserProfiles.FindAsync(userId);
+
+        if (userProfile == null)
+        {
+            return NotFound();
+        }
+
+        // Обновляем поля профиля пользователя
+        if (request.Profile.FirstName is not null)
+            userProfile.FirstName = request.Profile.FirstName;
+
+        if (request.Profile.LastName is not null)
+            userProfile.LastName = request.Profile.LastName;
+        // ... другие поля
+        userProfile.LastSeen = DateTime.UtcNow;
+
+        try
+        {
+            await _context.SaveChangesAsync();
+            return Ok(new UpdateUserProfileResponse { IsSuccess = true });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating user profile");
+            return StatusCode(500, new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Internal server error" });
+        }
     }
 
 }
