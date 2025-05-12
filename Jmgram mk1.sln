@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.12.35527.113
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jmgram mk1", "Jmgram mk1\Jmgram mk1.csproj", "{C2E26026-499B-4878-B90E-2B8F9006662E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jmgram Server", "Jmgram Server\Jmgram Server.csproj", "{5D9D1583-08BF-413E-8FA7-41C43E2EAD01}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C2E26026-499B-4878-B90E-2B8F9006662E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2E26026-499B-4878-B90E-2B8F9006662E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2E26026-499B-4878-B90E-2B8F9006662E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2E26026-499B-4878-B90E-2B8F9006662E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D9D1583-08BF-413E-8FA7-41C43E2EAD01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D9D1583-08BF-413E-8FA7-41C43E2EAD01}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D9D1583-08BF-413E-8FA7-41C43E2EAD01}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D9D1583-08BF-413E-8FA7-41C43E2EAD01}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E06D3ABE-EFBE-48F0-BE3B-4A1F17E78673}
+	EndGlobalSection
+EndGlobal

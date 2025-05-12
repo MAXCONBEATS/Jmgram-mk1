@@ -1,0 +1,6 @@
+@Jmgram_Server_HostAddress = http://localhost:5087
+
+GET {{Jmgram_Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
