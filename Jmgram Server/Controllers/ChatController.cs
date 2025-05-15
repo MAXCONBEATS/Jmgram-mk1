@@ -24,11 +24,13 @@ public class ChatController : ControllerBase
 {
     private readonly ILogger<ChatController> _logger;
     private readonly CreateChatUseCase _createChatUseCase;
+    private readonly AddUserToChatUseCase _addUserToChatUseCase;
 
-    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase)
+    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _createChatUseCase = createChatUseCase ?? throw new ArgumentNullException(nameof(createChatUseCase));
+        _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
     }
 
     [HttpPost("/Chat/Create")]
@@ -47,5 +49,17 @@ public class ChatController : ControllerBase
         }
 
         return Ok(response.Chat);
+    }
+    [HttpPost("AddUserToChat")]
+    public async Task<IActionResult> AddUserToChat([FromBody] AddUserToChatRequest request)
+    {
+        var response = await _addUserToChatUseCase.Execute(request);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.Message);
+        }
+
+        return Ok(response.ChatUser);
     }
 }

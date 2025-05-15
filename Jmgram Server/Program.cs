@@ -77,6 +77,7 @@ builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
 builder.Services.AddScoped<CreateChatUseCase>();
+builder.Services.AddScoped<AddUserToChatUseCase>();
 
 // 7. –егистрируем контроллеры и другие сервисы
 builder.Services.AddScoped<ChatController>(); // ”бедитесь, что ChatController существует и находитс€ в правильном namespace
