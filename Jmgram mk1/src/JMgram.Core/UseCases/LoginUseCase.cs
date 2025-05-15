@@ -21,38 +21,31 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<LoginResponse> Execute(LoginRequest request)
         {
-            // 1.  Проверить входные данные
+            // 1.  Валидация входных данных
             if (string.IsNullOrWhiteSpace(request.Phone) || string.IsNullOrWhiteSpace(request.Password))
             {
-                return new LoginResponse { IsSuccess = false, ErrorMessage = "Номер телефона и пароль должны быть заполнены." };
+                return new LoginResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные." };
             }
 
             // 2.  Найти пользователя по номеру телефона
-            var user = await _userRepository.GetByPhone(request.Phone);
-            if (user == null)
+            var users = await _userRepository.GetByPhones(new List<string> { request.Phone });
+            if (users == null || users.Count == 0)
             {
                 return new LoginResponse { IsSuccess = false, ErrorMessage = "Пользователь с таким номером телефона не найден." };
             }
 
-            // 3.  Проверить пароль
-            var passwordVerificationResult = _passwordHasher.VerifyPassword(user.PasswordHash, request.Password);
-
-            if (passwordVerificationResult == PasswordVerificationResult.Success)
+            var user = users[0]; // Получаем первого пользователя из списка
+                                 // 3.  Проверить пароль
+            var result = _passwordHasher.VerifyPassword(user.ToString(), request.Password);
+            if (result == PasswordVerificationResult.Failed)
             {
-                // 4.  Аутентификация успешна
-                UserDto userDto = new UserDto  // Map User to DTO
-                {
-                    Id = user.Id.ToString(),
-                    Phone = user.Phone
-                };
-
-                return new LoginResponse { IsSuccess = true, User = userDto };
-            }
-            else
-            {
-                // 5.  Неверный пароль
                 return new LoginResponse { IsSuccess = false, ErrorMessage = "Неверный пароль." };
             }
+
+            // 4.  Сгенерировать JWT токен
+
+            // 5.  Вернуть успешный ответ
+            return new LoginResponse { IsSuccess = true }; // TODO: Вернуть JWT токен
         }
     }
 }

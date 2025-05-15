@@ -34,6 +34,9 @@ namespace Jmgram_mk1.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -44,6 +47,12 @@ namespace Jmgram_mk1.Migrations
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastLogin")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -101,11 +110,8 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Chat", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -121,11 +127,11 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.ChatUser", b =>
                 {
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
+                    b.Property<string>("ChatId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("JoinedAt")
                         .HasColumnType("datetime2");
@@ -139,17 +145,22 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Contact", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("ContactUserId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("ContactUserId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Id")
                         .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Phone")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId", "ContactUserId");
 
@@ -166,11 +177,13 @@ namespace Jmgram_mk1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
+                    b.Property<string>("ChatId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("SenderId")
-                        .HasColumnType("int");
+                    b.Property<string>("SenderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -227,41 +240,6 @@ namespace Jmgram_mk1.Migrations
                     b.HasDiscriminator<string>("NotificationType").HasValue("Notification");
 
                     b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.User", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime>("LastLogin")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ProfileUserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProfileUserId");
-
-                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.UserProfile", b =>
@@ -466,8 +444,8 @@ namespace Jmgram_mk1.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.User", "User")
-                        .WithMany("ChatUsers")
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.AppIdentityUser", "User")
+                        .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -479,13 +457,13 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Contact", b =>
                 {
-                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.User", "ContactUser")
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.AppIdentityUser", "ContactUser")
                         .WithMany()
                         .HasForeignKey("ContactUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.User", "User")
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.AppIdentityUser", "User")
                         .WithMany("Contacts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -504,7 +482,7 @@ namespace Jmgram_mk1.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.User", "Sender")
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.AppIdentityUser", "Sender")
                         .WithMany()
                         .HasForeignKey("SenderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -513,15 +491,6 @@ namespace Jmgram_mk1.Migrations
                     b.Navigation("Chat");
 
                     b.Navigation("Sender");
-                });
-
-            modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.User", b =>
-                {
-                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.UserProfile", "Profile")
-                        .WithMany()
-                        .HasForeignKey("ProfileUserId");
-
-                    b.Navigation("Profile");
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.UserProfile", b =>
@@ -588,20 +557,14 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.AppIdentityUser", b =>
                 {
-                    b.Navigation("UserProfile")
-                        .IsRequired();
+                    b.Navigation("Contacts");
+
+                    b.Navigation("UserProfile");
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Chat", b =>
                 {
                     b.Navigation("ChatUsers");
-                });
-
-            modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.User", b =>
-                {
-                    b.Navigation("ChatUsers");
-
-                    b.Navigation("Contacts");
                 });
 #pragma warning restore 612, 618
         }

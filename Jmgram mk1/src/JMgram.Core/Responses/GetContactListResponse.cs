@@ -5,9 +5,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Responses
 {
     public class GetContactListResponse
     {
-        public bool IsSuccess { get; set; } = true; // По умолчанию считаем успешным
+        public bool IsSuccess { get; set; } = true;
         public string? ErrorMessage { get; set; }
-        public List<ContactDto> Contacts { get; set; } = new List<ContactDto>(); // Инициализируем список, чтобы избежать null reference exceptions
+        public List<ContactDto> Contacts { get; set; } = new List<ContactDto>();
     }
 }
 

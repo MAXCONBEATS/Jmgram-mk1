@@ -6,12 +6,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
     public interface IChatRepository
     {
-        Task<Chat?> GetById(int id);
+        Task<Chat?> GetById(string id);
         Task AddUserToChat(ChatUser chatUser);
-        Task<bool> IsUserInChat(int chatId, int userId);
         Task<Chat> CreateChat(Chat chat);
-        Task<List<ChatUser>> GetChatUsers(int chatId);
-        Task<bool> ChatExists(int chatId);
+        Task<List<ChatUser>> GetChatUsers(string chatId); // Изменено на string
+        Task<bool> ChatExists(string chatId); //Изменено на string
     }
     public class ChatRepository : IChatRepository
     {
@@ -22,7 +21,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public async Task<Chat?> GetById(int id)
+        public async Task<Chat?> GetById(string id)
         {
             return await _dbContext.Chats.FindAsync(id);
         }
@@ -32,7 +31,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext.ChatUsers.Add(chatUser);
             await _dbContext.SaveChangesAsync();
         }
-        public async Task<List<ChatUser>> GetChatUsers(int chatId)
+
+        public async Task<List<ChatUser>> GetChatUsers(string chatId) // Изменено на string
         {
             return await _dbContext.ChatUsers
                 .Where(cu => cu.ChatId == chatId)
@@ -40,17 +40,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 .ToListAsync();
         }
 
-        public async Task<bool> IsUserInChat(int chatId, int userId)
-        {
-            return await _dbContext.ChatUsers.AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
-        }
         public async Task<Chat> CreateChat(Chat chat)
         {
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
             return chat;
         }
-        public async Task<bool> ChatExists(int chatId)
+
+        public async Task<bool> ChatExists(string chatId) // Изменено на string
         {
             return await _dbContext.Chats.AnyAsync(c => c.Id == chatId);
         }

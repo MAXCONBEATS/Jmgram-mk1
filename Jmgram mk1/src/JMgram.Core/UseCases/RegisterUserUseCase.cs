@@ -32,13 +32,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             string passwordHash = _passwordHasher.HashPassword(request.Password);
 
             // 3. Создание нового объекта User и UserProfile из Request
-            var user = new User
+            var user = new AppIdentityUser
             {
                 Phone = request.Phone,    
                 PasswordHash = passwordHash, 
                 CreatedAt = DateTime.UtcNow,
                 IsActive = true,
-                Profile = new UserProfile
+                UserProfile = new UserProfile
                 {
                     FirstName = request.FirstName,
                     LastName = request.LastName,
@@ -54,7 +54,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             return new RegisterUserResponse { IsSuccess = true, User = userDto };
         }
 
-        private UserDto MapUserToDto(User user)
+        private UserDto MapUserToDto(AppIdentityUser user)
         {
             if (user == null)
             {

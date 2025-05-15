@@ -2,8 +2,8 @@
 {
     public class AddContactRequest
     {
-        public int UserId { get; set; }
-        public int ContactUserId { get; set; }
+        public string UserId { get; set; }
+        public string ContactUserId { get; set; }
     }
 
 

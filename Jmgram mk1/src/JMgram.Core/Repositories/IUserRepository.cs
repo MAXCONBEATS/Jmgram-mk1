@@ -14,14 +14,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     public interface IUserRepository
     {
         Task<bool> IsPhoneTaken(string phone);
-        Task Add(User user);
+        Task Add(AppIdentityUser user);
         Task CreateUserProfile(UserProfile userProfile);
         Task UpdateProfile(UserProfile profile);
-        Task Update(User user);
-        Task Delete(User user);
-        Task<User?> GetById(int id);
-        Task<User?> GetByPhone(string phone);
-        Task<List<User?>> GetByIds(List<string> userIds);
+        Task Update(AppIdentityUser user);
+        Task Delete(AppIdentityUser user);
+        Task<AppIdentityUser?> GetById(string id);
+        Task<List<AppIdentityUser>> GetByPhones(List<string> phones);
+        Task<List<AppIdentityUser?>> GetByIds(List<string> userIds);
         Task<UserProfile?> GetUserProfileById(string userId);
 
     }
@@ -40,7 +40,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         }
 
 
-        public async Task Add(User user)
+        public async Task Add(AppIdentityUser user)
         {
             _dbContext.Users.Add(user);
             await _dbContext.SaveChangesAsync();
@@ -50,7 +50,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext.UserProfiles.Add(userProfile);
             await _dbContext.SaveChangesAsync();
         }
-        public async Task Update(User user)
+        public async Task Update(AppIdentityUser user)
         {
             if (user != null)
             {
@@ -59,7 +59,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 await _dbContext.SaveChangesAsync();
             }
         }
-        public async Task Delete(User user) // Исправлено: Реализован метод Delete(User)
+        public async Task Delete(AppIdentityUser user) // Исправлено: Реализован метод Delete(User)
         {
             if (user != null)
             {
@@ -72,15 +72,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext.UserProfiles.Update(profile);
             await _dbContext.SaveChangesAsync();
         }
-        public async Task<User?> GetByPhone(string phone)
+        public async Task<List<AppIdentityUser>> GetByPhones(List<string> phones)
         {
-            return await _dbContext.Users.Include(u => u.Profile).FirstOrDefaultAsync(u => u.Phone == phone);
+            return await _dbContext.Users.Where(u => phones.Contains(u.Phone)).ToListAsync();
         }
-        public async Task<User?> GetById(int id)
+        public async Task<AppIdentityUser?> GetById(string id)
         {
-            return await _dbContext.Users.Include(u => u.Profile).FirstOrDefaultAsync(u => u.Id == id);
+            return await _dbContext.Users.Include(u => u.UserProfile).FirstOrDefaultAsync(u => u.Id == id.ToString());
         }
-        public async Task<List<User?>> GetByIds(List<string> userIds)
+        public async Task<List<AppIdentityUser?>> GetByIds(List<string> userIds)
         {
             return await _dbContext.Users.Where(u => userIds.Contains(u.Id.ToString())).ToListAsync();
         }

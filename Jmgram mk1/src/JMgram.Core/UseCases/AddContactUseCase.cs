@@ -21,7 +21,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         public async Task<AddContactResponse> Execute(AddContactRequest request)
         {
             // 1.  Проверить входные данные
-            if (request.UserId <= 0 || request.ContactUserId <= 0)
+            if (string.IsNullOrEmpty(request.UserId) || string.IsNullOrEmpty(request.ContactUserId))
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Неверные идентификаторы пользователей." };
             }
@@ -51,7 +51,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 UserId = request.UserId,
                 ContactUserId = request.ContactUserId,
-                AddedAt = DateTime.UtcNow
             };
 
             // 5.  Сохранить контакт в базе данных
@@ -60,10 +59,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             // 6. Преобразовать в DTO
             var contactDto = new ContactDto
             {
-                Id = contact.Id,
                 UserId = contact.UserId,
                 ContactUserId = contact.ContactUserId,
-                AddedAt = contact.AddedAt
             };
 
             // 7.  Вернуть результат

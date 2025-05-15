@@ -2,11 +2,11 @@
 {
     public class ChatUser
     {
-        public int ChatId { get; set; }
-        public int UserId { get; set; }
+        public string ChatId { get; set; }
+        public string UserId { get; set; } // Id пользователя string
         public DateTime JoinedAt { get; set; }
         public Chat Chat { get; set; }
-        public User User { get; set; }
+        public AppIdentityUser User { get; set; }
     }
 
 }

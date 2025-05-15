@@ -4,11 +4,7 @@
     {
         public string Id { get; set; }
         public string Phone { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime LastLogin { get; set; }
-        public bool IsActive { get; set; }
         public UserProfileDto Profile { get; set; }
-
-
     }
+
 }

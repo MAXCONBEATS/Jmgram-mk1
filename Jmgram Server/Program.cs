@@ -8,16 +8,28 @@ using Jmgram_mk1.src.JMgram.Core.UseCases;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// 1. Настройка DbContext
 builder.Services.AddDbContext<JMgramDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly("Jmgram mk1")));
 
-// Добавляем Identity
-builder.Services.AddIdentityCore<AppIdentityUser>(options => { })
-    .AddSignInManager()
-    .AddEntityFrameworkStores<JMgramDbContext>();
+// 2. Настройка Identity
+builder.Services.AddIdentity<AppIdentityUser, IdentityRole>(options =>
+{
+    // Настройки Identity (Пароли, Lockout, User)
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequiredLength = 6;
+    options.User.RequireUniqueEmail = false;
+    options.SignIn.RequireConfirmedAccount = false; // Если требуется подтверждение учетной записи
+})
+    .AddEntityFrameworkStores<JMgramDbContext>()
+    .AddDefaultTokenProviders()
+    .AddSignInManager<SignInManager<AppIdentityUser>>(); // Добавляем SignInManager
 
-// Настраиваем Cookie Authentication
+// 3. Настройка Cookie Authentication (Упрощенная версия)
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = ".AspNetCore.Identity.Application";
@@ -25,23 +37,28 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Только для HTTPS!
+    options.Cookie.SameSite = SameSiteMode.None; // Требуется для работы с CORS
 });
 
-// Явно регистрируем обработчик Cookie Authentication
+// 4. Добавляем Authentication и Authorization
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    .AddCookie(options =>
     {
         options.Cookie.Name = ".AspNetCore.Identity.Application";
         options.ExpireTimeSpan = TimeSpan.FromDays(1);
         options.LoginPath = "/Account/Login";
         options.LogoutPath = "/Account/Logout";
         options.SlidingExpiration = true;
+        options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.None;
     });
 
 builder.Services.AddAuthorization();
 
+// 5. Настройка CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -52,14 +69,20 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
+
+// 6. Регистрируем сервисы (Repositories, UseCases)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
+
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
-builder.Services.AddDbContext<JMgramDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-    b => b.MigrationsAssembly("Jmgram mk1")));
+builder.Services.AddScoped<CreateChatUseCase>();
 
+// 7. Регистрируем контроллеры и другие сервисы
+builder.Services.AddScoped<ChatController>(); // Убедитесь, что ChatController существует и находится в правильном namespace
+builder.Services.AddHttpContextAccessor();
 
+// 8. Добавляем MVC и Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -74,10 +97,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
-app.UseStaticFiles();
 
-app.UseRouting();
+// 9. Включаем CORS, Authentication и Authorization
+app.UseCors();
+app.UseStaticFiles(); // Для статических файлов (CSS, JS, Images)
+app.UseRouting(); // Добавляем routing
+
 app.UseAuthentication();
 app.UseAuthorization();
 

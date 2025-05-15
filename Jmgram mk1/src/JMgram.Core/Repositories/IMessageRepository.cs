@@ -23,7 +23,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<List<Message>> GetMessagesForChat(int chatId, int pageNumber, int pageSize)
         {
             return await _dbContext.Messages
-                .Where(m => m.ChatId == chatId)
+                .Where(m => m.ChatId == chatId.ToString())
                 .OrderBy(m => m.Timestamp)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
@@ -32,7 +32,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
         public async Task<int> GetTotalMessageCount(int chatId)
         {
-            return await _dbContext.Messages.Where(m => m.ChatId == chatId).CountAsync();
+            return await _dbContext.Messages.Where(m => m.ChatId == chatId.ToString()).CountAsync();
         }
 
         public async Task<int> Add(Message message)

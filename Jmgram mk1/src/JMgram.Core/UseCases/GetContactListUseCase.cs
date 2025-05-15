@@ -21,12 +21,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         public async Task<GetContactListResponse> Execute(GetContactListRequest request)
         {
             // 1. Проверить входные данные
-            if (request.UserId <= 0)
+            if (string.IsNullOrEmpty(request.UserId))
             {
                 return new GetContactListResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = "UserId must be greater than 0.",
+                    ErrorMessage = "UserId cannot be null or empty.",
                     Contacts = new List<ContactDto>()
                 };
             }
@@ -65,7 +65,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 Id = c.Id,
                 UserId = c.UserId,
                 ContactUserId = c.ContactUserId,
-                AddedAt = c.AddedAt
             }).ToList();
 
             // 5. Вернуть результат

@@ -2,8 +2,8 @@
 {
     public class ChatUserDto
     {
-        public int ChatId { get; set; }
-        public int UserId { get; set; }
+        public string ChatId { get; set; }
+        public string UserId { get; set; } // Id пользователя string
         public DateTime JoinedAt { get; set; }
     }
 

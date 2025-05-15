@@ -6,9 +6,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
     public interface IContactRepository
     {
-        Task<bool> IsContact(int userId, int contactUserId);
+        Task<bool> IsContact(string userId, string contactUserId);
         Task Add(Contact contact);
-        Task<List<Contact>> GetContactsForUser(int userId);
+        Task<List<Contact>> GetContactsForUser(string userId);
     }
     public class ContactRepository : IContactRepository
     {
@@ -19,7 +19,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public async Task<bool> IsContact(int userId, int contactUserId)
+        public async Task<bool> IsContact(string userId, string contactUserId)
         {
             return await _dbContext.Contacts.AnyAsync(c => c.UserId == userId && c.ContactUserId == contactUserId);
         }
@@ -30,13 +30,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<List<Contact>> GetContactsForUser(int userId)
+        public async Task<List<Contact>> GetContactsForUser(string userId)
         {
-            // Загружаем ContactUser
             return await _dbContext.Contacts
-               .Include(c => c.ContactUser)  // Добавлена жадная загрузка
-               .Where(c => c.UserId == userId)
-               .ToListAsync();
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
         }
     }
 }

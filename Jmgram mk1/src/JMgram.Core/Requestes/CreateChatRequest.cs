@@ -6,7 +6,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Requestes
     public class CreateChatRequest
     {
         public ChatDto Chat { get; set; }
-        public List<UserDto> Users { get; set; }
+        public List<string> Phones { get; set; }
 
     }
 

@@ -80,8 +80,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 // 3. Преобразование MessageDto в Message Entity
                 var messageEntity = new Message
                 {
-                    ChatId = request.Message.ChatId,
-                    SenderId = request.Message.SenderId,
+                    ChatId = request.Message.ChatId.ToString(),
+                    SenderId = request.Message.SenderId.ToString(),
                     Text = request.Message.Text,
                     Timestamp = DateTime.UtcNow // или request.Message.Timestamp, если нужно сохранить время отправки, указанное клиентом
                 };

@@ -19,24 +19,29 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<GetChatListResponse> Execute(GetChatListRequest request)
         {
-            if (request.ChatId <= 0)
+            // 1. Проверить входные данные
+            if (string.IsNullOrEmpty(request.ChatId))
             {
-                return new GetChatListResponse { ChatUsers = new List<ChatDto>() }; // Или вернуть ошибку
+                return new GetChatListResponse { IsSuccess = false, ErrorMessage = "ChatId cannot be null or empty.", ChatUsers = new List<ChatDto>() };
             }
 
-            // Получаем всех ChatUser по ChatId
+            // 2. Получаем все записи ChatUser по ChatId
             var chatUsers = await _chatRepository.GetChatUsers(request.ChatId);
 
-            // Преобразуем ChatUser в ChatDto
+            // 3. Если чат не найден (нет записей ChatUser), вернуть пустой список или ошибку (в зависимости от логики)
+            if (chatUsers == null || chatUsers.Count == 0) // Проверка на null и пустой список
+            {
+                return new GetChatListResponse { IsSuccess = true, ChatUsers = new List<ChatDto>() }; // Или вернуть ошибку:  IsSuccess = false, ErrorMessage = "Чат не найден"
+            }
+
+            // 4. Преобразуем ChatUser в ChatDto
             var chatDtos = chatUsers.Select(cu => new ChatDto
             {
-                ChatId = cu.ChatId,
-                UserId = cu.UserId,
-                UserName = cu.Chat.Name, // Или другое поле для отображения имени
-                JoinedAt = cu.JoinedAt
+                Name = cu.Chat.Name,
             }).ToList();
 
-            return new GetChatListResponse { ChatUsers = chatDtos };
+            // 5. Вернуть результат
+            return new GetChatListResponse { IsSuccess = true, ChatUsers = chatDtos };
         }
     }
 
