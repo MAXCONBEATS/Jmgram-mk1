@@ -2,7 +2,7 @@
 {
     public class UserDto
     {
-        public int Id { get; set; }
+        public string Id { get; set; }
         public string Phone { get; set; }
         public DateTime CreatedAt { get; set; }
         public DateTime LastLogin { get; set; }

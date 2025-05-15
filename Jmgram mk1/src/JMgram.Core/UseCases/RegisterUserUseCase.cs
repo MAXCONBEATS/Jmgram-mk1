@@ -63,7 +63,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             return new UserDto
             {
-                Id = user.Id,  
+                Id = user.Id.ToString(),  
                 Phone = user.Phone,
             };
         }

@@ -78,23 +78,20 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Error changing password" };
                 }
 
-                // 5. Создаем UserDto (если нужно вернуть информацию о пользователе)
-                if (int.TryParse(userId, out int userIdInt))
+                // 5. Создаем UserDto
+                var userDto = new UserDto
                 {
-                    var userDto = new UserDto
+                    Id = userId, // Больше не преобразуем в int
+                    Phone = user.PhoneNumber,
+                    Profile = new UserProfileDto //Создаем профиль, если его нет
                     {
-                        Id = userIdInt, // Теперь int
-                        Phone = user.PhoneNumber
-                    };
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                    }
+                };
 
-                    // 6. Возвращаем успешный ответ
-                    return new ChangePasswordResponse { IsSuccess = true, User = userDto };
-                }
-                else
-                {
-                    _logger.LogError($"Failed to parse UserId to int: {userId}");
-                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Internal server error" };
-                }
+                // 6. Возвращаем успешный ответ
+                return new ChangePasswordResponse { IsSuccess = true, User = userDto };
             }
             catch (Exception ex)
             {

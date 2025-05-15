@@ -42,7 +42,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 // 4.  Аутентификация успешна
                 UserDto userDto = new UserDto  // Map User to DTO
                 {
-                    Id = user.Id,
+                    Id = user.Id.ToString(),
                     Phone = user.Phone
                 };
 

@@ -21,7 +21,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task Delete(User user);
         Task<User?> GetById(int id);
         Task<User?> GetByPhone(string phone);
-        Task<List<User?>> GetByIds(List<int> userIds);
+        Task<List<User?>> GetByIds(List<string> userIds);
         Task<UserProfile?> GetUserProfileById(string userId);
 
     }
@@ -80,9 +80,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.Users.Include(u => u.Profile).FirstOrDefaultAsync(u => u.Id == id);
         }
-        public async Task<List<User?>> GetByIds(List<int> userIds)
+        public async Task<List<User?>> GetByIds(List<string> userIds)
         {
-            return await _dbContext.Users.Where(u => userIds.Contains(u.Id)).ToListAsync();
+            return await _dbContext.Users.Where(u => userIds.Contains(u.Id.ToString())).ToListAsync();
         }
         public async Task<UserProfile?> GetUserProfileById(string userId)
         {

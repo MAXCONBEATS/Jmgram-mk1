@@ -36,7 +36,7 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
             // Assert
             Assert.IsTrue(response.IsSuccess);
             Assert.IsNotNull(response.User);
-            Assert.AreEqual(1, response.User.Id);
+            Assert.AreEqual("1", response.User.Id.ToString());
             Assert.AreEqual("1234567890", response.User.Phone);
         }
 

@@ -1,6 +1,4 @@
-﻿
-
-using Jmgram_mk1.src.JMgram.Core.Entities;
+﻿using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
@@ -22,7 +20,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         public async Task<CreateChatResponse> Execute(CreateChatRequest request)
         {
             // 1. Валидация входных данных
-            if (request.Chat == null || string.IsNullOrWhiteSpace(request.Chat.Name) || request.Users == null || request.Users.Count == 0)
+            if (request.Chat == null || string.IsNullOrWhiteSpace(request.Chat.Name) || request.Users == null || request.Users.Count() == 0) // Используем Count() как метод
             {
                 return new CreateChatResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные" };
             }
@@ -38,15 +36,16 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             var createdChat = await _chatRepository.CreateChat(chat);
 
             // 4. Получение списка пользователей по ID
-            var userIds = request.Users.Select(u => u.Id).ToList();
-            var users = await _userRepository.GetByIds(userIds);
+            var userIds = request.Users.Select(u => u.Id).ToList(); // Получаем список userIds (string)
+            var users = await _userRepository.GetByIds(userIds); // Передаем список string
 
-            if (users == null || users.Count != request.Users.Count)
+            // 5. Проверка, что пользователи найдены
+            if (users == null || users.Count() != request.Users.Count()) // Используем Count() как метод
             {
                 return new CreateChatResponse { IsSuccess = false, ErrorMessage = "Один или несколько пользователей не найдены" };
             }
 
-            // 5. Добавление пользователей в чат
+            // 6. Добавление пользователей в чат
             foreach (var user in users)
             {
                 if (user != null)
@@ -62,7 +61,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 }
             }
 
-            // 6. Преобразование в DTO
+            // 7. Преобразование в DTO
             var chatDto = new ChatDto
             {
                 ChatId = createdChat.Id,
@@ -70,9 +69,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 CreatedAt = createdChat.CreatedAt
             };
 
-            // 7. Вернуть результат
+            // 8. Вернуть результат
             return new CreateChatResponse { IsSuccess = true, Chat = chatDto };
         }
     }
-
 }
