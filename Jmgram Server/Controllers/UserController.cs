@@ -22,11 +22,13 @@ using Jmgram_mk1.src.JMgram.Core.Storage;
 public class UserController : ControllerBase
 {
     private readonly GetUserProfileUseCase _getUserProfileUseCase;
+    private readonly IChangePasswordUseCase _changePasswordUseCase;
     private readonly ILogger<UserController> _logger;
 
-    public UserController(GetUserProfileUseCase getUserProfileUseCase, ILogger<UserController> logger)
+    public UserController(GetUserProfileUseCase getUserProfileUseCase, IChangePasswordUseCase changePasswordUseCase, ILogger<UserController> logger)
     {
         _getUserProfileUseCase = getUserProfileUseCase ?? throw new ArgumentNullException(nameof(getUserProfileUseCase));
+        _changePasswordUseCase = changePasswordUseCase ?? throw new ArgumentNullException(nameof(changePasswordUseCase));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
@@ -114,6 +116,23 @@ public class UserController : ControllerBase
             _logger.LogError(ex, "Error updating user profile");
             return StatusCode(500, new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Internal server error" });
         }
+    }
+    [HttpPost("/User/ChangePassword")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
+    {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
+
+        var response = await _changePasswordUseCase.Execute(request);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response); // Возвращаем response в случае успеха
     }
 
 }

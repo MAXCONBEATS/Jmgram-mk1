@@ -7,58 +7,100 @@ using Jmgram_mk1.src.JMgram.Core.Responses;
 using Jmgram_mk1.src.JMgram.Core.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
-    public class ChangePasswordUseCase
+    public interface IChangePasswordUseCase
     {
-        private readonly IUserRepository _userRepository;
-        private readonly IPasswordHasher _passwordHasher;
+        Task<ChangePasswordResponse> Execute(ChangePasswordRequest request);
+    }
 
-        public ChangePasswordUseCase(IUserRepository userRepository, IPasswordHasher passwordHasher)
+    public class ChangePasswordUseCase : IChangePasswordUseCase
+    {
+        private readonly UserManager<AppIdentityUser> _userManager;
+        private readonly ILogger<ChangePasswordUseCase> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public ChangePasswordUseCase(
+            UserManager<AppIdentityUser> userManager,
+            ILogger<ChangePasswordUseCase> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         public async Task<ChangePasswordResponse> Execute(ChangePasswordRequest request)
         {
-            // 1. Проверить входные данные
-            if (request.UserId <= 0 || string.IsNullOrWhiteSpace(request.OldPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            try
             {
-                return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные." };
+                // 1. Получаем UserId из Claims
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (userId == null)
+                {
+                    _logger.LogError("UserId not found in claims");
+                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Unauthorized" };
+                }
+
+                // 2. Получаем пользователя из UserManager
+                var user = await _userManager.FindByIdAsync(userId);
+
+                if (user == null)
+                {
+                    _logger.LogWarning($"User not found for UserId: {userId}");
+                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "User not found" };
+                }
+
+                // 3. Проверяем старый пароль
+                var checkPasswordResult = await _userManager.CheckPasswordAsync(user, request.OldPassword);
+
+                if (!checkPasswordResult)
+                {
+                    _logger.LogWarning($"Invalid old password for UserId: {userId}");
+                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Invalid old password." };
+                }
+
+                // 4. Меняем пароль
+                var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
+
+                if (!changePasswordResult.Succeeded)
+                {
+                    _logger.LogError($"Error changing password for UserId: {userId}");
+                    foreach (var error in changePasswordResult.Errors)
+                    {
+                        _logger.LogError(error.Description);
+                    }
+                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Error changing password" };
+                }
+
+                // 5. Создаем UserDto (если нужно вернуть информацию о пользователе)
+                if (int.TryParse(userId, out int userIdInt))
+                {
+                    var userDto = new UserDto
+                    {
+                        Id = userIdInt, // Теперь int
+                        Phone = user.PhoneNumber
+                    };
+
+                    // 6. Возвращаем успешный ответ
+                    return new ChangePasswordResponse { IsSuccess = true, User = userDto };
+                }
+                else
+                {
+                    _logger.LogError($"Failed to parse UserId to int: {userId}");
+                    return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Internal server error" };
+                }
             }
-
-            // 2. Получить пользователя по ID
-            var user = await _userRepository.GetById(request.UserId);
-            if (user == null)
+            catch (Exception ex)
             {
-                return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Пользователь не найден." };
+                _logger.LogError(ex, "Error changing password");
+                return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Internal server error" };
             }
-
-            // 3. Проверить старый пароль
-            var passwordVerificationResult = _passwordHasher.VerifyPassword(user.PasswordHash, request.OldPassword);
-            if (passwordVerificationResult != PasswordVerificationResult.Success)
-            {
-                return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Неверный старый пароль." };
-            }
-
-            // 4. Хешировать новый пароль
-            string newPasswordHash = _passwordHasher.HashPassword(request.NewPassword);
-
-            // 5. Обновить пароль в базе данных
-            user.PasswordHash = newPasswordHash;
-            await _userRepository.Update(user);
-
-            // 6. Создать DTO (если нужно вернуть информацию о пользователе)
-            UserDto userDto = new UserDto
-            {
-                Id = user.Id,
-                Phone = user.Phone
-            };
-
-            // 7. Вернуть результат
-            return new ChangePasswordResponse { IsSuccess = true, User = userDto };
         }
     }
 

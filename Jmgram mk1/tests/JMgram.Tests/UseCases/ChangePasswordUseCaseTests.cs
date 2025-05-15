@@ -6,6 +6,9 @@ using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Jmgram_mk1.src.JMgram.Core.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
+using Microsoft.Extensions.Logging;
 namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
 {
     [TestClass]
@@ -15,20 +18,21 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
         public async Task Execute_ValidRequest_ChangesPasswordSuccessfully()
         {
             // Arrange
-            var userRepositoryMock = new Mock<IUserRepository>();
-            var passwordHasherMock = new Mock<IPasswordHasher>();
+            var userManagerMock = new Mock<UserManager<AppIdentityUser>>(
+                Mock.Of<IUserStore<AppIdentityUser>>(), null, null, null, null, null, null, null, null);
+            var loggerMock = new Mock<ILogger<ChangePasswordUseCase>>();
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
-            var userId = 1;
-            var user = new User { Id = userId, Phone = "1234567890", PasswordHash = "oldHashedPassword" };
-            userRepositoryMock.Setup(repo => repo.GetById(userId)).ReturnsAsync(user);
-            passwordHasherMock.Setup(hasher => hasher.VerifyPassword("oldHashedPassword", "oldPassword"))
-                .Returns(PasswordVerificationResult.Success);
-            passwordHasherMock.Setup(hasher => hasher.HashPassword("newPassword")).Returns("newHashedPassword");
-            userRepositoryMock.Setup(repo => repo.Update(It.IsAny<User>())).Returns(Task.CompletedTask); // Assuming Update returns Task
+            // Настраиваем HttpContextAccessor
+            var httpContextMock = new Mock<HttpContext>();
+            var claimsPrincipalMock = new Mock<ClaimsPrincipal>();
+            claimsPrincipalMock.Setup(cp => cp.FindFirst(ClaimTypes.NameIdentifier)).Returns(new Claim(ClaimTypes.NameIdentifier, "testUserId")); // Укажите значение для UserId
+            httpContextMock.Setup(hc => hc.User).Returns(claimsPrincipalMock.Object);
+            httpContextAccessorMock.Setup(hca => hca.HttpContext).Returns(httpContextMock.Object);
 
-            var useCase = new ChangePasswordUseCase(userRepositoryMock.Object, passwordHasherMock.Object);
+            var useCase = new ChangePasswordUseCase(userManagerMock.Object, loggerMock.Object, httpContextAccessorMock.Object); // Добавляем httpContextAccessorMock
 
-            var request = new ChangePasswordRequest { UserId = userId, OldPassword = "oldPassword", NewPassword = "newPassword" };
+            var request = new ChangePasswordRequest { OldPassword = "oldPassword", NewPassword = "newPassword" };
 
             // Act
             var response = await useCase.Execute(request);
@@ -36,20 +40,23 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
             // Assert
             Assert.IsTrue(response.IsSuccess);
             Assert.IsNotNull(response.User);
-            Assert.AreEqual(userId, response.User.Id);
-            userRepositoryMock.Verify(repo => repo.Update(It.IsAny<User>()), Times.Once);
+            userManagerMock.Verify(um => um.ChangePasswordAsync(It.IsAny<AppIdentityUser>(), "oldPassword", "newPassword"), Times.Once);
         }
-
         [TestMethod]
-        public async Task Execute_InvalidUserId_ReturnsErrorResponse()
+        public async Task Execute_Unauthorized_ReturnsErrorResponse()
         {
             // Arrange
-            var userRepositoryMock = new Mock<IUserRepository>();
-            var passwordHasherMock = new Mock<IPasswordHasher>();
+            var userManagerMock = new Mock<UserManager<AppIdentityUser>>(
+                Mock.Of<IUserStore<AppIdentityUser>>(), null, null, null, null, null, null, null, null);
+            var loggerMock = new Mock<ILogger<ChangePasswordUseCase>>();
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
-            var useCase = new ChangePasswordUseCase(userRepositoryMock.Object, passwordHasherMock.Object);
+            // HttpContextAccessor не настроен, UserId не будет найден
+            httpContextAccessorMock.Setup(hca => hca.HttpContext).Returns((HttpContext)null);
 
-            var request = new ChangePasswordRequest { UserId = 0, OldPassword = "oldPassword", NewPassword = "newPassword" };
+            var useCase = new ChangePasswordUseCase(userManagerMock.Object, loggerMock.Object, httpContextAccessorMock.Object);
+
+            var request = new ChangePasswordRequest { OldPassword = "oldPassword", NewPassword = "newPassword" };
 
             // Act
             var response = await useCase.Execute(request);
@@ -57,22 +64,33 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
             // Assert
             Assert.IsFalse(response.IsSuccess);
             Assert.IsNull(response.User);
-            Assert.AreEqual("Неверные входные данные.", response.ErrorMessage);
+            Assert.AreEqual("Unauthorized", response.ErrorMessage);
         }
 
         [TestMethod]
         public async Task Execute_UserNotFound_ReturnsErrorResponse()
         {
             // Arrange
-            var userRepositoryMock = new Mock<IUserRepository>();
-            var passwordHasherMock = new Mock<IPasswordHasher>();
+            var userManagerMock = new Mock<UserManager<AppIdentityUser>>(
+                Mock.Of<IUserStore<AppIdentityUser>>(), null, null, null, null, null, null, null, null);
+            var loggerMock = new Mock<ILogger<ChangePasswordUseCase>>();
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
-            var userId = 1;
-            userRepositoryMock.Setup(repo => repo.GetById(userId)).ReturnsAsync((User)null);
+            var userId = "testUserId";
 
-            var useCase = new ChangePasswordUseCase(userRepositoryMock.Object, passwordHasherMock.Object);
+            // Настраиваем UserManager
+            userManagerMock.Setup(um => um.FindByIdAsync(userId)).ReturnsAsync((AppIdentityUser)null); // Пользователь не найден
 
-            var request = new ChangePasswordRequest { UserId = userId, OldPassword = "oldPassword", NewPassword = "newPassword" };
+            // Настраиваем HttpContextAccessor
+            var httpContextMock = new Mock<HttpContext>();
+            var claimsPrincipalMock = new Mock<ClaimsPrincipal>();
+            claimsPrincipalMock.Setup(cp => cp.FindFirst(ClaimTypes.NameIdentifier)).Returns(new Claim(ClaimTypes.NameIdentifier, userId));
+            httpContextMock.Setup(hc => hc.User).Returns(claimsPrincipalMock.Object);
+            httpContextAccessorMock.Setup(hca => hca.HttpContext).Returns(httpContextMock.Object);
+
+            var useCase = new ChangePasswordUseCase(userManagerMock.Object, loggerMock.Object, httpContextAccessorMock.Object);
+
+            var request = new ChangePasswordRequest { OldPassword = "oldPassword", NewPassword = "newPassword" };
 
             // Act
             var response = await useCase.Execute(request);
@@ -80,25 +98,35 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
             // Assert
             Assert.IsFalse(response.IsSuccess);
             Assert.IsNull(response.User);
-            Assert.AreEqual("Пользователь не найден.", response.ErrorMessage);
+            Assert.AreEqual("User not found", response.ErrorMessage);
         }
 
         [TestMethod]
         public async Task Execute_InvalidOldPassword_ReturnsErrorResponse()
         {
             // Arrange
-            var userRepositoryMock = new Mock<IUserRepository>();
-            var passwordHasherMock = new Mock<IPasswordHasher>();
+            var userManagerMock = new Mock<UserManager<AppIdentityUser>>(
+                Mock.Of<IUserStore<AppIdentityUser>>(), null, null, null, null, null, null, null, null);
+            var loggerMock = new Mock<ILogger<ChangePasswordUseCase>>();
+            var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
 
-            var userId = 1;
-            var user = new User { Id = userId, Phone = "1234567890", PasswordHash = "oldHashedPassword" };
-            userRepositoryMock.Setup(repo => repo.GetById(userId)).ReturnsAsync(user);
-            passwordHasherMock.Setup(hasher => hasher.VerifyPassword("oldHashedPassword", "oldPassword"))
-                .Returns(PasswordVerificationResult.Failed);
+            var userId = "testUserId";
+            var user = new AppIdentityUser { Id = userId, PhoneNumber = "1234567890" };
 
-            var useCase = new ChangePasswordUseCase(userRepositoryMock.Object, passwordHasherMock.Object);
+            // Настраиваем UserManager
+            userManagerMock.Setup(um => um.FindByIdAsync(userId)).ReturnsAsync(user);
+            userManagerMock.Setup(um => um.CheckPasswordAsync(user, "oldPassword")).ReturnsAsync(false); // Неверный пароль
 
-            var request = new ChangePasswordRequest { UserId = userId, OldPassword = "oldPassword", NewPassword = "newPassword" };
+            // Настраиваем HttpContextAccessor
+            var httpContextMock = new Mock<HttpContext>();
+            var claimsPrincipalMock = new Mock<ClaimsPrincipal>();
+            claimsPrincipalMock.Setup(cp => cp.FindFirst(ClaimTypes.NameIdentifier)).Returns(new Claim(ClaimTypes.NameIdentifier, userId));
+            httpContextMock.Setup(hc => hc.User).Returns(claimsPrincipalMock.Object);
+            httpContextAccessorMock.Setup(hca => hca.HttpContext).Returns(httpContextMock.Object);
+
+            var useCase = new ChangePasswordUseCase(userManagerMock.Object, loggerMock.Object, httpContextAccessorMock.Object);
+
+            var request = new ChangePasswordRequest { OldPassword = "oldPassword", NewPassword = "newPassword" };
 
             // Act
             var response = await useCase.Execute(request);
@@ -106,7 +134,7 @@ namespace Jmgram_mk1.tests.JMgram.Tests.UseCases
             // Assert
             Assert.IsFalse(response.IsSuccess);
             Assert.IsNull(response.User);
-            Assert.AreEqual("Неверный старый пароль.", response.ErrorMessage);
+            Assert.AreEqual("Invalid old password.", response.ErrorMessage);
         }
     }
 }
