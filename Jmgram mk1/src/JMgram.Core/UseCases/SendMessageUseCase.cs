@@ -21,7 +21,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         }
 
-        public async Task<SendMessageResponse> Execute(SendMessageRequest request)
+        public async Task<SendMessageResponse> Execute(SendMessageRequest request, string userId)
         {
             // 1. Валидация входных данных
             if (request == null)
@@ -30,7 +30,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     IsSuccess = false,
                     ErrorMessage = "Request cannot be null.",
-                    Message = null
                 };
             }
 
@@ -40,7 +39,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     IsSuccess = false,
                     ErrorMessage = "Message in request cannot be null.",
-                    Message = null
                 };
             }
             if (string.IsNullOrWhiteSpace(request.Message.Text))
@@ -49,10 +47,10 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     IsSuccess = false,
                     ErrorMessage = "Message text cannot be empty.",
-                    Message = null
                 };
             }
-            // 2. Проверка существования Chat и Sender
+
+            // 2. Проверка существования Chat
             var chat = await _chatRepository.GetById(request.Message.ChatId);
             if (chat == null)
             {
@@ -60,65 +58,63 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     IsSuccess = false,
                     ErrorMessage = $"Chat with Id {request.Message.ChatId} does not exist.",
-                    Message = null
                 };
             }
 
-            var sender = await _userRepository.GetById(request.Message.SenderId);
+            // 3. Проверить, что отправитель является участником чата
+            if (!await _chatRepository.IsUserInChat(request.Message.ChatId, userId))
+            {
+                return new SendMessageResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = $"User with Id {userId} is not a member of chat {request.Message.ChatId}.",
+                };
+            }
+
+            // 4. Получаем пользователя
+            var sender = await _userRepository.GetById(userId);
             if (sender == null)
             {
                 return new SendMessageResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = $"User with Id {request.Message.SenderId} does not exist.",
-                    Message = null
+                    ErrorMessage = $"User with Id {userId} does not exist.",
                 };
             }
 
             try
             {
-                // 3. Преобразование MessageDto в Message Entity
+                // 5. Создание Message Entity
                 var messageEntity = new Message
                 {
-                    ChatId = request.Message.ChatId.ToString(),
-                    SenderId = request.Message.SenderId.ToString(),
+                    ChatId = request.Message.ChatId,
+                    SenderId = userId, // Используем userId авторизованного пользователя
                     Text = request.Message.Text,
-                    Timestamp = DateTime.UtcNow // или request.Message.Timestamp, если нужно сохранить время отправки, указанное клиентом
+                    Timestamp = request.Message.Timestamp // Используем Timestamp из request
                 };
 
-                // 4. Добавление сообщения в базу данных
-                messageEntity.Id = await _messageRepository.Add(messageEntity);
+                // 6. Добавление сообщения в базу данных
+                var id = await _messageRepository.Add(messageEntity);
 
-
-                // 5. Преобразование Message Entity в MessageDto для ответа
-                var messageDto = new MessageDto
-                {
-                    Id = messageEntity.Id,
-                    ChatId = messageEntity.ChatId,
-                    SenderId = messageEntity.SenderId,
-                    Text = messageEntity.Text,
-                    Timestamp = messageEntity.Timestamp
-                };
-
-                // 6. Формирование успешного ответа
+                // 7. Формирование успешного ответа
                 return new SendMessageResponse
                 {
                     IsSuccess = true,
-                    Message = messageDto
+                    Id = id
                 };
             }
             catch (Exception ex)
             {
-                // 7. Обработка ошибок
+                // 8. Обработка ошибок
                 return new SendMessageResponse
                 {
                     IsSuccess = false,
                     ErrorMessage = $"An error occurred while sending message: {ex.Message}",
-                    Message = null
                 };
             }
         }
-
     }
 
 }
+
+

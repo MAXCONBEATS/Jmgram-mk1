@@ -42,13 +42,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             return message.Id;
         }
 
-        // Implement this method
         public async Task<Message?> GetMessageById(int messageId)
         {
             return await _dbContext.Messages.FindAsync(messageId);
         }
 
-        // Implement this method
         public async Task Update(Message message)
         {
             _dbContext.Messages.Update(message);

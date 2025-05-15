@@ -14,6 +14,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     public interface IUserRepository
     {
         Task<bool> IsPhoneTaken(string phone);
+        
         Task Add(AppIdentityUser user);
         Task CreateUserProfile(UserProfile userProfile);
         Task UpdateProfile(UserProfile profile);
@@ -88,6 +89,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
         }
+        
 
     }
 }

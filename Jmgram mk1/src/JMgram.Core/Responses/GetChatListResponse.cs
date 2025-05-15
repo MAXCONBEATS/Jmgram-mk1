@@ -7,7 +7,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Responses
     {
         public bool IsSuccess { get; set; }
         public string? ErrorMessage { get; set; }
-        public List<ChatDto> ChatUsers { get; set; }
+        public List<UserDto> Users { get; set; }
     }
 }
 

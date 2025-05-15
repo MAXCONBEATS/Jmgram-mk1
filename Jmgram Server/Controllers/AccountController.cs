@@ -113,19 +113,9 @@ public class AccountController : ControllerBase
         {
             _logger.LogInformation($"User {login.Phone} successfully logged in with Id: {user.Id}");
 
+            //  Используйте SignInManager.SignInAsync
+            await _signInManager.SignInAsync(user, isPersistent: true); // Используем SignInManager
 
-            var claims = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-        new Claim(ClaimTypes.Name, user.UserName)
-    };
-            _logger.LogInformation($"Claims created: {string.Join(", ", claims.Select(c => $"{c.Type}: {c.Value}"))}");
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal,
-                new AuthenticationProperties { IsPersistent = true });
             _logger.LogInformation("User successfully signed in");
 
             return Ok();
@@ -165,7 +155,7 @@ public class AccountController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Logout()
     {
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        await _signInManager.SignOutAsync();
         return Ok();
     }
 

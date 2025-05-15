@@ -2,7 +2,7 @@
 {
     public class Message
     {
-        public int Id { get; set; }
+        public int Id { get; init; }
         public string ChatId { get; set; } // Изменено на string
         public string SenderId { get; set; } // Изменено на string
         public string Text { get; set; } = "";

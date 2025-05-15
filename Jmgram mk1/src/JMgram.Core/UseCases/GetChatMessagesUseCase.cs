@@ -43,9 +43,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             // 5. Преобразовать сообщения в DTO
             var messageDtos = messages.Select(m => new MessageDto
             {
-                Id = m.Id,
                 ChatId = m.ChatId,
-                SenderId = m.SenderId,
                 Text = m.Text,
                 Timestamp = m.Timestamp
             }).ToList();

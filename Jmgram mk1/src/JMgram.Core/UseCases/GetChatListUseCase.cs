@@ -17,31 +17,38 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
         }
 
-        public async Task<GetChatListResponse> Execute(GetChatListRequest request)
+        public async Task<GetChatListResponse> Execute(GetChatListRequest request, string userId)
         {
             // 1. Проверить входные данные
-            if (string.IsNullOrEmpty(request.ChatId))
+            if (string.IsNullOrEmpty(request.ChatId) || string.IsNullOrEmpty(userId))
             {
-                return new GetChatListResponse { IsSuccess = false, ErrorMessage = "ChatId cannot be null or empty.", ChatUsers = new List<ChatDto>() };
+                return new GetChatListResponse { IsSuccess = false, ErrorMessage = "ChatId и UserId не могут быть пустыми", Users = new List<UserDto>() };
             }
 
-            // 2. Получаем все записи ChatUser по ChatId
+            // 2. Проверить, что пользователь является участником чата
+            if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
+            {
+                return new GetChatListResponse { IsSuccess = false, ErrorMessage = "Вы не являетесь участником этого чата", Users = new List<UserDto>() };
+            }
+
+            // 3. Получаем все записи ChatUser по ChatId
             var chatUsers = await _chatRepository.GetChatUsers(request.ChatId);
 
-            // 3. Если чат не найден (нет записей ChatUser), вернуть пустой список или ошибку (в зависимости от логики)
-            if (chatUsers == null || chatUsers.Count == 0) // Проверка на null и пустой список
+            // 4. Если чат не найден (нет записей ChatUser), вернуть пустой список или ошибку
+            if (chatUsers == null || chatUsers.Count == 0)
             {
-                return new GetChatListResponse { IsSuccess = true, ChatUsers = new List<ChatDto>() }; // Или вернуть ошибку:  IsSuccess = false, ErrorMessage = "Чат не найден"
+                return new GetChatListResponse { IsSuccess = true, Users = new List<UserDto>() };
             }
 
-            // 4. Преобразуем ChatUser в ChatDto
-            var chatDtos = chatUsers.Select(cu => new ChatDto
+            // 5. Преобразуем ChatUser в UserDto
+            var userDtos = chatUsers.Select(cu => new UserDto
             {
-                Name = cu.Chat.Name,
+                Id = cu.UserId,
+                Phone = cu.User.PhoneNumber
             }).ToList();
 
-            // 5. Вернуть результат
-            return new GetChatListResponse { IsSuccess = true, ChatUsers = chatDtos };
+            // 6. Вернуть результат
+            return new GetChatListResponse { IsSuccess = true, Users = userDtos };
         }
     }
 

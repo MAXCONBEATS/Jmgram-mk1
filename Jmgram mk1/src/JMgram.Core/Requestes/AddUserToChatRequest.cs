@@ -2,9 +2,8 @@
 {
     public class AddUserToChatRequest
     {
-        public string UserId { get; set; }
         public string ChatId { get; set; }
-
+        public List<string> PhoneNumbers { get; set; }
     }
 
 

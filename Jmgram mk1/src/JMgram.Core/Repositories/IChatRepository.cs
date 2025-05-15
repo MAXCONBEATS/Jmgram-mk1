@@ -10,7 +10,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task AddUserToChat(ChatUser chatUser);
         Task<Chat> CreateChat(Chat chat);
         Task<List<ChatUser>> GetChatUsers(string chatId); // Изменено на string
-        Task<bool> ChatExists(string chatId); //Изменено на string
+        Task<bool> ChatExists(string chatId);
+        Task<bool> IsUserInChat(string chatId, string userId);
     }
     public class ChatRepository : IChatRepository
     {
@@ -32,7 +33,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<List<ChatUser>> GetChatUsers(string chatId) // Изменено на string
+        public async Task<List<ChatUser>> GetChatUsers(string chatId)
         {
             return await _dbContext.ChatUsers
                 .Where(cu => cu.ChatId == chatId)
@@ -50,6 +51,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<bool> ChatExists(string chatId) // Изменено на string
         {
             return await _dbContext.Chats.AnyAsync(c => c.Id == chatId);
+        }
+        public async Task<bool> IsUserInChat(string chatId, string userId)
+        {
+            return await _dbContext.ChatUsers.AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
         }
     }
 

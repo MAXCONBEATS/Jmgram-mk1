@@ -73,11 +73,15 @@ builder.Services.AddCors(options =>
 // 6. Регистрируем сервисы (Repositories, UseCases)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
 builder.Services.AddScoped<CreateChatUseCase>();
 builder.Services.AddScoped<AddUserToChatUseCase>();
+builder.Services.AddScoped<GetChatListUseCase>();
+builder.Services.AddScoped<SendMessageUseCase>();
+builder.Services.AddScoped<UpdateMessageStatusUseCase>();
 
 // 7. Регистрируем контроллеры и другие сервисы
 builder.Services.AddScoped<ChatController>(); // Убедитесь, что ChatController существует и находится в правильном namespace

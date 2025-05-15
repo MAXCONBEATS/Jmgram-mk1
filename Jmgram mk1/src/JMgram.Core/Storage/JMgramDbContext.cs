@@ -47,7 +47,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
             // 5. Contact: Составной ключ (UserId, ContactUserId)
             modelBuilder.Entity<Contact>()
                 .HasKey(c => new { c.UserId, c.ContactUserId });
-            //6. Chat
+            //автоинкрементное id чата
             modelBuilder.Entity<Chat>()
                 .Property(c => c.Id)
                 .ValueGeneratedOnAdd();
@@ -73,6 +73,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
                 .HasOne(m => m.Chat)
                 .WithMany() //  У чата нет коллекции Messages
                 .HasForeignKey(m => m.ChatId);
+            //автоинкрементное id сообщения
+            modelBuilder.Entity<Message>()
+                .Property(m => m.Id)
+                .ValueGeneratedOnAdd();
 
             // 10. Message - AppIdentityUser (Sender): Связь один ко многим
             modelBuilder.Entity<Message>()

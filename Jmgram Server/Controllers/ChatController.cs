@@ -25,12 +25,21 @@ public class ChatController : ControllerBase
     private readonly ILogger<ChatController> _logger;
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
+    private readonly GetChatListUseCase _getChatListUseCase;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly SendMessageUseCase _sendMessageUseCase;
+    private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
 
-    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase)
+    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
+        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, UpdateMessageStatusUseCase updateMessageStatusUseCase)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _createChatUseCase = createChatUseCase ?? throw new ArgumentNullException(nameof(createChatUseCase));
         _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
+        _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
+        _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
     }
 
     [HttpPost("/Chat/Create")]
@@ -50,16 +59,84 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chat);
     }
-    [HttpPost("AddUserToChat")]
-    public async Task<IActionResult> AddUserToChat([FromBody] AddUserToChatRequest request)
+    [HttpPost("AddUsersToChat")]
+    [Authorize]
+    public async Task<IActionResult> AddUsersToChatByPhones([FromBody] AddUserToChatRequest request)
     {
-        var response = await _addUserToChatUseCase.Execute(request);
+        // Получаем UserId из claims
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        // Вызываем AddUserToChatUseCase
+        var response = await _addUserToChatUseCase.Execute(request, userId); // Передаём UserId в UseCase
 
         if (!response.IsSuccess)
         {
             return BadRequest(response.Message);
         }
 
-        return Ok(response.ChatUser);
+        return Ok(response.ChatUsers);
+    }
+    [HttpPost("List")]
+    [Authorize]
+    public async Task<IActionResult> GetChatList([FromBody] GetChatListRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        var response = await _getChatListUseCase.Execute(request, userId); // Передаем UserId в UseCase
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response.Users);
+    }
+    [HttpPost("SendMessage")]
+    [Authorize]
+    public async Task<IActionResult> SendMessage([FromBody] SendMessageRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+        var response = await _sendMessageUseCase.Execute(request, userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response);
+    }
+    [HttpPost("UpdateMessageStatus")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMessageStatus([FromBody] UpdateMessageStatusRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var response = await _updateMessageStatusUseCase.Execute(request, userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok();
     }
 }
