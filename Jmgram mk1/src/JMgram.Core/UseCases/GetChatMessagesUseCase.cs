@@ -4,6 +4,7 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
+using Microsoft.AspNetCore.Http;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -11,17 +12,19 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     {
         private readonly IChatRepository _chatRepository;
         private readonly IMessageRepository _messageRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public GetChatMessagesUseCase(IChatRepository chatRepository, IMessageRepository messageRepository)
+        public GetChatMessagesUseCase(IChatRepository chatRepository, IMessageRepository messageRepository, IHttpContextAccessor httpContextAccessor)
         {
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
             _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public async Task<GetChatMessagesResponse> Execute(GetChatMessagesRequest request)
+        public async Task<GetChatMessagesResponse> Execute(GetChatMessagesRequest request, string userId)
         {
             // 1. Проверить входные данные
-            if (request.ChatId <= 0 || request.PageNumber <= 0 || request.PageSize <= 0)
+            if (string.IsNullOrEmpty(request.ChatId) || request.PageNumber <= 0 || request.PageSize <= 0)
             {
                 return new GetChatMessagesResponse
                 {
@@ -30,7 +33,16 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     TotalPages = 0
                 }; // Или выбросить ArgumentException
             }
-
+            // 2.1 Check Auth
+            if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
+            {
+                return new GetChatMessagesResponse
+                {
+                    Chat = new List<MessageDto>(),
+                    TotalMessages = 0,
+                    TotalPages = 0
+                }; // Или выбросить ArgumentException
+            }
             // 2. Получить общее количество сообщений
             var totalMessages = await _messageRepository.GetTotalMessageCount(request.ChatId);
 

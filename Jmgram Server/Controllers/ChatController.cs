@@ -15,6 +15,7 @@ using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Storage;
+using Jmgram_mk1.src.JMgram.Core.Repositories;
 
 
 [Authorize]
@@ -23,23 +24,29 @@ using Jmgram_mk1.src.JMgram.Core.Storage;
 public class ChatController : ControllerBase
 {
     private readonly ILogger<ChatController> _logger;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IChatRepository _chatRepository;
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
-    private readonly GetChatListUseCase _getChatListUseCase;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly GetChatListUseCase _getChatListUseCase;  
     private readonly SendMessageUseCase _sendMessageUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
+    private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
-        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, UpdateMessageStatusUseCase updateMessageStatusUseCase)
+        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, 
+        UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, IChatRepository chatRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
         _createChatUseCase = createChatUseCase ?? throw new ArgumentNullException(nameof(createChatUseCase));
         _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
-        _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));
-        _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));    
         _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
+        _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
+        
     }
 
     [HttpPost("/Chat/Create")]
@@ -138,5 +145,22 @@ public class ChatController : ControllerBase
         }
 
         return Ok();
+    }
+    [HttpGet("GetMessages")]
+    [Authorize]
+    public async Task<IActionResult> GetMessages([FromQuery] GetChatMessagesRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+        if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
+        {
+            return Unauthorized();
+        }
+        var response = await _getChatMessagesUseCase.Execute(request, userId);
+
+        return Ok(response);
     }
 }

@@ -82,6 +82,7 @@ builder.Services.AddScoped<AddUserToChatUseCase>();
 builder.Services.AddScoped<GetChatListUseCase>();
 builder.Services.AddScoped<SendMessageUseCase>();
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
+builder.Services.AddScoped<GetChatMessagesUseCase>();
 
 // 7. –егистрируем контроллеры и другие сервисы
 builder.Services.AddScoped<ChatController>(); // ”бедитесь, что ChatController существует и находитс€ в правильном namespace

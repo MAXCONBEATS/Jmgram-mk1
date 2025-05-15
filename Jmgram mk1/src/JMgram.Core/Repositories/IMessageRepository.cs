@@ -5,8 +5,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
     public interface IMessageRepository
     {
-        Task<List<Message>> GetMessagesForChat(int chatId, int pageNumber, int pageSize);
-        Task<int> GetTotalMessageCount(int chatId);
+        Task<List<Message>> GetMessagesForChat(string chatId, int pageNumber, int pageSize);
+        Task<int> GetTotalMessageCount(string chatId);
         Task<int> Add(Message message);
         Task<Message?> GetMessageById(int messageId); 
         Task Update(Message message);
@@ -20,21 +20,20 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public async Task<List<Message>> GetMessagesForChat(int chatId, int pageNumber, int pageSize)
+        public async Task<List<Message>> GetMessagesForChat(string chatId, int pageNumber, int pageSize)
         {
             return await _dbContext.Messages
-                .Where(m => m.ChatId == chatId.ToString())
-                .OrderBy(m => m.Timestamp)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+             .Where(m => m.ChatId == chatId)
+             .OrderByDescending(m => m.Timestamp) // Или OrderBy, если хотите в другом порядке
+             .Skip((pageNumber - 1) * pageSize)
+             .Take(pageSize)
+             .ToListAsync();
         }
 
-        public async Task<int> GetTotalMessageCount(int chatId)
+        public async Task<int> GetTotalMessageCount(string chatId)
         {
-            return await _dbContext.Messages.Where(m => m.ChatId == chatId.ToString()).CountAsync();
+            return await _dbContext.Messages.CountAsync(m => m.ChatId == chatId);
         }
-
         public async Task<int> Add(Message message)
         {
             _dbContext.Messages.Add(message);
