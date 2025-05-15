@@ -12,35 +12,36 @@ builder.Services.AddDbContext<JMgramDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly("Jmgram mk1")));
 
-
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.ExpireTimeSpan = TimeSpan.FromDays(1);
-        options.Cookie.HttpOnly = true;
-        options.Cookie.IsEssential = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.None;
-    });
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultScheme = IdentityConstants.ApplicationScheme;
-    options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
-})
-.AddIdentityCookies();
-
-builder.Services.AddAuthorization();
+// Добавляем Identity
 builder.Services.AddIdentityCore<AppIdentityUser>(options => { })
     .AddSignInManager()
     .AddEntityFrameworkStores<JMgramDbContext>();
 
-builder.Services.ConfigureApplicationCookie(options => {
+// Настраиваем Cookie Authentication
+builder.Services.ConfigureApplicationCookie(options =>
+{
     options.Cookie.Name = ".AspNetCore.Identity.Application";
     options.ExpireTimeSpan = TimeSpan.FromDays(1);
-    options.LoginPath = "/Account/Login"; // Optional: Set your login path
-    options.LogoutPath = "/Account/Logout"; // Optional: Set your logout path
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
     options.SlidingExpiration = true;
 });
+
+// Явно регистрируем обработчик Cookie Authentication
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+    {
+        options.Cookie.Name = ".AspNetCore.Identity.Application";
+        options.ExpireTimeSpan = TimeSpan.FromDays(1);
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.SlidingExpiration = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.None;
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>

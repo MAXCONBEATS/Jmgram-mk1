@@ -3,97 +3,79 @@
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
+using Jmgram_mk1.src.JMgram.Core.Storage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Security.Claims;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
-    public class UpdateUserProfileUseCase
+    public interface IUpdateUserProfileUseCase
     {
-        private readonly IUserRepository _userRepository;
-        private readonly ILogger<UpdateUserProfileUseCase> _logger;
+        Task<UpdateUserProfileResponse> Execute(UpdateUserProfileRequest request);
+    }
 
-        public UpdateUserProfileUseCase(IUserRepository userRepository, ILogger<UpdateUserProfileUseCase> logger)
+    public class UpdateUserProfileUseCase : IUpdateUserProfileUseCase
+    {
+        private readonly JMgramDbContext _context;
+        private readonly ILogger<UpdateUserProfileUseCase> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
+        public UpdateUserProfileUseCase(
+            JMgramDbContext context,
+            ILogger<UpdateUserProfileUseCase> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context;
+            _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<UpdateUserProfileResponse> Execute(UpdateUserProfileRequest request)
         {
-            // 1. Validation
-            if (request == null)
-            {
-                _logger.LogError("UpdateUserProfileRequest cannot be null.");
-                return new UpdateUserProfileResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Request cannot be null."
-                };
-            }
-
-            if (request.Profile == null)
-            {
-                _logger.LogError("Profile cannot be null.");
-                return new UpdateUserProfileResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Profile cannot be null."
-                };
-            }
-
-            if (string.IsNullOrEmpty(request.Profile.UserId))
-            {
-                _logger.LogError("UserId cannot be null or empty.");
-                return new UpdateUserProfileResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "UserId cannot be null or empty."
-                };
-            }
-
             try
             {
-                // 2. Get existing profile from repo
-                var existingProfile = await _userRepository.GetUserProfileById(request.Profile.UserId);
+                // Получаем UserId из Claims через IHttpContextAccessor
+                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                if (existingProfile == null)
+                if (userId == null)
                 {
-                    _logger.LogWarning($"Profile with UserId {request.Profile.UserId} doesn't exists.");
-                    return new UpdateUserProfileResponse
-                    {
-                        IsSuccess = false,
-                        ErrorMessage = "Profile with userId doesn't exists."
-                    };
+                    _logger.LogError("UserId not found in claims");
+                    return new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Unauthorized" };
                 }
 
-                // 3. Update Profile with updateProfile DTO method
-                existingProfile.FirstName = request.Profile.FirstName ?? existingProfile.FirstName;
-                existingProfile.LastName = request.Profile.LastName ?? existingProfile.LastName;
-                existingProfile.AvatarPath = request.Profile.AvatarPath ?? existingProfile.AvatarPath;
-                existingProfile.Bio = request.Profile.Bio ?? existingProfile.Bio;
-                existingProfile.LastSeen = DateTime.UtcNow;
+                var userProfile = await _context.UserProfiles.FindAsync(userId);
 
-                // 4. Save changes via repo
-                await _userRepository.UpdateProfile(existingProfile);
-
-                // 5. Return success
-                return new UpdateUserProfileResponse
+                if (userProfile == null)
                 {
-                    IsSuccess = true
-                };
+                    _logger.LogWarning($"Profile not found for UserId: {userId}");
+                    return new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Profile not found" };
+                }
+
+                // Обновляем поля профиля пользователя
+                if (request.Profile.FirstName is not null)
+                    userProfile.FirstName = request.Profile.FirstName;
+
+                if (request.Profile.LastName is not null)
+                    userProfile.LastName = request.Profile.LastName;
+
+                if (request.Profile.Bio is not null)
+                    userProfile.Bio = request.Profile.Bio;
+
+                // ... другие поля
+
+                await _context.SaveChangesAsync();
+                userProfile.LastSeen = DateTime.UtcNow; // Обновляем LastSeen только при успешном сохранении
+                await _context.SaveChangesAsync();
+
+                return new UpdateUserProfileResponse { IsSuccess = true };
             }
             catch (Exception ex)
             {
-                // 6. Catch errors
-                _logger.LogError(ex, $"An error occurred updating user profile for UserId: {request.Profile.UserId}");
-                return new UpdateUserProfileResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = $"An error occurred updating user profile: {ex.Message}"
-                };
+                _logger.LogError(ex, "Error updating user profile");
+                return new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Internal server error" };
             }
         }
-
     }
 
 }

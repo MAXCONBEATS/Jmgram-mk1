@@ -67,7 +67,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 // 4. Формирование DTO
                 var profileDto = new UserProfileDto
                 {
-                    UserId = userProfile.UserId,
                     FirstName = userProfile.FirstName,
                     LastName = userProfile.LastName,
                     AvatarPath = userProfile.AvatarPath,

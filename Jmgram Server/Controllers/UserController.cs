@@ -63,10 +63,7 @@ public class UserController : ControllerBase
     }
     [Authorize]
     [HttpPatch("/User/UpdateProfile")]
-    public async Task<IActionResult> UpdateProfile(
-    [FromBody] UpdateUserProfileRequest request,
-    [FromServices] JMgramDbContext _context,
-    [FromServices] ILogger<AccountController> _logger)
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request, [FromServices] JMgramDbContext _context)
     {
         if (request?.Profile == null)
         {
@@ -98,7 +95,13 @@ public class UserController : ControllerBase
 
         if (request.Profile.LastName is not null)
             userProfile.LastName = request.Profile.LastName;
-        // ... другие поля
+
+        if (request.Profile.AvatarPath is not null)
+            userProfile.AvatarPath = request.Profile.AvatarPath;
+
+        if (request.Profile.Bio is not null)
+            userProfile.Bio = request.Profile.Bio;
+
         userProfile.LastSeen = DateTime.UtcNow;
 
         try
