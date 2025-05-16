@@ -5,19 +5,23 @@ using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Jmgram_mk1.src.JMgram.Core.Dtos;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
     public class SendNotificationUseCase
     {
         private readonly INotificationRepository _notificationRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SendNotificationUseCase(INotificationRepository notificationRepository)
+        public SendNotificationUseCase(INotificationRepository notificationRepository, IHttpContextAccessor httpContextAccessor)
         {
             _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
-        public async Task<SendNotificationResponse> Execute(SendNotificationRequest request)
+        public async Task<SendNotificationResponse> Execute(NotificationDto request)
         {
             // 1. Валидация входных данных
             if (request == null)
@@ -29,18 +33,9 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     Notification = null
                 };
             }
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            if (request.Notification == null)
-            {
-                return new SendNotificationResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Notification in request cannot be null.",
-                    Notification = null
-                };
-            }
-
-            if (request.Notification.UserId <= 0)
+            if (string.IsNullOrEmpty(userId))
             {
                 return new SendNotificationResponse
                 {
@@ -49,18 +44,17 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     Notification = null
                 };
             }
-
             try
             {
                 // 2. Преобразование NotificationDto в Notification Entity
-                Notification notificationEntity = CreateNotificationEntity(request.Notification);
+                Notification notificationEntity = CreateNotificationEntity(request, userId);
 
                 if (notificationEntity == null)
                 {
                     return new SendNotificationResponse
                     {
                         IsSuccess = false,
-                        ErrorMessage = $"Unsupported notification type: {request.Notification.NotificationType}",
+                        ErrorMessage = $"Unsupported notification type: {request.NotificationType}",
                         Notification = null
                     };
                 }
@@ -72,7 +66,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new SendNotificationResponse
                 {
                     IsSuccess = true,
-                    Notification = request.Notification
+                    Notification = request
                 };
             }
             catch (Exception ex)
@@ -86,7 +80,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
             }
         }
-        private Notification CreateNotificationEntity(NotificationDto notificationDto)
+        private Notification CreateNotificationEntity(NotificationDto notificationDto, string userId)
         {
             switch (notificationDto.NotificationType)
             {
@@ -95,11 +89,11 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     {
                         return new MessageNotification
                         {
-                            userId = notificationDto.UserId,
+                            userId = userId,
                             message = notificationDto.Message,
                             timestamp = DateTime.UtcNow,
                             isRead = false,
-                            NotificationMessageId = messageNotificationDto.MessageId
+                            MessageId = messageNotificationDto.MessageId
                         };
                     }
                     break;
@@ -108,21 +102,25 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     {
                         return new ContactRequestNotification
                         {
-                            userId = notificationDto.UserId,
+                            userId = userId,
                             message = notificationDto.Message,
                             timestamp = DateTime.UtcNow,
                             isRead = false,
-                            contactRequestId = contactRequestNotificationDto.ContactRequestId,
                             senderUserId = contactRequestNotificationDto.SenderUserId
                         };
                     }
                     break;
                 case NotificationType.System:
+                    var isAdmin = true; //_httpContextAccessor.HttpContext.User.IsInRole("Admin");
+                    if (!isAdmin)
+                    {
+                        return null;
+                    }
                     if (notificationDto is SystemNotificationDto systemNotificationDto)
                     {
                         return new SystemNotification
                         {
-                            userId = notificationDto.UserId,
+                            userId = userId,
                             message = notificationDto.Message,
                             timestamp = DateTime.UtcNow,
                             isRead = false,

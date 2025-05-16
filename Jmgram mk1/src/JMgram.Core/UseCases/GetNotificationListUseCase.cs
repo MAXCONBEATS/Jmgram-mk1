@@ -17,35 +17,14 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
         }
 
-        public async Task<GetNotificationListResponse> Execute(GetNotificationListRequest request)
+        public async Task<GetNotificationListResponse> Execute(string userId)
         {
-            // 1. Валидация входных данных
-            if (request == null)
-            {
-                return new GetNotificationListResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "Request cannot be null.",
-                    Notifications = new List<NotificationDto>()
-                };
-            }
-
-            if (request.UserId <= 0)
-            {
-                return new GetNotificationListResponse
-                {
-                    IsSuccess = false,
-                    ErrorMessage = "UserId must be greater than 0.",
-                    Notifications = new List<NotificationDto>()
-                };
-            }
-
             try
             {
-                // 2. Получение уведомлений из репозитория
-                var notifications = await _notificationRepository.GetNotificationsByUserId(request.UserId);
+                // 1. Get notifications by userId from repository
+                var notifications = await _notificationRepository.GetNotificationsByUserId(userId);
 
-                // 3. Формирование успешного ответа
+                // 2. Form successful response
                 return new GetNotificationListResponse
                 {
                     IsSuccess = true,
@@ -54,12 +33,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 4. Обработка ошибок
+                // 3. Handle errors
                 return new GetNotificationListResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = $"An error occurred while retrieving notifications: {ex.Message}",
-                    Notifications = new List<NotificationDto>()
+                    ErrorMessage = $"An error occurred while getting notification list: {ex.Message}",
+                    Notifications = null
                 };
             }
         }

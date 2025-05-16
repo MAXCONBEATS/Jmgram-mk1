@@ -13,4 +13,5 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public virtual UserProfile? UserProfile { get; set; } // Добавлено свойство
         public virtual ICollection<Contact> Contacts { get; set; } = new List<Contact>(); // Добавлено свойство
     }
+    
 }

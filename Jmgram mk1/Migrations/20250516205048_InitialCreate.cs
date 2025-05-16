@@ -70,25 +70,23 @@ namespace Jmgram_mk1.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Notification",
+                name: "Notifications",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    userId = table.Column<int>(type: "int", nullable: false),
+                    userId = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    messageId = table.Column<int>(type: "int", nullable: true),
                     timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
                     isRead = table.Column<bool>(type: "bit", nullable: false),
-                    NotificationType = table.Column<string>(type: "nvarchar(21)", maxLength: 21, nullable: false),
-                    contactRequestId = table.Column<int>(type: "int", nullable: true),
-                    senderUserId = table.Column<int>(type: "int", nullable: true),
-                    NotificationMessageId = table.Column<int>(type: "int", nullable: true),
+                    NotificationType = table.Column<int>(type: "int", nullable: false),
+                    senderUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    MessageId = table.Column<int>(type: "int", nullable: true),
                     source = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Notification", x => x.Id);
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -201,15 +199,16 @@ namespace Jmgram_mk1.Migrations
                 name: "Contacts",
                 columns: table => new
                 {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    ContactUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Id = table.Column<int>(type: "int", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Phone = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ContactUserId = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Contacts", x => new { x.UserId, x.ContactUserId });
+                    table.PrimaryKey("PK_Contacts", x => x.Id);
                     table.ForeignKey(
                         name: "FK_Contacts_AspNetUsers_ContactUserId",
                         column: x => x.ContactUserId,
@@ -300,6 +299,33 @@ namespace Jmgram_mk1.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ContactRequests",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SenderUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    RecipientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ContactRequests_UserProfiles_RecipientUserId",
+                        column: x => x.RecipientUserId,
+                        principalTable: "UserProfiles",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ContactRequests_UserProfiles_SenderUserId",
+                        column: x => x.SenderUserId,
+                        principalTable: "UserProfiles",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -345,9 +371,25 @@ namespace Jmgram_mk1.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ContactRequests_RecipientUserId",
+                table: "ContactRequests",
+                column: "RecipientUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ContactRequests_SenderUserId_RecipientUserId",
+                table: "ContactRequests",
+                columns: new[] { "SenderUserId", "RecipientUserId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Contacts_ContactUserId",
                 table: "Contacts",
                 column: "ContactUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Contacts_UserId",
+                table: "Contacts",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_ChatId",
@@ -382,19 +424,22 @@ namespace Jmgram_mk1.Migrations
                 name: "ChatUsers");
 
             migrationBuilder.DropTable(
+                name: "ContactRequests");
+
+            migrationBuilder.DropTable(
                 name: "Contacts");
 
             migrationBuilder.DropTable(
                 name: "Messages");
 
             migrationBuilder.DropTable(
-                name: "Notification");
-
-            migrationBuilder.DropTable(
-                name: "UserProfiles");
+                name: "Notifications");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
+
+            migrationBuilder.DropTable(
+                name: "UserProfiles");
 
             migrationBuilder.DropTable(
                 name: "Chats");

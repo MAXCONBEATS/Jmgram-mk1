@@ -2,7 +2,7 @@
 {
     public class GetNotificationListRequest
     {
-        public int UserId { get; set; }
+        public required string UserId { get; set; }
 
     }
 }

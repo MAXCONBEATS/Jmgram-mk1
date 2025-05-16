@@ -6,9 +6,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
     {
         [Key]
         public int Id { get; set; }
-        public int userId { get; set; }
+        public string userId { get; set; }
         public string message { get; set; } = "";
-        public int? messageId { get; set; }
         public DateTime timestamp { get; set; }
         public bool isRead { get; set; }
         // Remove this line: public NotificationType notificationType { get; set; }
@@ -16,14 +15,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
 
     public class MessageNotification : Notification
     {
-        public int NotificationMessageId { get; set; }
+        public int MessageId { get; set; }
 
     }
 
     public class ContactRequestNotification : Notification
     {
-        public int contactRequestId { get; set; }
-        public int senderUserId { get; set; }
+        public string senderUserId { get; set; }
         public new string message { get; set; } // Опциональное приветственное сообщение
 
     }
@@ -37,6 +35,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
 
     public enum NotificationType
     {
-        Message, ContactRequest, System
+        Message,
+        ContactRequest,
+        System
     }
 }

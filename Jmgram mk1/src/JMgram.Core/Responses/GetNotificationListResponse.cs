@@ -6,7 +6,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Responses
     {
         public bool IsSuccess { get; set; }
         public string? ErrorMessage { get; set; }
-        public List<NotificationDto> Notifications { get; set; }
+        public List<NotificationDto>? Notifications { get; set; }
     }
 }
 

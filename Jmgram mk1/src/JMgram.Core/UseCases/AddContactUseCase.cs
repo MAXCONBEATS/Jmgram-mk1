@@ -4,35 +4,47 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
+using Microsoft.AspNetCore.Http;
+using System.Security.Claims;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
     public class AddContactUseCase
     {
         private readonly IUserRepository _userRepository;
-        private readonly IContactRepository _contactRepository; // Предполагаем, что есть репозиторий для контактов
+        private readonly IContactRepository _contactRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public AddContactUseCase(IUserRepository userRepository, IContactRepository contactRepository)
+        public AddContactUseCase(IUserRepository userRepository, IContactRepository contactRepository, IHttpContextAccessor httpContextAccessor)
         {
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _contactRepository = contactRepository ?? throw new ArgumentNullException(nameof(contactRepository));
+            _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         }
 
         public async Task<AddContactResponse> Execute(AddContactRequest request)
         {
-            // 1.  Проверить входные данные
-            if (string.IsNullOrEmpty(request.UserId) || string.IsNullOrEmpty(request.ContactUserId))
+            // 1. Get user ID from the context
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return new AddContactResponse { IsSuccess = false, ErrorMessage = "User ID not found in claims." };
+            }
+
+            // 2. Validate input
+            if (string.IsNullOrEmpty(request.ContactUserId))
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Неверные идентификаторы пользователей." };
             }
 
-            if (request.UserId == request.ContactUserId)
+            if (userId == request.ContactUserId)
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Нельзя добавить себя в контакты." };
             }
 
-            // 2.  Проверить, что оба пользователя существуют
-            var user = await _userRepository.GetById(request.UserId);
+            // 3. Check if both users exist
+            var user = await _userRepository.GetById(userId);
             var contactUser = await _userRepository.GetById(request.ContactUserId);
 
             if (user == null || contactUser == null)
@@ -40,30 +52,32 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Один или оба пользователя не найдены." };
             }
 
-            // 3. Проверить, что контакт еще не добавлен
-            if (await _contactRepository.IsContact(request.UserId, request.ContactUserId))
+            // 4. Check if the contact is already added
+            if (await _contactRepository.IsContact(userId, request.ContactUserId))
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Этот пользователь уже добавлен в контакты." };
             }
 
-            // 4. Создать новый контакт
+            // 5. Create the contact
             var contact = new Contact
             {
-                UserId = request.UserId,
+                UserId = userId,
                 ContactUserId = request.ContactUserId,
+                Name = "New Contact",
+                Phone = "Phone number"
             };
 
-            // 5.  Сохранить контакт в базе данных
+            // 6. Save the contact in the database
             await _contactRepository.Add(contact);
 
-            // 6. Преобразовать в DTO
+            // 7. Convert to DTO
             var contactDto = new ContactDto
             {
                 UserId = contact.UserId,
                 ContactUserId = contact.ContactUserId,
             };
 
-            // 7.  Вернуть результат
+            // 8. Return result
             return new AddContactResponse { IsSuccess = true, Contact = contactDto };
         }
     }

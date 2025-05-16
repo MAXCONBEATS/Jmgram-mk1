@@ -111,6 +111,7 @@ namespace Jmgram_mk1.Migrations
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Chat", b =>
                 {
                     b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -145,28 +146,63 @@ namespace Jmgram_mk1.Migrations
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Contact", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ContactUserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    b.Property<string>("Name")
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContactUserId")
                         .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Phone")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("UserId", "ContactUserId");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ContactUserId");
 
+                    b.HasIndex("UserId");
+
                     b.ToTable("Contacts");
+                });
+
+            modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.ContactRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("RecipientUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("SenderUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RecipientUserId");
+
+                    b.HasIndex("SenderUserId", "RecipientUserId")
+                        .IsUnique();
+
+                    b.ToTable("ContactRequests");
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Message", b =>
@@ -212,10 +248,8 @@ namespace Jmgram_mk1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("NotificationType")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
+                    b.Property<int>("NotificationType")
+                        .HasColumnType("int");
 
                     b.Property<bool>("isRead")
                         .HasColumnType("bit");
@@ -224,20 +258,18 @@ namespace Jmgram_mk1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("messageId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("timestamp")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("userId")
-                        .HasColumnType("int");
+                    b.Property<string>("userId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notification");
+                    b.ToTable("Notifications");
 
-                    b.HasDiscriminator<string>("NotificationType").HasValue("Notification");
+                    b.HasDiscriminator<int>("NotificationType");
 
                     b.UseTphMappingStrategy();
                 });
@@ -406,23 +438,21 @@ namespace Jmgram_mk1.Migrations
                 {
                     b.HasBaseType("Jmgram_mk1.src.JMgram.Core.Entities.Notification");
 
-                    b.Property<int>("contactRequestId")
-                        .HasColumnType("int");
+                    b.Property<string>("senderUserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("senderUserId")
-                        .HasColumnType("int");
-
-                    b.HasDiscriminator().HasValue("ContactRequest");
+                    b.HasDiscriminator().HasValue(1);
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.MessageNotification", b =>
                 {
                     b.HasBaseType("Jmgram_mk1.src.JMgram.Core.Entities.Notification");
 
-                    b.Property<int>("NotificationMessageId")
+                    b.Property<int>("MessageId")
                         .HasColumnType("int");
 
-                    b.HasDiscriminator().HasValue("Message");
+                    b.HasDiscriminator().HasValue(0);
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.SystemNotification", b =>
@@ -433,7 +463,7 @@ namespace Jmgram_mk1.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasDiscriminator().HasValue("System");
+                    b.HasDiscriminator().HasValue(2);
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.ChatUser", b =>
@@ -472,6 +502,21 @@ namespace Jmgram_mk1.Migrations
                     b.Navigation("ContactUser");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.ContactRequest", b =>
+                {
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.UserProfile", null)
+                        .WithMany()
+                        .HasForeignKey("RecipientUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Jmgram_mk1.src.JMgram.Core.Entities.UserProfile", null)
+                        .WithMany()
+                        .HasForeignKey("SenderUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Jmgram_mk1.src.JMgram.Core.Entities.Message", b =>

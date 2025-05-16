@@ -70,7 +70,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// 6. Регистрируем сервисы (Repositories, UseCases)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
@@ -83,9 +82,14 @@ builder.Services.AddScoped<GetChatListUseCase>();
 builder.Services.AddScoped<SendMessageUseCase>();
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
 builder.Services.AddScoped<GetChatMessagesUseCase>();
+builder.Services.AddScoped<AddContactUseCase>();
+builder.Services.AddScoped<SendNotificationUseCase>();
+builder.Services.AddScoped<GetNotificationListUseCase>();
+builder.Services.AddScoped<CreateContactRequestUseCase>();
 
-// 7. Регистрируем контроллеры и другие сервисы
-builder.Services.AddScoped<ChatController>(); // Убедитесь, что ChatController существует и находится в правильном namespace
+builder.Services.AddScoped<IContactRepository, ContactRepository>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
 builder.Services.AddHttpContextAccessor();
 
 // 8. Добавляем MVC и Swagger
