@@ -12,15 +12,19 @@ public class ContactController : ControllerBase
     private readonly CreateContactRequestUseCase _createContactRequestUseCase;
     private readonly AcceptContactRequestUseCase _acceptContactRequestUseCase;
     private readonly UpdateContactNameUseCase _updateContactNameUseCase;
+    private readonly GetContactListUseCase _getContactListUseCase;
     private readonly DeleteContactUseCase _deleteContactUseCase;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ContactController> _logger;
 
-    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase, UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger)
+    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase, 
+        UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, GetContactListUseCase getContactListUseCase,
+    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger)
     {
         _createContactRequestUseCase = createContactRequestUseCase ?? throw new ArgumentNullException(nameof(createContactRequestUseCase));
         _acceptContactRequestUseCase = acceptContactRequestUseCase ?? throw new ArgumentNullException(nameof(acceptContactRequestUseCase));
         _updateContactNameUseCase = updateContactNameUseCase ?? throw new ArgumentNullException(nameof(updateContactNameUseCase));
+        _getContactListUseCase = getContactListUseCase ?? throw new ArgumentNullException(nameof(getContactListUseCase));
         _deleteContactUseCase = deleteContactUseCase ?? throw new ArgumentNullException(nameof(deleteContactUseCase));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -90,6 +94,30 @@ public class ContactController : ControllerBase
         {
             _logger.LogError($"ContactController.UpdateName: Failed to update contact name for UserId: {userId}, ContactUserId: {request.ContactUserId}.");
             return BadRequest("Не удалось изменить имя контакта.");
+        }
+    }
+    [HttpGet("List")]
+    public async Task<IActionResult> List()
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        _logger.LogInformation($"ContactController.List: Getting contact list for UserId: {userId}");
+
+        var response = await _getContactListUseCase.Execute(userId);
+
+        if (response.IsSuccess)
+        {
+            _logger.LogInformation($"ContactController.List: Successfully retrieved contact list for UserId: {userId}");
+            return Ok(response.Contacts);
+        }
+        else
+        {
+            _logger.LogError($"ContactController.List: Failed to retrieve contact list for UserId: {userId}: {response.ErrorMessage}");
+            return BadRequest(response.ErrorMessage);
         }
     }
 

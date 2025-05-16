@@ -9,7 +9,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<bool> IsContact(string userId, string contactUserId);
         Task Add(Contact contact);
         Task<Contact> GetContact(string userId, string contactUserId);
-        Task<List<Contact>> GetContactsForUser(string userId);
+        Task<List<Contact>> GetContactList(string userId);
         Task Update(Contact contact);
         Task Delete(string userId, string contactUserId);
     }
@@ -37,11 +37,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             return await _dbContext.Contacts.FirstOrDefaultAsync(c => c.UserId == userId && c.ContactUserId == contactUserId);
         }
 
-        public async Task<List<Contact>> GetContactsForUser(string userId)
+        public async Task<List<Contact>> GetContactList(string userId)
         {
-            return await _dbContext.Contacts
-                .Where(c => c.UserId == userId)
-                .ToListAsync();
+            return await _dbContext.Contacts.Where(c => c.UserId == userId).ToListAsync();
         }
         public async Task Update(Contact contact)
         {
