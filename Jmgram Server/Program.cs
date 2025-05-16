@@ -89,6 +89,7 @@ builder.Services.AddScoped<GetNotificationListUseCase>();
 builder.Services.AddScoped<CreateContactRequestUseCase>();
 builder.Services.AddScoped<AcceptContactRequestUseCase>();
 builder.Services.AddScoped<DeleteContactUseCase>();
+builder.Services.AddScoped<UpdateContactNameUseCase>();
 builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();
 
 builder.Services.AddScoped<IContactRepository, ContactRepository>();

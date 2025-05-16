@@ -11,16 +11,16 @@ public class ContactController : ControllerBase
 {
     private readonly CreateContactRequestUseCase _createContactRequestUseCase;
     private readonly AcceptContactRequestUseCase _acceptContactRequestUseCase;
+    private readonly UpdateContactNameUseCase _updateContactNameUseCase;
     private readonly DeleteContactUseCase _deleteContactUseCase;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ContactController> _logger;
 
-    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, 
-        AcceptContactRequestUseCase acceptContactRequestUseCase, DeleteContactUseCase deleteContactUseCase,
-        IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger)
+    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase, UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger)
     {
         _createContactRequestUseCase = createContactRequestUseCase ?? throw new ArgumentNullException(nameof(createContactRequestUseCase));
         _acceptContactRequestUseCase = acceptContactRequestUseCase ?? throw new ArgumentNullException(nameof(acceptContactRequestUseCase));
+        _updateContactNameUseCase = updateContactNameUseCase ?? throw new ArgumentNullException(nameof(updateContactNameUseCase));
         _deleteContactUseCase = deleteContactUseCase ?? throw new ArgumentNullException(nameof(deleteContactUseCase));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,16 +36,16 @@ public class ContactController : ControllerBase
             return Unauthorized("Не удалось получить UserId из claims.");
         }
 
-        _logger.LogInformation($"ContactController.Add: Adding contact request for SenderUserId: {senderUserId}, RecipientUserId: {request.ContactUserId}"); // Add logging
+        _logger.LogInformation($"ContactController.Add: Adding contact request for SenderUserId: {senderUserId}, RecipientUserId: {request.ContactUserId}");
         var response = await _createContactRequestUseCase.Execute(senderUserId, request.ContactUserId);
 
         if (!response.IsSuccess)
         {
-            _logger.LogError($"ContactController.Add: Error creating contact request: {response.ErrorMessage}"); // Add logging
+            _logger.LogError($"ContactController.Add: Error creating contact request: {response.ErrorMessage}");
             return BadRequest(response.ErrorMessage);
         }
 
-        _logger.LogInformation($"ContactController.Add: Contact request created successfully."); // Add logging
+        _logger.LogInformation($"ContactController.Add: Contact request created successfully.");
         return Ok("Запрос на добавление в друзья отправлен.");
     }
 
@@ -67,6 +67,32 @@ public class ContactController : ControllerBase
             return BadRequest("Не удалось принять запрос на добавление в друзья.");
         }
     }
+
+    [HttpPost("UpdateName")]
+    public async Task<IActionResult> UpdateName([FromBody] UpdateContactNameRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        _logger.LogInformation($"ContactController.UpdateName: Updating contact name for UserId: {userId}, ContactUserId: {request.ContactUserId} to Name: {request.NewName}");
+
+        var result = await _updateContactNameUseCase.Execute(userId, request.ContactUserId, request.NewName);
+
+        if (result)
+        {
+            _logger.LogInformation($"ContactController.UpdateName: Contact name updated successfully for UserId: {userId}, ContactUserId: {request.ContactUserId}");
+            return Ok("Имя контакта успешно изменено.");
+        }
+        else
+        {
+            _logger.LogError($"ContactController.UpdateName: Failed to update contact name for UserId: {userId}, ContactUserId: {request.ContactUserId}.");
+            return BadRequest("Не удалось изменить имя контакта.");
+        }
+    }
+
     [HttpPost("Delete")]
     public async Task<IActionResult> Delete([FromBody] DeleteContactRequest request)
     {
