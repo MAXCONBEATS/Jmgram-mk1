@@ -71,9 +71,10 @@ public class AccountController : ControllerBase
 
             var userProfile = new UserProfile
             {
-                UserId = user.Id, // Id пользователя (GUID в виде строки)
+                UserId = user.Id,
                 FirstName = registration.FirstName,
                 LastName = registration.LastName,
+                Phone = registration.Phone, //добавлено
                 LastSeen = DateTime.UtcNow
             };
 

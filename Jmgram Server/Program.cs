@@ -69,7 +69,8 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
@@ -86,6 +87,8 @@ builder.Services.AddScoped<AddContactUseCase>();
 builder.Services.AddScoped<SendNotificationUseCase>();
 builder.Services.AddScoped<GetNotificationListUseCase>();
 builder.Services.AddScoped<CreateContactRequestUseCase>();
+builder.Services.AddScoped<AcceptContactRequestUseCase>();
+builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();
 
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();

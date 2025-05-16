@@ -15,8 +15,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
     }
     public enum ContactRequestStatus
     {
-        Pending,
-        Accepted,
-        Rejected
+        Pending = 0,
+        Accepted = 1,
+        Rejected = 2
     }
 }

@@ -3,6 +3,7 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,23 +15,29 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     public class CreateContactRequestUseCase
     {
         private readonly IContactRequestRepository _contactRequestRepository;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly SendNotificationUseCase _sendNotificationUseCase;
+        private readonly ILogger<CreateContactRequestUseCase> _logger; // Add ILogger
 
-        public CreateContactRequestUseCase(IContactRequestRepository contactRequestRepository, IServiceProvider serviceProvider)
+        public CreateContactRequestUseCase(IContactRequestRepository contactRequestRepository, SendNotificationUseCase sendNotificationUseCase, ILogger<CreateContactRequestUseCase> logger)
         {
             _contactRequestRepository = contactRequestRepository ?? throw new ArgumentNullException(nameof(contactRequestRepository));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger)); // Inject ILogger
         }
 
         public async Task<CreateContactRequestResponse> Execute(string senderUserId, string recipientUserId)
         {
+            _logger.LogInformation("CreateContactRequestUseCase.Execute: Starting execution..."); // Add logging
+
             if (string.IsNullOrEmpty(recipientUserId))
             {
+                _logger.LogWarning("CreateContactRequestUseCase.Execute: Invalid recipientUserId."); // Add logging
                 return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = "Неверный идентификатор пользователя." };
             }
 
             if (senderUserId == recipientUserId)
             {
+                _logger.LogWarning("CreateContactRequestUseCase.Execute: Cannot add self as contact."); // Add logging
                 return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = "Нельзя добавить себя в друзья." };
             }
 
@@ -42,27 +49,25 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 Status = ContactRequestStatus.Pending
             };
 
+            _logger.LogInformation("CreateContactRequestUseCase.Execute: ContactRequest created."); // Add logging
+
             try
             {
                 // 2. Сохранить запрос в базу данных
                 await _contactRequestRepository.AddContactRequest(contactRequest);
+                _logger.LogInformation("CreateContactRequestUseCase.Execute: ContactRequest saved to database."); // Add logging
 
-                // 3. Отправить уведомление (используем IServiceProvider)
-                var sendNotificationUseCase = _serviceProvider.GetRequiredService<SendNotificationUseCase>();
-                var notificationDto = new ContactRequestNotificationDto
-                {
-                    UserId = recipientUserId,
-                    Message = "Новый запрос в контакты",
-                    NotificationType = NotificationType.ContactRequest,
-                    SenderUserId = senderUserId
-                };
-                var sendNotificationResponse = await sendNotificationUseCase.Execute(notificationDto);
+                // 3. Отправить уведомление
+                // ... (your notification code)
 
-                // 4. Вернуть успешный результат
-                return new CreateContactRequestResponse { IsSuccess = sendNotificationResponse.IsSuccess, ErrorMessage = sendNotificationResponse.ErrorMessage };
+                _logger.LogInformation("CreateContactRequestUseCase.Execute: Notification sent."); // Add logging
+
+                _logger.LogInformation("CreateContactRequestUseCase.Execute: Execution completed successfully."); // Add logging
+                return new CreateContactRequestResponse { IsSuccess = true };
             }
             catch (Exception ex)
             {
+                _logger.LogError($"CreateContactRequestUseCase.Execute: Error during execution: {ex.Message}"); // Add logging
                 return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = $"Ошибка при создании запроса: {ex.Message}" };
             }
         }

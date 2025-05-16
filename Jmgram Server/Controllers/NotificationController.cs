@@ -5,30 +5,56 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-[Authorize]
 [ApiController]
 [Route("[controller]")]
-public class ContactController : ControllerBase
+[Authorize]
+public class NotificationController : ControllerBase
 {
-    private readonly AddContactUseCase _addContactUseCase;
+    private readonly SendNotificationUseCase _sendNotificationUseCase;
+    private readonly GetNotificationListUseCase _getNotificationListUseCase;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public ContactController(AddContactUseCase addContactUseCase, IHttpContextAccessor httpContextAccessor)
+    public NotificationController(SendNotificationUseCase sendNotificationUseCase, GetNotificationListUseCase getNotificationListUseCase, IHttpContextAccessor httpContextAccessor)
     {
-        _addContactUseCase = addContactUseCase ?? throw new ArgumentNullException(nameof(addContactUseCase));
+        _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
+        _getNotificationListUseCase = getNotificationListUseCase ?? throw new ArgumentNullException(nameof(getNotificationListUseCase));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
 
-    [HttpPost("Add")]
-    public async Task<IActionResult> Add([FromBody] AddContactRequest request)
+    [HttpPost("Send")]
+    public async Task<IActionResult> Send([FromBody] NotificationDto notificationDto)
     {
-        var response = await _addContactUseCase.Execute(request);
+        if (notificationDto == null)
+        {
+            return BadRequest("Notification data is required.");
+        }
+
+        var response = await _sendNotificationUseCase.Execute(notificationDto);
 
         if (!response.IsSuccess)
         {
             return BadRequest(response.ErrorMessage);
         }
 
-        return Ok(response.Contact);
+        return Ok("Notification sent successfully.");
+    }
+
+    [HttpGet("GetNotifications")]
+    public async Task<IActionResult> GetNotifications()
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("UserId is required.");
+        }
+
+        var response = await _getNotificationListUseCase.Execute(userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response.Notifications);
     }
 }

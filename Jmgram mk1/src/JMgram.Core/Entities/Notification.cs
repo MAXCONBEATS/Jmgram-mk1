@@ -10,7 +10,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public string message { get; set; } = "";
         public DateTime timestamp { get; set; }
         public bool isRead { get; set; }
-        // Remove this line: public NotificationType notificationType { get; set; }
     }
 
     public class MessageNotification : Notification
@@ -35,8 +34,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
 
     public enum NotificationType
     {
-        Message,
-        ContactRequest,
-        System
+        Message = 0,
+        ContactRequest = 1,
+        System = 2
     }
 }

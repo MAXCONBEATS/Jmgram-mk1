@@ -4,7 +4,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Dtos
     public class NotificationDto
     {
         public string UserId { get; set; }
-        public string Message { get; set; } = "";
+        public string Message { get; set; }
         public DateTime Timestamp { get; set; }
         public bool IsRead { get; set; }
         public NotificationType NotificationType { get; set; }

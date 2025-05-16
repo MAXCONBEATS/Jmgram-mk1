@@ -11,6 +11,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     public interface IContactRequestRepository
     {
         Task AddContactRequest(ContactRequest contactRequest);
+        Task UpdateContactRequestStatus(int contactRequestId, ContactRequestStatus status); 
+        Task<ContactRequest> GetContactRequestById(int contactRequestId);
     }
     public class ContactRequestRepository : IContactRequestRepository
     {
@@ -26,6 +28,21 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _context.ContactRequests.Add(contactRequest);
             await _context.SaveChangesAsync();
         }
-    }
 
+        public async Task UpdateContactRequestStatus(int contactRequestId, ContactRequestStatus status)
+        {
+            var contactRequest = await _context.ContactRequests.FindAsync(contactRequestId);
+            if (contactRequest != null)
+            {
+                contactRequest.Status = status;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task<ContactRequest> GetContactRequestById(int contactRequestId)
+        {
+            return await _context.ContactRequests.FindAsync(contactRequestId);
+        }
+    }
 }
+
