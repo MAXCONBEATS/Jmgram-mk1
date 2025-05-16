@@ -9,6 +9,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<bool> IsContact(string userId, string contactUserId);
         Task Add(Contact contact);
         Task<List<Contact>> GetContactsForUser(string userId);
+        Task Delete(string userId, string contactUserId);
     }
     public class ContactRepository : IContactRepository
     {
@@ -35,6 +36,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             return await _dbContext.Contacts
                 .Where(c => c.UserId == userId)
                 .ToListAsync();
+        }
+        public async Task Delete(string userId, string contactUserId)
+        {
+            var contact = await _dbContext.Contacts.FirstOrDefaultAsync(c => c.UserId == userId && c.ContactUserId == contactUserId);
+            if (contact != null)
+            {
+                _dbContext.Contacts.Remove(contact);
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 }
