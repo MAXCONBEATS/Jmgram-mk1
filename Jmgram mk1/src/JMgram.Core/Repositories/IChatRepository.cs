@@ -6,10 +6,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
     public interface IChatRepository
     {
-        Task<Chat?> GetById(string id);
+        Task<Chat?> GetById(string id, bool includeChatUsers = false);
         Task AddUserToChat(ChatUser chatUser);
         Task<Chat> CreateChat(Chat chat);
-        Task<List<ChatUser>> GetChatUsers(string chatId); // Изменено на string
+        Task<List<ChatUser>> GetChatUsers(string chatId);
         Task<bool> ChatExists(string chatId);
         Task<bool> IsUserInChat(string chatId, string userId);
     }
@@ -22,9 +22,16 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
-        public async Task<Chat?> GetById(string id)
+        public async Task<Chat?> GetById(string id, bool includeChatUsers = false)
         {
-            return await _dbContext.Chats.FindAsync(id);
+            var query = _dbContext.Chats.Where(c => c.Id == id);
+
+            if (includeChatUsers)
+            {
+                query = query.Include(c => c.ChatUsers);
+            }
+
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task AddUserToChat(ChatUser chatUser)
