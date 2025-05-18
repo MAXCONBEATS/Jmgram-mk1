@@ -1,6 +1,8 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
@@ -12,14 +14,18 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<List<ChatUser>> GetChatUsers(string chatId);
         Task<bool> ChatExists(string chatId);
         Task<bool> IsUserInChat(string chatId, string userId);
+        Task RemoveUserFromChat(string chatId, string userId);
+        Task DeleteChat(string chatId);
     }
     public class ChatRepository : IChatRepository
     {
         private readonly JMgramDbContext _dbContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ChatRepository(JMgramDbContext dbContext)
+        public ChatRepository(JMgramDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<Chat?> GetById(string id, bool includeChatUsers = false)
@@ -50,18 +56,53 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
         public async Task<Chat> CreateChat(Chat chat)
         {
+            // Get the current UserId
+            var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Set the CreatorUserId if available
+            if (!string.IsNullOrEmpty(userId))
+            {
+                chat.CreatorUserId = userId;
+            }
+
             _dbContext.Chats.Add(chat);
             await _dbContext.SaveChangesAsync();
             return chat;
         }
 
-        public async Task<bool> ChatExists(string chatId) // Изменено на string
+        public async Task<bool> ChatExists(string chatId)
         {
             return await _dbContext.Chats.AnyAsync(c => c.Id == chatId);
         }
         public async Task<bool> IsUserInChat(string chatId, string userId)
         {
             return await _dbContext.ChatUsers.AnyAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+        }
+        public async Task RemoveUserFromChat(string chatId, string userId)
+        {
+            var chatUser = await _dbContext.ChatUsers
+             .FirstOrDefaultAsync(cu => cu.ChatId == chatId && cu.UserId == userId);
+
+            if (chatUser != null)
+            {
+                _dbContext.ChatUsers.Remove(chatUser);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+        public async Task DeleteChat(string chatId)
+        {
+            var chat = await _dbContext.Chats.FindAsync(chatId);
+
+            if (chat != null)
+            {
+                // 1. Удаляем все записи из ChatUsers, связанные с этим чатом
+                var chatUsers = _dbContext.ChatUsers.Where(cu => cu.ChatId == chatId);
+                _dbContext.ChatUsers.RemoveRange(chatUsers);
+
+                // 2. Удаляем сам чат
+                _dbContext.Chats.Remove(chat);
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 

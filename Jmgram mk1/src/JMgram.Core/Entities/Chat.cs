@@ -6,6 +6,7 @@
         public string Name { get; set; }
         public DateTime CreatedAt { get; set; }
         public ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();
+        public string CreatorUserId { get; set; }
     }
 
 

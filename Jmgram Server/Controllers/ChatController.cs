@@ -35,10 +35,12 @@ public class ChatController : ControllerBase
     private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
+    private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
+    private readonly DeleteChatUseCase _deleteChatUseCase;
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
         IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase,
-    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase,
+    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
     RespondToChatInviteUseCase respondToChatInviteUseCase,IChatRepository chatRepository, IUserRepository userRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -53,7 +55,9 @@ public class ChatController : ControllerBase
         _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
-        
+        _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
+        _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));
+
     }
 
     [HttpPost("/Chat/Create")]
@@ -245,5 +249,67 @@ public class ChatController : ControllerBase
         var response = await _getChatMessagesUseCase.Execute(request, userId);
 
         return Ok(response);
+    }
+    [HttpDelete("RemoveUserFromChat")]
+    [Authorize]
+    public async Task<IActionResult> RemoveUserFromChat(string chatId, string userId)
+    {
+        // 1. Получаем ID текущего пользователя
+        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // 2. Получаем чат из базы данных
+        var chat = await _chatRepository.GetById(chatId);
+
+        // 3. Проверяем, существует ли чат
+        if (chat == null)
+        {
+            return BadRequest($"Chat with id {chatId} not found.");
+        }
+
+        // 4. Проверяем, является ли текущий пользователь создателем чата
+        if (chat.CreatorUserId != currentUserId)
+        {
+            return Forbid("You are not allowed to remove users from this chat."); // Возвращаем ошибку 403
+        }
+
+        var response = await _removeUserFromChatUseCase.Execute(chatId, userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok("User removed from chat successfully.");
+    }
+    [HttpDelete("DeleteChat")]
+    [Authorize]
+    public async Task<IActionResult> DeleteChat(string chatId)
+    {
+        // 1. Получаем ID текущего пользователя
+        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        // 2. Получаем чат из базы данных
+        var chat = await _chatRepository.GetById(chatId);
+
+        // 3. Проверяем, существует ли чат
+        if (chat == null)
+        {
+            return BadRequest($"Chat with id {chatId} not found.");
+        }
+
+        // 4. Проверяем, является ли текущий пользователь создателем чата
+        if (chat.CreatorUserId != currentUserId)
+        {
+            return Forbid("You are not allowed to delete this chat."); // Возвращаем ошибку 403
+        }
+
+        var response = await _deleteChatUseCase.Execute(chatId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok("Chat deleted successfully.");
     }
 }

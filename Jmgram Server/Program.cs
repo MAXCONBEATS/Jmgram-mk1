@@ -93,6 +93,8 @@ builder.Services.AddScoped<UpdateContactNameUseCase>();
 builder.Services.AddScoped<GetContactListUseCase>();
 builder.Services.AddScoped<RespondToChatInviteUseCase>();
 builder.Services.AddScoped<AddUserToChatNotificationUseCase>();
+builder.Services.AddScoped<RemoveUserFromChatUseCase>();
+builder.Services.AddScoped<DeleteChatUseCase>();
 
 
 builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();

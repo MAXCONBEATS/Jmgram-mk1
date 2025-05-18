@@ -41,6 +41,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 Name = request.Chat.Name,
                 CreatedAt = DateTime.UtcNow,
+                CreatorUserId = creatorUserId
             };
 
             // 4. Создание чата в БД
