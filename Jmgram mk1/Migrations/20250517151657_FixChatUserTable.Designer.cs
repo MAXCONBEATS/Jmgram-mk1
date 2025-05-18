@@ -4,6 +4,7 @@ using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Jmgram_mk1.Migrations
 {
     [DbContext(typeof(JMgramDbContext))]
-    partial class JMgramDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250517151657_FixChatUserTable")]
+    partial class FixChatUserTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -250,23 +253,20 @@ namespace Jmgram_mk1.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ChatId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsRead")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("NotificationType")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("Timestamp")
+                    b.Property<bool>("isRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("timestamp")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("userId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -454,7 +454,7 @@ namespace Jmgram_mk1.Migrations
                 {
                     b.HasBaseType("Jmgram_mk1.src.JMgram.Core.Entities.Notification");
 
-                    b.Property<string>("SenderUserId")
+                    b.Property<string>("senderUserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -475,7 +475,7 @@ namespace Jmgram_mk1.Migrations
                 {
                     b.HasBaseType("Jmgram_mk1.src.JMgram.Core.Entities.Notification");
 
-                    b.Property<string>("Source")
+                    b.Property<string>("source")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

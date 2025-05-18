@@ -8,6 +8,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Dtos
         public DateTime Timestamp { get; set; }
         public bool IsRead { get; set; }
         public NotificationType NotificationType { get; set; }
+        public string ChatId { get; set; }
     }
 
     // DTO для уведомления о сообщении

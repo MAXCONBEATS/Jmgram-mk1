@@ -14,6 +14,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
         public DbSet<MessageNotification> MessageNotifications { get; set; }
         public DbSet<ContactRequestNotification> ContactRequestNotifications { get; set; }
         public DbSet<SystemNotification> SystemNotifications { get; set; }
+        public DbSet<ChatInviteNotification> ChatInviteNotifications { get; set; }
         public DbSet<UserProfile> UserProfiles { get; set; } = null!;
         public DbSet<ChatUser> ChatUsers { get; set; } = null!;
         public DbSet<ContactRequest> ContactRequests { get; set; } = null!;
@@ -45,12 +46,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
              .WithMany() // У AppIdentityUser нет коллекции ContactUsers
              .HasForeignKey(c => c.ContactUserId)
              .OnDelete(DeleteBehavior.Restrict); // Запретить удаление контактного пользователя, если он используется в контактах
-            // 11.Contact
+                                                 // 11.Contact
             modelBuilder.Entity<Contact>().HasKey(c => c.Id);
 
             modelBuilder.Entity<Contact>()
-                .Property(c => c.Id)
-                .UseIdentityColumn();
+             .Property(c => c.Id)
+             .UseIdentityColumn();
 
             //автоинкрементное id чата
             modelBuilder.Entity<Chat>()
@@ -60,6 +61,18 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
             // 6. ChatUser: Составной ключ (ChatId, UserId)
             modelBuilder.Entity<ChatUser>()
              .HasKey(cu => new { cu.ChatId, cu.UserId });
+
+            modelBuilder.Entity<ChatUser>()
+             .Property(cu => cu.ChatId)
+             .HasMaxLength(255); // Set the max length
+
+            modelBuilder.Entity<ChatUser>()
+             .Property(cu => cu.UserId)
+             .HasMaxLength(255); // Set the max length
+
+            modelBuilder.Entity<ChatUser>()
+             .Property(cu => cu.JoinedAt)
+             .HasColumnType("datetime2"); // Or your preferred DateTime type
 
             // 7. ChatUser - Chat: Связь один ко многим
             modelBuilder.Entity<ChatUser>()
@@ -94,7 +107,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
              .HasDiscriminator<NotificationType>("NotificationType")
              .HasValue<MessageNotification>(NotificationType.Message)
              .HasValue<ContactRequestNotification>(NotificationType.ContactRequest)
-             .HasValue<SystemNotification>(NotificationType.System);
+             .HasValue<SystemNotification>(NotificationType.System)
+             .HasValue<ChatInviteNotification>(NotificationType.ChatInvite);
 
             modelBuilder.Entity<ContactRequest>()
              .HasKey(cr => cr.Id); // Primary key
@@ -108,16 +122,22 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
              .HasConversion<string>(); // Store enum as string
 
             modelBuilder.Entity<ContactRequest>()
-             .HasOne<UserProfile>() // Assuming you have a UserProfile entity
-             .WithMany()
-             .HasForeignKey(cr => cr.SenderUserId)
-             .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+                .HasOne<UserProfile>() // Assuming you have a UserProfile entity
+                .WithMany()
+                .HasForeignKey(cr => cr.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+                                                    //Properties SenderUserId and RecipientUserId should be configure as foreign key
+            modelBuilder.Entity<ContactRequest>()
+                .HasOne<UserProfile>() // Assuming you have a UserProfile entity
+                .WithMany()
+                .HasForeignKey(cr => cr.SenderUserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
             modelBuilder.Entity<ContactRequest>()
-             .HasOne<UserProfile>() // Assuming you have a UserProfile entity
-             .WithMany()
-             .HasForeignKey(cr => cr.RecipientUserId)
-             .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+                .HasOne<UserProfile>() // Assuming you have a UserProfile entity
+                .WithMany()
+                .HasForeignKey(cr => cr.RecipientUserId)
+                .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
             modelBuilder.Entity<ContactRequest>()
              .HasIndex(cr => new { cr.SenderUserId, cr.RecipientUserId })

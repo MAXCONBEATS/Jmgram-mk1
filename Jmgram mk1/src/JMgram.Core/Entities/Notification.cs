@@ -1,15 +1,18 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Jmgram_mk1.src.JMgram.Core.Entities
 {
     public abstract class Notification
     {
         [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
-        public string userId { get; set; }
-        public string message { get; set; } = "";
-        public DateTime timestamp { get; set; }
-        public bool isRead { get; set; }
+        public string UserId { get; set; }
+        public string Message { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+        public bool IsRead { get; set; }
+        public string? ChatId { get; set; }
     }
 
     public class MessageNotification : Notification
@@ -20,22 +23,26 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
 
     public class ContactRequestNotification : Notification
     {
-        public string senderUserId { get; set; }
-        public new string message { get; set; } // Опциональное приветственное сообщение
+        public string SenderUserId { get; set; }
+        public new string Message { get; set; } // Опциональное приветственное сообщение
 
     }
 
     public class SystemNotification : Notification
     {
-        public new string message { get; set; }
-        public string source { get; set; } // От кого пришло системное уведомление (например, "Telegram Bot")
+        public new string Message { get; set; }
+        public string Source { get; set; } // От кого пришло системное уведомление (например, "Telegram Bot")
 
+    }
+    public class ChatInviteNotification : Notification
+    {      
     }
 
     public enum NotificationType
     {
         Message = 0,
         ContactRequest = 1,
-        System = 2
+        System = 2,
+        ChatInvite = 3
     }
 }

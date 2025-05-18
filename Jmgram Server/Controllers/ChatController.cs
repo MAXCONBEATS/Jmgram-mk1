@@ -26,24 +26,31 @@ public class ChatController : ControllerBase
     private readonly ILogger<ChatController> _logger;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChatRepository _chatRepository;
+    private readonly IUserRepository _userRepository;
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
     private readonly GetChatListUseCase _getChatListUseCase;  
     private readonly SendMessageUseCase _sendMessageUseCase;
+    private readonly SendNotificationUseCase _sendNotificationUseCase;
+    private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
-        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, 
-        UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, IChatRepository chatRepository)
+        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase,
+    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase,
+    RespondToChatInviteUseCase respondToChatInviteUseCase,IChatRepository chatRepository, IUserRepository userRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _createChatUseCase = createChatUseCase ?? throw new ArgumentNullException(nameof(createChatUseCase));
         _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
-        _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));    
+        _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));
         _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
+        _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
+        _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
         
@@ -72,21 +79,97 @@ public class ChatController : ControllerBase
     {
         // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+        var addedUsers = new List<string>(); // To store added user IDs
+        var errorMessages = new List<string>(); // To store error messages
+                                                // Перебираем список телефонных номеров
+        foreach (var phoneNumber in request.PhoneNumbers)
+        {
+            // 1. Находим пользователя по номеру телефона
+            var user = await _userRepository.GetUserByPhoneNumber(phoneNumber);
+            if (user == null)
+            {
+                _logger.LogWarning($"User with phone number {phoneNumber} not found.");
+                errorMessages.Add($"User with phone number {phoneNumber} not found.");
+                continue; // Skip to the next phone number
+            }
+            // 2. Добавляем пользователя в чат
+            var response = await _addUserToChatUseCase.Execute(request.ChatId, user.Id);
+            if (!response.IsSuccess)
+            {
+                _logger.LogError($"Error adding user {user.Id} to chat {request.ChatId}: {response.Message}");
+                errorMessages.Add($"Error adding user {user.Id} to chat {request.ChatId}: {response.Message}");
+            }
+            else
+            {
+                addedUsers.Add(user.Id); // Add the user ID to the list of added users
+            }
+        }
+        if (errorMessages.Any())
+        {
+            return BadRequest(string.Join(" ", errorMessages)); // Return all error messages
+        }
+        return Ok(addedUsers); // Return the list of added user IDs
+    }
+
+    [HttpPost("InviteToChat")]
+    [Authorize]
+    public async Task<IActionResult> InviteToChat([FromBody] InviteToChatRequest request)
+    {
+        var inviterUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(inviterUserId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+        _logger.LogInformation($"ChatId value: {request.ChatId}");
+        foreach (var invitedUserId in request.InvitedUserIds)
+        {
+            // Проверяем, существует ли пользователь с указанным invitedUserId
+            var user = await _userRepository.GetById(invitedUserId);
+            if (user == null)
+            {
+                _logger.LogWarning($"User with id {invitedUserId} not found.");
+                return BadRequest($"User with id {invitedUserId} not found.");
+            }
+            var notificationDto = new NotificationDto
+            {
+                UserId = invitedUserId,
+                Message = $"Вас пригласили в чат {request.ChatId} от {inviterUserId}. Принять или отклонить?",
+                Timestamp = DateTime.UtcNow,
+                IsRead = false,
+                NotificationType = NotificationType.ChatInvite,
+                ChatId = request.ChatId
+            };
+            var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); // Send invite notif
+            if (!notificationResponse.IsSuccess)
+            {
+                return BadRequest(notificationResponse.ErrorMessage);
+            }
+        }
+        return Ok("Приглашение в чат отправлено.");
+    }
+    [HttpPost("RespondToInvite")]
+    [Authorize]
+    public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized("Не удалось получить UserId из claims.");
         }
-
-        // Вызываем AddUserToChatUseCase
-        var response = await _addUserToChatUseCase.Execute(request, userId); // Передаём UserId в UseCase
+        _logger.LogInformation($"RespondToInvite: NotificationId = {request.NotificationId}, Accepted = {request.Accepted}");
+        var response = await _respondToChatInviteUseCase.Execute(request.NotificationId, userId, request.Accepted);
 
         if (!response.IsSuccess)
         {
-            return BadRequest(response.Message);
+            return BadRequest(response.ErrorMessage);
         }
 
-        return Ok(response.ChatUsers);
+        return Ok(response.SuccessMessage);
     }
     [HttpPost("List")]
     [Authorize]

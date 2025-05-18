@@ -10,11 +10,10 @@ using System.Threading.Tasks;
 
 namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
-    // Интерфейс репозитория
     public interface IUserRepository
     {
         Task<bool> IsPhoneTaken(string phone);
-        
+
         Task Add(AppIdentityUser user);
         Task CreateUserProfile(UserProfile userProfile);
         Task UpdateProfile(UserProfile profile);
@@ -24,7 +23,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<List<AppIdentityUser>> GetByPhones(List<string> phones);
         Task<List<AppIdentityUser?>> GetByIds(List<string> userIds);
         Task<UserProfile?> GetUserProfileById(string userId);
-
+        Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber);
     }
     public class UserRepository : IUserRepository
     {
@@ -89,7 +88,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
         }
-        
 
+        public async Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber) // Implement the method
+        {
+            return await _dbContext.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
+        }
     }
 }

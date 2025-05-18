@@ -9,7 +9,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     {
         Task<List<NotificationDto>> GetNotificationsByUserId(string userId);
         Task AddNotification(Notification notification);
-        Task<NotificationDto?> GetNotificationById(int notificationId);
+        Task<NotificationDto?> GetNotificationDtoById(int notificationId); // Renamed method
+        Task<Notification> GetNotificationById(int notificationId);
         Task UpdateNotification(Notification notification);
         Task DeleteNotification(int notificationId);
     }
@@ -25,30 +26,33 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<List<NotificationDto>> GetNotificationsByUserId(string userId)
         {
             var notifications = await _context.Notifications
-                .Where(n => n.userId == userId)
-                .OrderByDescending(n => n.timestamp)
-                .ToListAsync();
+             .Where(n => n.UserId == userId)
+             .OrderByDescending(n => n.Timestamp)
+             .ToListAsync();
 
             return notifications.Select(MapToDto).ToList();
         }
 
         public async Task AddNotification(Notification notification)
         {
-            notification.timestamp = DateTime.UtcNow;
-            notification.isRead = false;
+            notification.Timestamp = DateTime.UtcNow;
+            notification.IsRead = false;
 
             _context.Notifications.Add(notification);
             await _context.SaveChangesAsync();
         }
 
-        public async Task<NotificationDto?> GetNotificationById(int notificationId)
+        public async Task<NotificationDto?> GetNotificationDtoById(int notificationId) // Renamed method
         {
             var notification = await _context.Notifications
-                .FirstOrDefaultAsync(n => n.Id == notificationId);
+             .FirstOrDefaultAsync(n => n.Id == notificationId);
 
             return notification == null ? null : MapToDto(notification);
         }
-
+        public async Task<Notification> GetNotificationById(int notificationId)
+        {
+            return await _context.Notifications.FindAsync(notificationId);
+        }
         public async Task UpdateNotification(Notification notification)
         {
             _context.Notifications.Update(notification);
@@ -57,9 +61,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
         public async Task DeleteNotification(int notificationId)
         {
-            var notification = await _context.Notifications
-                .FirstOrDefaultAsync(n => n.Id == notificationId);
-
+            var notification = await _context.Notifications.FindAsync(notificationId);
             if (notification != null)
             {
                 _context.Notifications.Remove(notification);
@@ -69,50 +71,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
         private NotificationDto MapToDto(Notification notification)
         {
-            switch (notification)
+            return new NotificationDto
             {
-                case MessageNotification msg:
-                    return new MessageNotificationDto
-                    {
-                        UserId = msg.userId,
-                        Message = msg.message,
-                        MessageId = msg.MessageId,
-                        Timestamp = msg.timestamp,
-                        IsRead = msg.isRead,
-                        NotificationType = NotificationType.Message
-                    };
-
-                case ContactRequestNotification cr:
-                    return new ContactRequestNotificationDto
-                    {
-                        UserId = cr.userId,
-                        Message = cr.message,
-                        Timestamp = cr.timestamp,
-                        IsRead = cr.isRead,
-                        SenderUserId = cr.senderUserId,
-                        NotificationType = NotificationType.ContactRequest
-                    };
-
-                case SystemNotification sys:
-                    return new SystemNotificationDto
-                    {
-                        UserId = sys.userId,
-                        Message = sys.message,
-                        Timestamp = sys.timestamp,
-                        IsRead = sys.isRead,
-                        Source = sys.source,
-                        NotificationType = NotificationType.System
-                    };
-
-                default:
-                    return new NotificationDto
-                    {
-                        UserId = notification.userId,
-                        Message = notification.message,
-                        Timestamp = notification.timestamp,
-                        IsRead = notification.isRead
-                    };
-            }
+                UserId = notification.UserId,
+                Message = notification.Message,
+                Timestamp = notification.Timestamp,
+                IsRead = notification.IsRead,
+                NotificationType = Enum.Parse<NotificationType>(notification.GetType().Name.Replace("Notification", ""))
+            };
         }
     }
 }

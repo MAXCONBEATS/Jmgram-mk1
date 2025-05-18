@@ -40,29 +40,58 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     case NotificationType.Message:
                         notification = new MessageNotification
                         {
-                            userId = notificationDto.UserId,
-                            message = notificationDto.Message,
-                            timestamp = notificationDto.Timestamp,
-                            isRead = notificationDto.IsRead,
+                            UserId = notificationDto.UserId,
+                            Message = notificationDto.Message,
+                            Timestamp = notificationDto.Timestamp,
+                            IsRead = notificationDto.IsRead,
+                            ChatId = notificationDto.ChatId
                         };
                         break;
                     case NotificationType.ContactRequest:
                         notification = new ContactRequestNotification
                         {
-                            userId = notificationDto.UserId,
-                            message = notificationDto.Message,
-                            timestamp = notificationDto.Timestamp,
-                            isRead = notificationDto.IsRead,
+                            UserId = notificationDto.UserId,
+                            Message = notificationDto.Message,
+                            Timestamp = notificationDto.Timestamp,
+                            IsRead = notificationDto.IsRead,
+                            ChatId = notificationDto.ChatId
                         };
                         break;
                     case NotificationType.System:
                         notification = new SystemNotification
                         {
-                            userId = notificationDto.UserId,
-                            message = notificationDto.Message,
-                            timestamp = notificationDto.Timestamp,
-                            isRead = notificationDto.IsRead,
+                            UserId = notificationDto.UserId,
+                            Message = notificationDto.Message,
+                            Timestamp = notificationDto.Timestamp,
+                            IsRead = notificationDto.IsRead,
+                            ChatId = notificationDto.ChatId
                         };
+                        break;
+                    case NotificationType.ChatInvite:
+                        notification = new ChatInviteNotification
+                        {
+                            UserId = notificationDto.UserId,
+                            Message = notificationDto.Message,
+                            Timestamp = notificationDto.Timestamp,
+                            IsRead = notificationDto.IsRead,
+                            ChatId = notificationDto.ChatId
+                        };
+                        if (notificationDto != null)
+                        {
+                            _logger.LogInformation($"notificationDto не null");
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"notificationDto  null");
+                        }
+                        if (notificationDto.ChatId != null)
+                        {
+                            _logger.LogInformation($"ChatId не null");
+                        }
+                        else
+                        {
+                            _logger.LogInformation($"ChatId null");
+                        }
                         break;
                     default:
                         return new SendNotificationResponse { IsSuccess = false, ErrorMessage = $"Unsupported notification type: {notificationDto.NotificationType}" };
@@ -75,7 +104,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                _logger.LogError($"SendNotificationUseCase.Execute: An error occurred while sending notification: {ex.Message}");
+                _logger.LogError($"SendNotificationUseCase.Execute: An error occurred while sending notification: {ex.Message}, Inner Exception: {ex.InnerException}");
                 return new SendNotificationResponse { IsSuccess = false, ErrorMessage = $"Ошибка при отправке уведомления: {ex.Message}" };
             }
         }
