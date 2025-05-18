@@ -35,12 +35,14 @@ public class ChatController : ControllerBase
     private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
+    private readonly GetUserChatsUseCase _getUserChatsUseCase;
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
         IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase,
-    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
+    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
+    RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
     RespondToChatInviteUseCase respondToChatInviteUseCase,IChatRepository chatRepository, IUserRepository userRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -55,6 +57,7 @@ public class ChatController : ControllerBase
         _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
+        _getUserChatsUseCase = getUserChatsUseCase ?? throw new ArgumentNullException(nameof(getUserChatsUseCase));
         _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
         _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));
 
@@ -174,6 +177,27 @@ public class ChatController : ControllerBase
         }
 
         return Ok(response.SuccessMessage);
+    }
+    [HttpGet("UserChats")]
+    [Authorize]
+    public async Task<IActionResult> GetUserChats()
+    {
+        // Получаем UserId из claims
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        // Используем Use Case для получения чатов пользователя
+        var response = await _getUserChatsUseCase.Execute(userId);
+
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response.Chats);
     }
     [HttpPost("List")]
     [Authorize]

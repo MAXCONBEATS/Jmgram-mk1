@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Jmgram_Server</RootNamespace>
+	  <SpaRoot>jmgramclientapp\</SpaRoot>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,13 +23,13 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Jmgram mk1\Jmgram mk1.csproj" />
-  </ItemGroup>
-
+	<ItemGroup>
+		<ProjectReference Include="..\Jmgram mk1\Jmgram mk1.csproj" />
+	</ItemGroup>
   <ItemGroup>
     <Folder Include="wwwroot\" />
   </ItemGroup>
+
+
 
 </Project>

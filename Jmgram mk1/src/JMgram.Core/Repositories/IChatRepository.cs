@@ -16,6 +16,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<bool> IsUserInChat(string chatId, string userId);
         Task RemoveUserFromChat(string chatId, string userId);
         Task DeleteChat(string chatId);
+        Task<List<Chat>> GetUserChats (string userId);
     }
     public class ChatRepository : IChatRepository
     {
@@ -52,6 +53,21 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 .Where(cu => cu.ChatId == chatId)
                 .Include(cu => cu.User)
                 .ToListAsync();
+        }
+        public async Task<List<Chat>> GetUserChats(string userId)
+        {
+            var chats = await _dbContext.Chats
+             .Join(
+              _dbContext.ChatUsers,
+              chat => chat.Id,
+              chatUser => chatUser.ChatId,
+              (chat, chatUser) => new { Chat = chat, ChatUser = chatUser }
+             )
+             .Where(joined => joined.ChatUser.UserId == userId)
+             .Select(joined => joined.Chat)
+             .ToListAsync();
+
+            return chats;
         }
 
         public async Task<Chat> CreateChat(Chat chat)

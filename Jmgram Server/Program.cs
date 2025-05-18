@@ -63,7 +63,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("https://localhost:7142")
+        policy.WithOrigins("https://localhost:3000")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();
@@ -95,6 +95,7 @@ builder.Services.AddScoped<RespondToChatInviteUseCase>();
 builder.Services.AddScoped<AddUserToChatNotificationUseCase>();
 builder.Services.AddScoped<RemoveUserFromChatUseCase>();
 builder.Services.AddScoped<DeleteChatUseCase>();
+builder.Services.AddScoped<GetUserChatsUseCase>();
 
 
 builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();
@@ -121,9 +122,10 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // 9. Включаем CORS, Authentication и Authorization
-app.UseCors();
 app.UseStaticFiles(); // Для статических файлов (CSS, JS, Images)
 app.UseRouting(); // Добавляем routing
+
+app.UseCors(); // <- ВАЖНО: После app.UseRouting()
 
 app.UseAuthentication();
 app.UseAuthorization();
