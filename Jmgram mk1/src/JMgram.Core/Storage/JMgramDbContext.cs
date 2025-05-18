@@ -6,7 +6,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
 {
     public class JMgramDbContext : IdentityDbContext<AppIdentityUser>
     {
-        public DbSet<AppIdentityUser> Users { get; set; } = null!;
+        public new DbSet<AppIdentityUser> Users { get; set; } = null!;
         public DbSet<Chat> Chats { get; set; } = null!;
         public DbSet<Message> Messages { get; set; } = null!;
         public DbSet<Contact> Contacts { get; set; } = null!;
