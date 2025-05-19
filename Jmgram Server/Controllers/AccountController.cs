@@ -28,7 +28,7 @@ public class AccountController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost("Register")]
+    [HttpPost]
     public async Task<Results<Ok, ValidationProblem>> Register(
     [FromBody] RegisterUserRequest registration,
     JMgramDbContext context,
@@ -95,7 +95,7 @@ public class AccountController : ControllerBase
         });
         }
     }
-    [HttpPost("Login")]
+    [HttpPost]
     public async Task<IActionResult> Login([FromBody] LoginRequest login)
     {
         _logger.LogInformation($"Login attempt for phone: {login.Phone}");
@@ -157,6 +157,7 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Logout()
     {
         await _signInManager.SignOutAsync();
+        Response.Cookies.Delete(".AspNetCore.Identity.Application");
         return Ok();
     }
 

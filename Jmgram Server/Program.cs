@@ -61,13 +61,18 @@ builder.Services.AddAuthorization();
 // 5. Настройка CORS
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("AllowReactApp", builder =>
     {
-        policy.WithOrigins("https://localhost:3000")
+        builder.WithOrigins("http://localhost:3000") // Укажите origin вашего React-приложения
               .AllowAnyMethod()
               .AllowAnyHeader()
-              .AllowCredentials();
+              .AllowCredentials(); // Очень важно для Cookies и Authorization headers!
     });
+});
+builder.Host.UseDefaultServiceProvider(options =>
+{
+    options.ValidateScopes = true;
+    options.ValidateOnBuild = true;
 });
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
@@ -77,6 +82,7 @@ builder.Services.AddScoped<IMessageRepository, MessageRepository>();
 
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
+builder.Services.AddScoped<IGetLastChatMessageUseCase, GetLastChatMessageUseCase>();
 builder.Services.AddScoped<CreateChatUseCase>();
 builder.Services.AddScoped<AddUserToChatUseCase>();
 builder.Services.AddScoped<GetChatListUseCase>();
@@ -125,7 +131,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles(); // Для статических файлов (CSS, JS, Images)
 app.UseRouting(); // Добавляем routing
 
-app.UseCors(); // <- ВАЖНО: После app.UseRouting()
+app.UseCors("AllowReactApp"); // <- ВАЖНО: После app.UseRouting()
 
 app.UseAuthentication();
 app.UseAuthorization();

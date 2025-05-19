@@ -1,4 +1,5 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Entities;
+﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
+using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -17,6 +18,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task RemoveUserFromChat(string chatId, string userId);
         Task DeleteChat(string chatId);
         Task<List<Chat>> GetUserChats (string userId);
+        Task<LastChatMessageDto> GetLastChatMessage(string chatId);
     }
     public class ChatRepository : IChatRepository
     {
@@ -68,6 +70,23 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
              .ToListAsync();
 
             return chats;
+        }
+        public async Task<LastChatMessageDto> GetLastChatMessage(string chatId)
+        {
+            var lastMessage = await _dbContext.Messages
+             .Where(m => m.ChatId == chatId)
+             .OrderByDescending(m => m.Timestamp)
+             .Select(m => new LastChatMessageDto
+             {
+                 ChatId = m.ChatId,
+                 Text = m.Text,
+                 SenderId = m.SenderId,
+                 SenderName = _dbContext.Users.FirstOrDefault(u => u.Id == m.SenderId).FirstName,
+                 Timestamp = m.Timestamp
+             })
+             .FirstOrDefaultAsync();
+
+            return lastMessage;
         }
 
         public async Task<Chat> CreateChat(Chat chat)

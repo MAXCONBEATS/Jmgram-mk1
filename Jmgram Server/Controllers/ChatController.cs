@@ -29,21 +29,24 @@ public class ChatController : ControllerBase
     private readonly IUserRepository _userRepository;
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
-    private readonly GetChatListUseCase _getChatListUseCase;  
+    private readonly GetChatListUseCase _getChatListUseCase;
     private readonly SendMessageUseCase _sendMessageUseCase;
     private readonly SendNotificationUseCase _sendNotificationUseCase;
     private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
     private readonly GetUserChatsUseCase _getUserChatsUseCase;
+    private readonly IGetLastChatMessageUseCase _getLastChatMessageUseCase; //  Измените тип здесь!
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
 
-    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase, 
-        IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase, SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase,
-    UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
-    RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
-    RespondToChatInviteUseCase respondToChatInviteUseCase,IChatRepository chatRepository, IUserRepository userRepository)
+
+    public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
+     IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase,
+     SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
+     UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
+     RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
+     RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -58,6 +61,7 @@ public class ChatController : ControllerBase
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
         _getUserChatsUseCase = getUserChatsUseCase ?? throw new ArgumentNullException(nameof(getUserChatsUseCase));
+        _getLastChatMessageUseCase = getLastChatMessageUseCase ?? throw new ArgumentNullException(nameof(getLastChatMessageUseCase));
         _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
         _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));
 
@@ -199,6 +203,7 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chats);
     }
+
     [HttpPost("List")]
     [Authorize]
     public async Task<IActionResult> GetChatList([FromBody] GetChatListRequest request)
@@ -271,6 +276,20 @@ public class ChatController : ControllerBase
             return Unauthorized();
         }
         var response = await _getChatMessagesUseCase.Execute(request, userId);
+
+        return Ok(response);
+    }
+    [HttpGet("GetLastChatMessage")]
+    [Authorize]
+    public async Task<IActionResult> GetLastChatMessage([FromQuery] string chatId)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var response = await _getLastChatMessageUseCase.Execute(chatId, userId);
 
         return Ok(response);
     }

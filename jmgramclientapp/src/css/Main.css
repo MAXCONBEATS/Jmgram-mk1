@@ -1,0 +1,70 @@
+ /* Общий контейнер */
+ .main-container {
+  background-color: #181818; /* Цвет заднего фона */
+  color: white; /* Цвет текста */
+  min-height: 100vh; /* Минимальная высота экрана */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+ }
+ 
+ /* Контейнер списка чатов */
+ .chat-list {
+  background-color: #212121; /* Цвет колонки чатов */
+  border-radius: 10px;
+  padding: 20px;
+  width: 80%; /* Ширина колонки чатов */
+  margin-bottom: 20px;
+ }
+ 
+ /* Элемент чата */
+ .chat-item {
+  padding: 10px;
+  border-bottom: 1px solid #333; /* Разделитель между чатами */
+  cursor: pointer; /* Изменение курсора при наведении */
+ }
+ 
+ .chat-item:hover {
+  background-color: #333; /* Цвет фона при наведении */
+ }
+ 
+ /* Название чата */
+ .chat-name {
+  font-size: 1.2em;
+  margin-bottom: 5px;
+ }
+ 
+ /* Последнее сообщение */
+ .last-message {
+  font-size: 0.9em;
+  color: #ccc;
+ }
+ 
+ /* Список контактов */
+ .contact-list {
+  list-style: none;
+  padding: 0;
+ }
+ 
+ .contact-list li {
+  margin-bottom: 5px;
+ }
+ 
+ /* Иконка выхода */
+ .logout-icon {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+ }
+ 
+ /* Сообщение об ошибке */
+ .error-message {
+  color: red;
+  font-weight: bold;
+ }
+ 
+ /* Дополнительные стили (при необходимости) */
