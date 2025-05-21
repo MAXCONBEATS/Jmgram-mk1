@@ -19,6 +19,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task DeleteChat(string chatId);
         Task<List<Chat>> GetUserChats (string userId);
         Task<LastChatMessageDto> GetLastChatMessage(string chatId);
+        Task<Chat> GetChatBetweenUsers(string userId1, string userId2);
     }
     public class ChatRepository : IChatRepository
     {
@@ -55,6 +56,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 .Where(cu => cu.ChatId == chatId)
                 .Include(cu => cu.User)
                 .ToListAsync();
+        }
+        public async Task<Chat> GetChatBetweenUsers(string userId1, string userId2)
+        {
+            return await _dbContext.Chats
+             .Include(c => c.ChatUsers)
+             .Where(c => c.ChatUsers.Any(cu => cu.UserId == userId1) && c.ChatUsers.Any(cu => cu.UserId == userId2))
+             .FirstOrDefaultAsync();
         }
         public async Task<List<Chat>> GetUserChats(string userId)
         {

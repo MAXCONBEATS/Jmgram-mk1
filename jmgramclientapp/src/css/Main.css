@@ -1,32 +1,90 @@
  /* Общий контейнер */
  .main-container {
-  background-color: #181818; /* Цвет заднего фона */
-  color: white; /* Цвет текста */
-  min-height: 100vh; /* Минимальная высота экрана */
+  background-color: #181818;
+  color: white;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 20px;
  }
  
- /* Контейнер списка чатов */
- .chat-list {
-  background-color: #212121; /* Цвет колонки чатов */
+ /* Контейнер для контента (контакты и чаты) */
+ .main-content {
+  display: flex;
+  width: 100%;
+  max-width: 1200px; /* Максимальная ширина контента */
+  margin: 0 auto; /* Центрирование по горизонтали */
+  position: relative; /* Добавляем relative для позиционирования заголовка */
+ }
+ 
+ /* Контейнер для контактов */
+ .contacts-container {
+  background-color: #212121;
   border-radius: 10px;
   padding: 20px;
-  width: 80%; /* Ширина колонки чатов */
-  margin-bottom: 20px;
+  width: 200px; /* Уменьшаем ширину колонки контактов */
+  /* Убираем margin-right, так как будем позиционировать заголовок абсолютно */
+  position: fixed; /* Фиксированная позиция */
+  top: 92px; /* Отступ от верха */
+  left: 20px; /* Отступ слева */
+  height: fit-content; /* Автоматическая высота */
+ }
+ 
+ /* Заголовок "Контакты" */
+ .main-content .contacts-header {
+  position: fixed; /* Абсолютное позиционирование */
+  top: 30px; /* Отступ от верха контейнера */
+  left: 20px; /* Отступ от левого края контейнера */
+  width: 200px; /* Ширина, равная ширине колонки */
+  text-align: center; /* Центрирование текста */
+  margin: 0; /* Убираем стандартные отступы */
+  padding-top: 10px; /* Добавляем отступ сверху и снизу */
+  padding-bottom: 10px;
+ }
+ 
+ /* Список контактов */
+ .contact-list {
+  list-style: none;
+  padding: 0;
+ }
+ 
+ .contact-list li {
+  margin-bottom: 5px;
+  cursor: pointer; /* Добавляем изменение курсора */
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Плавный переход */
+ }
+ 
+ .contact-list li:hover {
+  background-color: #333; /* Цвет фона при наведении */
+  transform: scale(1.05); /* Увеличение размера фона */
+ }
+ 
+ /* Контейнер для чатов */
+ .chat-container {
+  flex-grow: 1; /* Занимает оставшееся пространство */
+  margin-left: 260px; /* Добавлено */
+ }
+ 
+ /* Контейнер списка чатов */
+ .chat-list {
+  background-color: #212121;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
  }
  
  /* Элемент чата */
  .chat-item {
   padding: 10px;
-  border-bottom: 1px solid #333; /* Разделитель между чатами */
-  cursor: pointer; /* Изменение курсора при наведении */
+  border-bottom: 1px solid #333;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease; /* Плавный переход */
  }
  
  .chat-item:hover {
-  background-color: #333; /* Цвет фона при наведении */
+  background-color: #333;
+  transform: scale(1.05); /* Увеличение размера фона */
  }
  
  /* Название чата */
@@ -39,16 +97,6 @@
  .last-message {
   font-size: 0.9em;
   color: #ccc;
- }
- 
- /* Список контактов */
- .contact-list {
-  list-style: none;
-  padding: 0;
- }
- 
- .contact-list li {
-  margin-bottom: 5px;
  }
  
  /* Иконка выхода */
@@ -67,4 +115,29 @@
   font-weight: bold;
  }
  
- /* Дополнительные стили (при необходимости) */
+ /* Стили для контейнера кнопки создания чата */
+ .chat-container .create-chat-container {
+  text-align: right; /* Выравниваем кнопку по правому краю */
+  margin-top: 10px; /* Добавляем отступ сверху */
+ }
+ 
+ /* Стили для кнопки "Создать чат" */
+ .chat-container .create-chat-container button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+ }
+ 
+ /* Стили для поля ввода "Название чата" */
+ .chat-container .create-chat-container input {
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+  box-sizing: border-box;
+ }

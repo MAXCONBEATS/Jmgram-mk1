@@ -1,6 +1,8 @@
  import React, { useState } from 'react';
- import { useNavigate, Link } from 'react-router-dom'; //  <-- Добавьте Link
+ import { useNavigate, Link } from 'react-router-dom';
  import { register } from '../controllers/AccountController';
+ import login_icon from '../assets/images/login_icon.png'; // Используем тот же логотип
+ import '../css/Register.css'; // Ссылка на новый файл стилей
  
  function Register() {
   const [firstName, setFirstName] = useState('');
@@ -23,33 +25,58 @@
   };
  
   return (
-   <div>
-    <h2>Регистрация</h2>
-    {error && <p style={{ color: 'red' }}>{error}</p>}
-    <form onSubmit={handleSubmit}>
-     <div>
-      <label>Имя:</label>
-      <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-     </div>
-     <div>
-      <label>Фамилия:</label>
-      <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} />
-     </div>
-     <div>
-      <label>Телефон:</label>
-      <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} />
-     </div>
-     <div>
-      <label>Пароль:</label>
-      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-     </div>
-     <button type="submit">Зарегистрироваться</button>
-    </form>
+   <div className="register-container">
+    <div className="register-form-area">
+     <img src={login_icon} alt="Логотип" className="register-logo" />
+     <h2>Регистрация</h2>
+     {error && <p className="error-message">{error}</p>}
+     <form onSubmit={handleSubmit}>
+      <div className="form-group">
+       <label htmlFor="firstName">Имя:</label>
+       <input
+        type="text"
+        id="firstName"
+        value={firstName}
+        onChange={(e) => setFirstName(e.target.value)}
+       />
+      </div>
+      <div className="form-group">
+       <label htmlFor="lastName">Фамилия:</label>
+       <input
+        type="text"
+        id="lastName"
+        value={lastName}
+        onChange={(e) => setLastName(e.target.value)}
+       />
+      </div>
+      <div className="form-group">
+       <label htmlFor="phone">Телефон:</label>
+       <input
+        type="text"
+        id="phone"
+        value={phone}
+        onChange={(e) => setPhone(e.target.value)}
+       />
+      </div>
+      <div className="form-group">
+       <label htmlFor="password">Пароль:</label>
+       <input
+        type="password"
+        id="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+       />
+      </div>
+      <button type="submit" className="register-button">
+       Зарегистрироваться
+      </button>
+     </form>
  
-    <p>Уже зарегистрированы?</p> {/* Текст */}
-    <Link to="/login">
-     <button>Войти</button> {/* Кнопка */}
-    </Link>
+     <p>Уже зарегистрированы?</p>
+     <Link to="/login">
+      <button className="login-button">Войти</button>
+     </Link>
+    </div>
    </div>
   );
  }
