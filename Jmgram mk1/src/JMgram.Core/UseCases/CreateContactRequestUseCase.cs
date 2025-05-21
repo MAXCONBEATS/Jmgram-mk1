@@ -67,7 +67,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                _logger.LogError($"CreateContactRequestUseCase.Execute: Error during execution: {ex.Message}"); // Add logging
+                _logger.LogError($"CreateContactRequestUseCase.Execute: Error during execution: {ex.Message}. Inner exception: {ex.InnerException?.Message}"); // Add logging
                 return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = $"Ошибка при создании запроса: {ex.Message}" };
             }
         }

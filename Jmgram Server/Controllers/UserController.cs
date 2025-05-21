@@ -15,6 +15,7 @@ using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Storage;
+using Jmgram_mk1.src.JMgram.Core.Repositories;
 
 
 [ApiController]
@@ -24,15 +25,17 @@ public class UserController : ControllerBase
     private readonly GetUserProfileUseCase _getUserProfileUseCase;
     private readonly IChangePasswordUseCase _changePasswordUseCase;
     private readonly ILogger<UserController> _logger;
+    private readonly IUserRepository _userRepository;
 
-    public UserController(GetUserProfileUseCase getUserProfileUseCase, IChangePasswordUseCase changePasswordUseCase, ILogger<UserController> logger)
+    public UserController(GetUserProfileUseCase getUserProfileUseCase, IChangePasswordUseCase changePasswordUseCase, ILogger<UserController> logger, IUserRepository userRepository)
     {
         _getUserProfileUseCase = getUserProfileUseCase ?? throw new ArgumentNullException(nameof(getUserProfileUseCase));
         _changePasswordUseCase = changePasswordUseCase ?? throw new ArgumentNullException(nameof(changePasswordUseCase));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
-    [HttpGet("get-profile")]
+    [HttpGet("/User/GetProfile")]
     [Authorize]
     public async Task<IActionResult> GetProfile(string? userId = null)
     {
@@ -133,6 +136,24 @@ public class UserController : ControllerBase
         }
 
         return Ok(response); // Возвращаем response в случае успеха
+    }
+    [HttpGet("/User/Search")]
+    public async Task<IActionResult> Search([FromQuery] string phone)
+    {
+        var user = await _userRepository.GetUserByPhoneNumber(phone);
+
+        if (user == null)
+        {
+            return NotFound("Пользователь не найден.");
+        }
+
+        return Ok(new
+        {
+            id = user.Id,
+            firstName = user.FirstName,
+            lastName = user.LastName,
+            phone = user.Phone
+        });
     }
 
 }

@@ -1,9 +1,13 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Requestes;
+﻿using Jmgram_mk1.src.JMgram.Core.Entities;
+using Jmgram_mk1.src.JMgram.Core.Dtos;
+using Jmgram_mk1.src.JMgram.Core.Repositories;
+using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-
+using Microsoft.AspNetCore.Cors;
+[EnableCors("AllowReactApp")]
 [ApiController] 
 [Route("[controller]")]
 [Authorize]
@@ -19,7 +23,7 @@ public class ContactController : ControllerBase
 
     public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase, 
         UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, GetContactListUseCase getContactListUseCase,
-    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger)
+    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger, IContactRequestRepository contactRequestRepository)
     {
         _createContactRequestUseCase = createContactRequestUseCase ?? throw new ArgumentNullException(nameof(createContactRequestUseCase));
         _acceptContactRequestUseCase = acceptContactRequestUseCase ?? throw new ArgumentNullException(nameof(acceptContactRequestUseCase));
@@ -52,6 +56,7 @@ public class ContactController : ControllerBase
         _logger.LogInformation($"ContactController.Add: Contact request created successfully.");
         return Ok("Запрос на добавление в друзья отправлен.");
     }
+   
 
     [HttpPost("Accept")]
     public async Task<IActionResult> Accept([FromBody] AcceptContactRequest request)

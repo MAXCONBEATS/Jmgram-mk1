@@ -3,8 +3,10 @@
  import logoutIcon from '../assets/images/logout_icon.png';
  import { getLastChatMessage, getUserChats } from '../controllers/ChatController';
  import CreateChatButton from './CreateChatButton'; // Импортируйте компонент кнопки
- import { getContactList } from '../controllers/ContactController'; // Импортируйте getContactList
+ import { getContactList } from '../controllers/ContactController';
+ import UserSearch from './UserSearch';
  import axios from 'axios';
+ axios.defaults.baseURL = 'https://localhost:5087';
  
  function Main({ userChats, error, onLogout }) {
   const [chatData, setChatData] = useState([]);
@@ -93,6 +95,7 @@
     <div className="main-content">
      <h2 className="contacts-header">Контакты:</h2>
      <div className="contacts-container">
+        <UserSearch />
       <ul className="contact-list">
        {contacts.length > 0 ? (
         contacts.map((contact) => (

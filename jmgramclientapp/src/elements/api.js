@@ -2,7 +2,7 @@
  
  export const getUserChats = async () => {
   try {
-   const response = await axios.get('http://127.0.0.1:5087/Chat/UserChats', { withCredentials: true });
+   const response = await axios.get('https://localhost:5087/Chat/UserChats', { withCredentials: true });
    return response.data;
   } catch (error) {
    console.error('Ошибка при получении UserChats:', error);

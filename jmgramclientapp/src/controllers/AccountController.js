@@ -1,6 +1,6 @@
  import axios from 'axios';
  
- const API_BASE_URL = 'http://127.0.0.1:5087'; //  Определите базовый URL
+ const API_BASE_URL = 'https://localhost:5087'; //  Определите базовый URL
  
  export const register = async (firstName, lastName, phone, password) => {
   try {

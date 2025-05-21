@@ -6,6 +6,8 @@
  import { isAuthenticated } from './controllers/AccountController';
  import { getUserChats } from './controllers/ChatController';
  import Main from './elements/Main'; //  <-- Импортируйте Main
+ import axios from 'axios';
+  axios.defaults.baseURL = 'https://localhost:5087';
  
  function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);

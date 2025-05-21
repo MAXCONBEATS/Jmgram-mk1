@@ -5,6 +5,8 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
+using System.Net;
+using System.Net.WebSockets;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,35 +42,77 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.HttpOnly = true;
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Только для HTTPS!
     options.Cookie.SameSite = SameSiteMode.None; // Требуется для работы с CORS
+
+    // Добавляем обработку для API-запросов (возврат 401)
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/Contact") || context.Request.Path.StartsWithSegments("/User")) //  Проверьте, что это API-запрос
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // Верните 401
+            context.Response.ContentType = "application/json";
+            context.Response.Headers.Append("Access-Control-Allow-Origin", context.Request.Headers["Origin"]);
+            context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
 });
 
 // 4. Добавляем Authentication и Authorization
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.Cookie.Name = ".AspNetCore.Identity.Application";
-        options.ExpireTimeSpan = TimeSpan.FromDays(1);
-        options.LoginPath = "/Account/Login";
-        options.LogoutPath = "/Account/Logout";
-        options.SlidingExpiration = true;
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.None;
-    });
-
-builder.Services.AddAuthorization();
+ .AddCookie(); // Убираем конфигурацию cookie здесь
 
 // 5. Настройка CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // Укажите origin вашего React-приложения
+        builder.WithOrigins("https://localhost:3000") // Укажите origin вашего React-приложения (HTTPS!)
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials(); // Очень важно для Cookies и Authorization headers!
     });
+
+    // Добавляем CORS-политику для WebSocket
+    options.AddPolicy("AllowReactAppWebSocket", builder =>
+    {
+        builder.WithOrigins("https://localhost:3000")
+              .AllowAnyMethod() // Разрешаем все методы (GET, POST, OPTIONS и т.д.)
+              .AllowAnyHeader() // Разрешаем все заголовки
+              .AllowCredentials(); // Разрешаем передачу куки (если требуется аутентификация для WebSocket)
+    });
 });
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = ".AspNetCore.Identity.Application";
+    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Обязательно для HTTPS!
+    options.Cookie.SameSite = SameSiteMode.None; // Обязательно для работы между разными портами (HTTPS!)
+
+    // Добавляем обработку для API-запросов (возврат 401)
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/Contact") || context.Request.Path.StartsWithSegments("/User")) // Проверьте, что это API-запрос
+        {
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // Верните 401
+            context.Response.ContentType = "application/json";
+            context.Response.Headers.Append("Access-Control-Allow-Origin", context.Request.Headers["Origin"]);
+            context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
+
+builder.Services.AddAuthorization();
+
 builder.Host.UseDefaultServiceProvider(options =>
 {
     options.ValidateScopes = true;
@@ -136,6 +180,50 @@ app.UseCors("AllowReactApp"); // <- ВАЖНО: После app.UseRouting()
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
 
+app.UseWebSockets();
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/ws")
+    {
+        // Проверяем, является ли запрос WebSocket
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            // Проверяем Origin заголовка запроса
+            var origin = context.Request.Headers["Origin"].ToString();
+
+            // Добавляем логирование для отладки
+            Console.WriteLine($"WebSocket request from Origin: {origin}");
+
+            // Сверяем с разрешенными Origin
+            if (origin == "https://localhost:3000") // Сравниваем Origin с разрешенным
+            {
+                // Применяем CORS политику для WebSocket
+                context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
+                context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+
+                using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
+                {
+                    // Обработка WebSocket-соединения
+                    // Ваш код обработки WebSocket-соединения здесь
+                }
+            }
+            else
+            {
+                Console.WriteLine($"WebSocket connection blocked from Origin: {origin}");
+                context.Response.StatusCode = 403; // Запрещено
+            }
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    }
+    else
+    {
+        await next.Invoke();
+    }
+});
+app.MapControllers();
 app.Run();
