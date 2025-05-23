@@ -1,11 +1,30 @@
 import axios from "axios";
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
-function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
-    const [chatName, setChatName] = useState(chat.Name); // Используем chat.Name
+function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat }) {
+    const [chatName, setChatName] = useState(chat.Name);
     const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [message, setMessage] = useState('');
+    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const contextMenuRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (contextMenuRef.current && !contextMenuRef.current.contains(event.target)) {
+                setContextMenuVisible(false);
+            }
+        };
+        if (contextMenuVisible) {
+            document.addEventListener('click', handleClickOutside);
+        } else {
+            document.removeEventListener('click', handleClickOutside);
+        }
+        return () => {
+            document.removeEventListener('click', handleClickOutside);
+        };
+    }, [contextMenuVisible]);
 
     const handleChatNameChange = (event) => {
         setChatName(event.target.value);
@@ -13,11 +32,27 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
 
     const handleSaveChatName = async () => {
         try {
-            await axios.post('/Chat/SetChatName', { chatId: chat.ChatId || chat.id, chatName: chatName }); // Используем chat.ChatId или chat.id
-            onChatNameChange(chat.ChatId || chat.id, chatName); // Используем chat.ChatId или chat.id
+            await axios.post('/Chat/SetChatName', { chatId: chat.ChatId || chat.id, chatName: chatName });
+            onChatNameChange(chat.ChatId || chat.id, chatName);
             setIsEditing(false);
+            setContextMenuVisible(false);
         } catch (error) {
             console.error('Ошибка при изменении имени чата:', error);
+        }
+    };
+
+    const handleContextMenu = (event) => {
+        event.preventDefault();
+        setContextMenuPosition({ x: event.clientX, y: event.clientY });
+        setContextMenuVisible(true);
+    };
+
+    const handleDeleteChat = async () => {
+        try {
+            await onDeleteChat(chat.ChatId || chat.id);
+            setContextMenuVisible(false);
+        } catch (error) {
+            console.error('Ошибка при удалении чата:', error);
         }
     };
 
@@ -34,9 +69,7 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
             alert('Введите сообщение перед отправкой.');
             return;
         }
-        // Placeholder for sending message logic
         console.log(`Sending message to chat ${chat.ChatId || chat.id}: ${message}`);
-        // Clear message and close dropdown
         setMessage('');
         setShowDropdown(false);
     };
@@ -44,14 +77,16 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
     return (
         <div
             onClick={onClick}
+            onContextMenu={handleContextMenu}
             style={{
                 cursor: 'pointer',
-                backgroundColor: 'transparent', // Remove background color change
+                backgroundColor: 'transparent',
                 padding: '5px',
                 marginBottom: '5px',
                 borderRadius: '4px',
-                border: isSelected ? '2px solid #444444' : '2px solid transparent', // Inner border for selected chat only with requested color
+                border: isSelected ? '2px solid #444444' : '2px solid transparent',
                 boxSizing: 'border-box',
+                position: 'relative',
             }}
         >
             {isEditing ? (
@@ -63,8 +98,7 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
             ) : (
                 <>
                     <div>
-                        {chat.Name} {/* Используем chat.Name */}
-                        <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}>Изменить имя</button>
+                        {chat.Name}
                     </div>
                     {showDropdown && (
                         <div style={{ marginTop: '8px', border: '1px solid #ccc', padding: '8px', borderRadius: '4px' }}>
@@ -81,7 +115,37 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
                     )}
                 </>
             )}
+            {contextMenuVisible && (
+                <ul
+                    ref={contextMenuRef}
+                    className="context-menu"
+                    style={{
+                        top: contextMenuPosition.y,
+                        left: contextMenuPosition.x,
+                        position: 'fixed',
+                        zIndex: 1000,
+                        minWidth: '150px',
+                    }}
+                >
+                    <li
+                        className="context-menu-item"
+                        onClick={() => {
+                            setIsEditing(true);
+                            setContextMenuVisible(false);
+                        }}
+                    >
+                        Изменить имя
+                    </li>
+                    <li
+                        className="context-menu-item"
+                        onClick={handleDeleteChat}
+                    >
+                        Удалить чат
+                    </li>
+                </ul>
+            )}
         </div>
     );
 }
+
 export default ChatItem;

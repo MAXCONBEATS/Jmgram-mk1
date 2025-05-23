@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ChatList from './ChatList';
+import { deleteChat } from '../controllers/ChatController';
 
 function ChatListContainer({ selectedChat, setSelectedChat }) {
     const [chats, setChats] = useState([]);
@@ -47,6 +48,18 @@ function ChatListContainer({ selectedChat, setSelectedChat }) {
         setSelectedChat(chat);
     };
 
+    const handleDeleteChat = async (chatId) => {
+        try {
+            await deleteChat(chatId);
+            setChats((prevChats) => prevChats.filter(chat => chat.id !== chatId));
+            if (selectedChat && (selectedChat.id === chatId || selectedChat.ChatId === chatId)) {
+                setSelectedChat(null);
+            }
+        } catch (error) {
+            console.error('Ошибка при удалении чата:', error);
+        }
+    };
+
     return (
         <ChatList
             chats={chats}
@@ -54,6 +67,7 @@ function ChatListContainer({ selectedChat, setSelectedChat }) {
             error={error}
             onChatNameChange={handleChatNameChange}
             onChatClick={handleChatClick}
+            onDeleteChat={handleDeleteChat}
             selectedChat={selectedChat}
         />
     );

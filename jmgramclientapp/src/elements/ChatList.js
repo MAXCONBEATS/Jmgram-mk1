@@ -1,7 +1,7 @@
 import React from 'react';
 import ChatItem from './ChatItem';
 
-function ChatList({ chats, isLoading, error, onChatNameChange, onChatClick, selectedChat }) {
+function ChatList({ chats, isLoading, error, onChatNameChange, onChatClick, onDeleteChat, selectedChat }) {
   if (isLoading) {
     return <p>Загрузка списка чатов...</p>;
   }
@@ -19,6 +19,7 @@ function ChatList({ chats, isLoading, error, onChatNameChange, onChatClick, sele
             chat={chat}
             onChatNameChange={onChatNameChange}
             onClick={() => onChatClick(chat)}
+            onDeleteChat={onDeleteChat}
             isSelected={selectedChat && (selectedChat.id === chat.id || selectedChat.ChatId === chat.ChatId)}
           />
         ))
