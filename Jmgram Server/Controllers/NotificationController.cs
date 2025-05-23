@@ -59,35 +59,37 @@ public class NotificationController : ControllerBase
     }
 
 
-    [HttpGet("GetNotifications")] // Assuming you have a GetNotifications method
-    public async Task<IActionResult> GetNotifications(string userId)
+    [HttpGet("GetNotifications")]
+    public async Task<IActionResult> GetNotifications()
     {
-        _logger.LogInformation($"NotificationController.GetNotifications: Attempting to retrieve notifications for user {userId}.");
+        _logger.LogInformation("NotificationController.GetNotifications: Attempting to retrieve notifications.");
+
+        // Получаем UserId из claims
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("NotificationController.GetNotifications: UserId not found in claims.");
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
 
         try
         {
-            // Retrieve notifications from the repository
-            var notifications = await _notificationRepository.GetNotificationsForUser(userId); // Implement this method in your repository
+            // Используем Use Case для получения списка уведомлений
+            var response = await _getNotificationListUseCase.Execute(userId);
 
-            // Map the notifications to NotificationDto
-            var notificationDtos = notifications.Select(n => new NotificationDto
+            if (!response.IsSuccess)
             {
-                Id = n.Id, // Map the Id property
-                UserId = n.UserId,
-                Message = n.Message,
-                Timestamp = n.Timestamp,
-                IsRead = n.IsRead,
-                NotificationType = n.NotificationType,
-                ChatId = n.ChatId
-            }).ToList();
+                _logger.LogError($"NotificationController.GetNotifications: Failed to retrieve notifications: {response.ErrorMessage}");
+                return BadRequest(response.ErrorMessage);
+            }
 
-            _logger.LogInformation($"NotificationController.GetNotifications: Retrieved {notificationDtos.Count} notifications for user {userId}.");
-            return Ok(notificationDtos); // Return the DTOs
+            _logger.LogInformation($"NotificationController.GetNotifications: Successfully retrieved notifications for user {userId}.");
+            return Ok(response.Notifications); // Возвращаем список NotificationDto
         }
         catch (Exception ex)
         {
-            _logger.LogError($"NotificationController.GetNotifications: An error occurred while retrieving notifications for user {userId}: {ex.Message}, Inner Exception: {ex.InnerException}");
-            return BadRequest($"Failed to retrieve notifications: {ex.Message}");
+            _logger.LogError($"NotificationController.GetNotifications: An error occurred: {ex.Message}");
+            return StatusCode(500, $"An error occurred while retrieving notifications: {ex.Message}");
         }
     }
     [HttpDelete("Delete")]

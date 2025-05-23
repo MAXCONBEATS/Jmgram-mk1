@@ -1,10 +1,9 @@
 import axios from 'axios';
 axios.defaults.baseURL = 'https://localhost:5087';
 
-export async function getNotifications(userId) {
+export async function getNotifications() {
   try {
     const response = await axios.get('https://localhost:5087/Notification/GetNotifications', {
-      params: { UserId: userId },
       withCredentials: true
     });
     return response.data;
