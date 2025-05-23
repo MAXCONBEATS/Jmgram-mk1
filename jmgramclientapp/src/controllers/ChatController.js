@@ -99,3 +99,19 @@ export async function deleteChat(chatId) {
   throw error;
  }
 }
+
+export async function setChatName(chatId, chatName) {
+ try {
+  const response = await axios.post('/Chat/SetChatName', null, {
+   withCredentials: true,
+   params: {
+    chatId: chatId,
+    chatName: chatName,
+   },
+  });
+  return response.data;
+ } catch (error) {
+  console.error('Ошибка при изменении имени чата:', error);
+  throw error;
+ }
+}

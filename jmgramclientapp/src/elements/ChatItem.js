@@ -1,8 +1,8 @@
-import axios from "axios";
 import React, { useState, useEffect, useRef } from 'react';
+import { setChatName } from '../controllers/ChatController';
 
 function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat }) {
-    const [chatName, setChatName] = useState(chat.Name);
+    const [chatName, setChatNameState] = useState(chat.Name);
     const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [message, setMessage] = useState('');
@@ -27,12 +27,12 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat })
     }, [contextMenuVisible]);
 
     const handleChatNameChange = (event) => {
-        setChatName(event.target.value);
+        setChatNameState(event.target.value);
     };
 
     const handleSaveChatName = async () => {
         try {
-            await axios.post('/Chat/SetChatName', { chatId: chat.ChatId || chat.id, chatName: chatName });
+            await setChatName(chat.ChatId || chat.id, chatName);
             onChatNameChange(chat.ChatId || chat.id, chatName);
             setIsEditing(false);
             setContextMenuVisible(false);
