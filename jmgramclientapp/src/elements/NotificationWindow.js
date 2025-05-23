@@ -5,7 +5,6 @@ import { markAsRead } from '../controllers/NotificationController';
 function NotificationWindow({ notifications, onRemoveNotification }) {
   const [closedNotifications, setClosedNotifications] = useState(new Set());
 
-  console.log('Notifications:', notifications);
   useEffect(() => {
     if (notifications.length === 0) return;
 

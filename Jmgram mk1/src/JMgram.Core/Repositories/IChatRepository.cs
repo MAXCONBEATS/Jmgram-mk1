@@ -31,6 +31,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     {
         private readonly JMgramDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        
 
         public ChatRepository(JMgramDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
@@ -133,7 +134,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         }
 
         public async Task<bool> ChatExists(string chatId)
-        {
+        {      
             return await _dbContext.Chats.AnyAsync(c => c.Id == chatId);
         }
         public async Task<bool> IsUserInChat(string chatId, string userId)

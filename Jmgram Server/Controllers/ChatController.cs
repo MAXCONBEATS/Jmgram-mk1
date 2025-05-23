@@ -403,35 +403,36 @@ public class ChatController : ControllerBase
         return Ok("User removed from chat successfully.");
     }
     [HttpDelete("DeleteChat")]
-    [Authorize]
     public async Task<IActionResult> DeleteChat(string chatId)
     {
-        // 1. Получаем ID текущего пользователя
-        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        _logger.LogInformation($"ChatController.DeleteChat: Attempting to delete chat with ID {chatId}.");
 
-        // 2. Получаем чат из базы данных
-        var chat = await _chatRepository.GetById(chatId);
-
-        // 3. Проверяем, существует ли чат
-        if (chat == null)
+        try
         {
-            return BadRequest($"Chat with id {chatId} not found.");
-        }
+            // 1. Проверка входных данных (убедитесь, что chatId не null и не пустой)
+            if (string.IsNullOrEmpty(chatId))
+            {
+                _logger.LogError("ChatController.DeleteChat: Invalid input - chatId is null or empty.");
+                return BadRequest("chatId не может быть пустым.");
+            }
 
-        // 4. Проверяем, является ли текущий пользователь создателем чата
-        if (chat.CreatorUserId != currentUserId)
+            // 2. Вызов Use Case для удаления чата
+            var response = await _deleteChatUseCase.Execute(chatId);
+
+            if (!response.IsSuccess)
+            {
+                _logger.LogError($"ChatController.DeleteChat: Failed to delete chat: {response.ErrorMessage}");
+                return BadRequest(response.ErrorMessage);
+            }
+
+            _logger.LogInformation($"ChatController.DeleteChat: Chat with ID {chatId} deleted successfully.");
+            return NoContent(); // 204 No Content
+        }
+        catch (Exception ex)
         {
-            return Forbid("You are not allowed to delete this chat."); // Возвращаем ошибку 403
+            _logger.LogError($"ChatController.DeleteChat: An unexpected error occurred: {ex.Message}");
+            return StatusCode(500, "An unexpected error occurred. Please check the server logs.");
         }
-
-        var response = await _deleteChatUseCase.Execute(chatId);
-
-        if (!response.IsSuccess)
-        {
-            return BadRequest(response.ErrorMessage);
-        }
-
-        return Ok("Chat deleted successfully.");
     }
     [HttpDelete("DeleteMessage")]
     public async Task<IActionResult> DeleteMessage(int messageId)

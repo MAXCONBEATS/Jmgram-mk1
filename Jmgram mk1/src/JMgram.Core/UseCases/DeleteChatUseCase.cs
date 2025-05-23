@@ -22,13 +22,14 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<DeleteChatResponse> Execute(string chatId)
         {
+            _logger.LogInformation($"DeleteChatUseCase.Execute: Attempting to delete chat {chatId}");
+
             try
             {
-                _logger.LogInformation($"DeleteChatUseCase.Execute: Deleting chat {chatId}");
-
                 // 1. Проверка существования чата
                 if (!await _chatRepository.ChatExists(chatId))
                 {
+                    _logger.LogError($"DeleteChatUseCase.Execute: Chat with id {chatId} does not exist.");
                     return new DeleteChatResponse { IsSuccess = false, ErrorMessage = $"Chat with id {chatId} does not exist." };
                 }
 
@@ -41,7 +42,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                _logger.LogError($"DeleteChatUseCase.Execute: An error occurred while deleting chat: {ex.Message}");
+                _logger.LogError($"DeleteChatUseCase.Execute: An error occurred while deleting chat: {ex.Message}, StackTrace: {ex.StackTrace}");
                 return new DeleteChatResponse { IsSuccess = false, ErrorMessage = $"An error occurred while deleting chat: {ex.Message}" };
             }
         }

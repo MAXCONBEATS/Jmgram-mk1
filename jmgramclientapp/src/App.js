@@ -33,7 +33,6 @@ import React, { useState, useEffect } from 'react';
    const fetchUserChats = async () => {
     try {
      const data = await getUserChats();
-     console.log('Fetched user chats:', data); // Debug log
      setUserChats(data);
      setError(null);
     } catch (error) {

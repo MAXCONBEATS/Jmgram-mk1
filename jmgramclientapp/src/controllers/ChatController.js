@@ -89,7 +89,13 @@ export async function deleteChat(chatId) {
   });
   return response.data;
  } catch (error) {
-  console.error('Ошибка при удалении чата:', error);
+  if (error.response) {
+   console.error('Ошибка при удалении чата:', error.message);
+   console.error('Статус ответа:', error.response.status);
+   console.error('Данные ответа:', error.response.data);
+  } else {
+   console.error('Ошибка при удалении чата:', error.message);
+  }
   throw error;
  }
 }
