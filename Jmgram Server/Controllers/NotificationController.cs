@@ -1,4 +1,5 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
+using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Microsoft.AspNetCore.Authorization;
@@ -14,14 +15,16 @@ public class NotificationController : ControllerBase
     private readonly GetNotificationListUseCase _getNotificationListUseCase;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<NotificationController> _logger;
+    private readonly INotificationRepository _notificationRepository;
 
-    public NotificationController(SendNotificationUseCase sendNotificationUseCase, GetNotificationListUseCase getNotificationListUseCase,
+    public NotificationController(SendNotificationUseCase sendNotificationUseCase, GetNotificationListUseCase getNotificationListUseCase, INotificationRepository notificationRepository,
         ILogger<NotificationController> logger, IHttpContextAccessor httpContextAccessor)
     {
         _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
         _getNotificationListUseCase = getNotificationListUseCase ?? throw new ArgumentNullException(nameof(getNotificationListUseCase));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+        _notificationRepository = notificationRepository ?? throw new ArgumentNullException(nameof(notificationRepository));
     }
 
     [HttpPost("Send")]
@@ -56,22 +59,52 @@ public class NotificationController : ControllerBase
     }
 
 
-    [HttpGet("GetNotifications")]
-    public async Task<IActionResult> GetNotifications()
+    [HttpGet("GetNotifications")] // Assuming you have a GetNotifications method
+    public async Task<IActionResult> GetNotifications(string userId)
     {
-        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(userId))
+        _logger.LogInformation($"NotificationController.GetNotifications: Attempting to retrieve notifications for user {userId}.");
+
+        try
         {
-            return Unauthorized("UserId is required.");
+            // Retrieve notifications from the repository
+            var notifications = await _notificationRepository.GetNotificationsForUser(userId); // Implement this method in your repository
+
+            // Map the notifications to NotificationDto
+            var notificationDtos = notifications.Select(n => new NotificationDto
+            {
+                Id = n.Id, // Map the Id property
+                UserId = n.UserId,
+                Message = n.Message,
+                Timestamp = n.Timestamp,
+                IsRead = n.IsRead,
+                NotificationType = n.NotificationType,
+                ChatId = n.ChatId
+            }).ToList();
+
+            _logger.LogInformation($"NotificationController.GetNotifications: Retrieved {notificationDtos.Count} notifications for user {userId}.");
+            return Ok(notificationDtos); // Return the DTOs
         }
-
-        var response = await _getNotificationListUseCase.Execute(userId);
-
-        if (!response.IsSuccess)
+        catch (Exception ex)
         {
-            return BadRequest(response.ErrorMessage);
+            _logger.LogError($"NotificationController.GetNotifications: An error occurred while retrieving notifications for user {userId}: {ex.Message}, Inner Exception: {ex.InnerException}");
+            return BadRequest($"Failed to retrieve notifications: {ex.Message}");
         }
+    }
+    [HttpDelete("Delete")]
+    public async Task<IActionResult> DeleteNotification(int id)
+    {
+        _logger.LogInformation($"NotificationController.DeleteNotification: Attempting to delete notification with ID {id}.");
 
-        return Ok(response.Notifications);
+        try
+        {
+            await _notificationRepository.DeleteNotification(id); //  Вызываем метод репозитория напрямую
+            _logger.LogInformation($"NotificationController.DeleteNotification: Notification with ID {id} deleted successfully.");
+            return NoContent(); //  Возвращаем NoContent (204) после успешного удаления
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"NotificationController.DeleteNotification: An error occurred while deleting notification with ID {id}: {ex.Message}, Inner Exception: {ex.InnerException}");
+            return BadRequest("Failed to delete notification."); //  Возвращаем BadRequest при ошибке
+        }
     }
 }

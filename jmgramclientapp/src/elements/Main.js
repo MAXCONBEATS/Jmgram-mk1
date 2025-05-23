@@ -1,180 +1,170 @@
 import React, { useState, useEffect } from 'react';
 import '../css/Main.css';
+import '../css/ContextMenu.css';
 import logoutIcon from '../assets/images/logout_icon.png';
-import { getLastChatMessage, getUserChats } from '../controllers/ChatController';
-import CreateChatButton from './CreateChatButton'; // Импортируйте компонент кнопки
-import { getContactList } from '../controllers/ContactController';
+import { getContactList, getContactRequests, acceptContactRequest } from '../controllers/ContactController';
+import { getNotifications } from '../controllers/NotificationController';
 import UserSearch from './UserSearch';
 import ChatWindow from './ChatWindow';
+import NotificationWindow from './NotificationWindow';
+import ChatListContainer from './ChatListContainer';
 import axios from 'axios';
 axios.defaults.baseURL = 'https://localhost:5087';
 
- function Main({ userChats, error, onLogout }) {
- 
-  const [chatData, setChatData] = useState([]);
-  const [userChatsState, setUserChatsState] = useState(userChats); // Добавляем локальное состояние для userChats
-  const [contacts, setContacts] = useState([]); // Состояние для хранения контактов
-  const [loading, setLoading] = useState(true); // Состояние для отслеживания загрузки
-  const [selectedChat, setSelectedChat] = useState(null); // Новое состояние для выбранного чата
- 
-  const userId = localStorage.getItem('UserId'); // Получите UserId (пример)
+function Main({ error, onLogout }) {
+  const [contacts, setContacts] = useState([]);
+  const [contactRequests, setContactRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedChat, setSelectedChat] = useState(null);
+
+  const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
+
+  const userId = localStorage.getItem('UserId');
 
   useEffect(() => {
-    setUserChatsState(userChats);
-  }, [userChats]);
+    const fetchContacts = async () => {
+      try {
+        const contactList = await getContactList();
+        setContacts(contactList);
+      } catch (error) {
+        console.error('Ошибка при получении списка контактов:', error);
+      }
+    };
+    fetchContacts();
+  }, []);
 
- // Helper function to get the other user's name in a chat
- const getOtherUserName = (chat) => {
-   if (!chat.chatUsers || chat.chatUsers.length === 0) return '';
-   // Assuming chat.chatUsers is an array of user objects with id and name
-   const otherUser = chat.chatUsers.find(user => user.id !== userId);
-   return otherUser ? otherUser.name : '';
- };
+  useEffect(() => {
+    if (contacts.length === 0) return;
 
- // Format chat name as "Переписка с {имя другого пользователя}"
- const formatChatName = (chat) => {
-   const otherUserName = getOtherUserName(chat);
-   return otherUserName ? `Переписка с ${otherUserName}` : chat.name;
- };
+    const fetchContactRequests = async () => {
+      try {
+        const requestsData = await getContactRequests();
+        const mappedRequests = requestsData.map((request) => {
+          let name = 'Неизвестный пользователь';
+          if (request.senderUserId === userId) {
+            const recipientContact = contacts.find(contact => contact.contactUserId === request.recipientUserId);
+            if (recipientContact && recipientContact.name) {
+              name = recipientContact.name;
+            } else {
+              name = 'Неизвестный номер';
+            }
+          } else {
+            const senderContact = contacts.find(contact => contact.contactUserId === request.senderUserId);
+            if (senderContact && senderContact.name) {
+              name = senderContact.name;
+            } else {
+              name = 'Неизвестный номер';
+            }
+          }
+          return {
+            ...request,
+            senderName: name,
+          };
+        });
+        setContactRequests(mappedRequests);
+      } catch (error) {
+        console.error('Ошибка при получении запросов в контакты:', error);
+      }
+    };
+    fetchContactRequests();
+  }, [contacts]);
 
- console.log('userChatsState:', userChatsState);
- console.log('chatData:', chatData);
+  const [notifications, setNotifications] = useState([]);
 
- useEffect(() => {
-  const fetchChatData = async () => {
-   setLoading(true); // Начинаем загрузку
-   if (userChatsState) {
-     const chatDataPromises = userChatsState.map(async (chat) => {
-      const lastChatMessage = await getLastChatMessage(chat.id);
-      return {
-       chatId: chat.id,
-       chatName: formatChatName(chat),
-       lastMessage: lastChatMessage ? lastChatMessage.text : 'Нет сообщений',
-       lastMessageSender: lastChatMessage ? lastChatMessage.senderName + ':' : '', // Используем senderName
-       lastMessageTime: lastChatMessage ? lastChatMessage.timestamp : null,
-       chatUsers: chat.chatUsers, // Keep chatUsers for name formatting
-      };
-     });
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const data = await getNotifications();
+        setNotifications(data);
+      } catch (error) {
+        console.error('Ошибка при получении уведомлений:', error);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
-    const chatData = await Promise.all(chatDataPromises);
-    setChatData(chatData);
-   }
-   setLoading(false); // Загрузка завершена
+  const handleAcceptContactRequest = async (contactRequestId) => {
+    try {
+      const result = await acceptContactRequest(contactRequestId);
+      if (typeof result === 'string' || (result && result.isSuccess)) {
+        setContactRequests((prev) => prev.filter((req) => req.id !== contactRequestId));
+        const updatedContacts = await getContactList();
+        setContacts(updatedContacts);
+      } else {
+        alert(`Ошибка при принятии запроса: ${result.errorMessage || 'Неизвестная ошибка'}`);
+      }
+    } catch (error) {
+      console.error('Ошибка при принятии запроса в контакты:', error);
+    }
   };
 
-  fetchChatData();
- }, [userChatsState]);
+  const handleRemoveNotification = async (id) => {
+    try {
+      await axios.delete('/Notification/Delete', { params: { id }, withCredentials: true });
+      setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
+    } catch (error) {
+      console.error('Ошибка при удалении уведомления:', error.response || error);
+      alert('Не удалось удалить уведомление.');
+    }
+  };
 
- useEffect(() => {
- const fetchContacts = async () => {
-  try {
-   const contactList = await getContactList(); // Убрали передачу userId
-   setContacts(contactList); // Сохраняем полученные контакты в состоянии
-  } catch (error) {
-   console.error('Ошибка при получении списка контактов:', error);
-   // Обработайте ошибку (например, отобразите сообщение об ошибке)
-  }
- };
+  return (
+    <div className="main-container">
+      <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} />
 
- fetchContacts();
-}, []);
+      {error && <p className="error-message">{error}</p>}
 
- const formatTime = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  const hours = date.getHours().toString().padStart(2, '0');
-  const minutes = date.getMinutes().toString().padStart(2, '0');
-  return `${hours}:${minutes}`;
- };
-
- const handleCreateChat = (newChat) => {
-  // Обновляем локальное состояние userChats с новым чатом
-  setUserChatsState([...userChatsState, newChat]);
- };
-
- const handleAcceptContactRequest = async (contactRequestId) => {
-  try {
-   const response = await axios.post('http://localhost:5087/Contact/Accept', { contactRequestId }, { withCredentials: true });
-   if (response.status === 200) {
-    console.log('Запрос на добавление в друзья принят.');
-    // Обновляем список чатов
-    const updatedUserChats = await getUserChats();
-    setUserChatsState(updatedUserChats);
-   } else {
-    console.error('Ошибка при принятии запроса в друзья:', response.status);
-    // Обработайте ошибку
-   }
-  } catch (error) {
-   console.error('Ошибка при принятии запроса в друзья:', error);
-   // Обработайте ошибку
-  }
- };
-
- return (
-  <div className="main-container">
-   <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} />
-
-   {error && <p className="error-message">{error}</p>}
-
-    <div className="main-content" style={{ display: 'flex', gap: '20px' }}>
-     <div style={{ flex: '1', maxWidth: '200px' }}>
-      <h2 className="contacts-header">Контакты:</h2>
-      <div className="user-search-container">
-       <UserSearch />
-      </div>
-
-      <div className="contacts-container">
-       <ul className="contact-list">
-        {contacts.length > 0 ? (
-         contacts.map((contact) => (
-          <li key={contact.contactUserId}>{contact.name}</li>
-         ))
-        ) : (
-         <li>У вас пока нет контактов</li> // Сообщение при отсутствии контактов
-        )}
-       </ul>
-      </div>
-     </div>
-
-     <div style={{ flex: '2' }}>
-      <h2>Чаты:</h2>
-      <div className="chat-list">
-       {loading ? (
-        <p>Загрузка чатов...</p>
-       ) : chatData.length > 0 ? (
-        chatData.map((chat) => (
-         <div
-          key={chat.chatId}
-          className={`chat-item${selectedChat && selectedChat.chatId === chat.chatId ? ' selected' : ''}`}
-          onClick={() => setSelectedChat(chat)}
-          style={{ cursor: 'pointer', padding: '5px', borderBottom: '1px solid #ccc' }}
-         >
-          <div className="chat-name">{chat.chatName}</div>
-          <div className="last-message" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-           <div>
-            <strong>{chat.lastMessageSender}</strong> {chat.lastMessage}
-           </div>
-           <div style={{ marginLeft: '10px', whiteSpace: 'nowrap' }}>
-            {formatTime(chat.lastMessageTime)}
-           </div>
+      <div className="main-content" style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ flex: '1', maxWidth: '200px' }}>
+          <h2 className="contacts-header">Контакты:</h2>
+          <div className="user-search-container">
+            <UserSearch />
           </div>
-         </div>
-        ))
-       ) : (
-        <p>Чатов пока нет. Создайте новый!</p> // Сообщение при отсутствии чатов
-       )}
-      </div>
-      <div className="create-chat-button-wrapper">
-       <CreateChatButton contacts={contacts} onCreateChat={handleCreateChat} /> {/* Добавляем кнопку */}
-      </div>
-     </div>
 
-     <div style={{ flex: '3', display: 'flex', justifyContent: 'center' }}>
-      <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} />
-     </div>
+          <div className="contacts-wrapper">
+            <div className="contacts-container">
+              <ul className="contact-list">
+                {contacts.length > 0 ? (
+                  contacts.map((contact) => (
+                    <li key={contact.contactUserId}>{contact.name}</li>
+                  ))
+                ) : (
+                  <li>У вас пока нет контактов</li>
+                )}
+              </ul>
+            </div>
+            {contactRequests.length > 0 && (
+              <div className="contact-requests-container" style={{ marginTop: '10px' }}>
+                <h3>Запросы в контакты:</h3>
+                <ul className="contact-requests-list">
+                  {contactRequests.map((request) => (
+                    <li key={request.id}>
+                      {request.senderName || 'Неизвестный пользователь'}
+                      <button onClick={() => handleAcceptContactRequest(request.id)} style={{ marginLeft: '10px' }}>
+                        Принять
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div style={{ flex: '2' }}>
+          <h2>Чаты:</h2>
+          <ChatListContainer selectedChat={selectedChat} setSelectedChat={setSelectedChat} />
+        </div>
+
+        <div style={{ flex: '3', display: 'flex', justifyContent: 'center' }}>
+          <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} />
+        </div>
+      </div>
+      <NotificationWindow notifications={notifications} onRemoveNotification={handleRemoveNotification} />
     </div>
-  </div>
- );
+  );
 }
 
 export default Main;

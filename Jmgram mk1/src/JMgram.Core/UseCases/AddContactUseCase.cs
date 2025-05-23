@@ -63,20 +63,28 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 UserId = userId,
                 ContactUserId = request.ContactUserId,
-                Name = "New Contact",
-                Phone = "Phone number"
+                Name = contactUser.FirstName,
+                Phone = contactUser.Phone
+            };
+            var contactForRecipient = new Contact
+            {
+                UserId = request.ContactUserId,
+                ContactUserId = userId,
+                Name = user.FirstName,
+                Phone = user.Phone
             };
 
             // 6. Save the contact in the database
             await _contactRepository.Add(contact);
+            await _contactRepository.Add(contactForRecipient);
 
             // 7. Convert to DTO
             var contactDto = new ContactDto
             {
                 UserId = contact.UserId,
                 ContactUserId = contact.ContactUserId,
+                Name = user.FirstName
             };
-
             // 8. Return result
             return new AddContactResponse { IsSuccess = true, Contact = contactDto };
         }

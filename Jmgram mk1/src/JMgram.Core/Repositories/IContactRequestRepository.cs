@@ -16,6 +16,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<ContactRequest> GetContactRequestById(Guid contactRequestId);
         Task<ContactRequest> GetContactRequest(string senderUserId, string recipientUserId);
         Task UpdateContactRequest(ContactRequest contactRequest);
+        Task<List<ContactRequest>> GetIncomingContactRequests(string userId);
+        Task<List<ContactRequest>> GetOutgoingContactRequests(string userId);
     }
     public class ContactRequestRepository : IContactRequestRepository
     {
@@ -55,6 +57,19 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             _context.ContactRequests.Update(contactRequest);
             await _context.SaveChangesAsync();
+        }
+        public async Task<List<ContactRequest>> GetIncomingContactRequests(string userId)
+        {
+            return await _context.ContactRequests
+                .Where(cr => cr.RecipientUserId == userId)
+                .ToListAsync();
+        }
+
+        public async Task<List<ContactRequest>> GetOutgoingContactRequests(string userId)
+        {
+            return await _context.ContactRequests
+                .Where(cr => cr.SenderUserId == userId)
+                .ToListAsync();
         }
     }
 }

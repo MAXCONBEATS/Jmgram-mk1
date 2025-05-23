@@ -3,6 +3,7 @@
     public class AddContactRequest
     {
         public string ContactUserId { get; set; }
+        public string SenderId { get; set; }
     }
 
 

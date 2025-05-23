@@ -1,0 +1,26 @@
+.context-menu {
+  position: fixed;
+  background-color: #212121; /* Dark background */
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 5px 0;
+  margin: 0;
+  z-index: 2000; /* Higher than chat items */
+  width: 150px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+  cursor: default;
+  color: white; /* Text color white for contrast */
+  user-select: none; /* Prevent text selection */
+}
+
+.context-menu li {
+  padding: 8px 12px;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.context-menu li:hover {
+  background-color: #f0f0f0;
+  color: black; /* Change text color on hover for readability */
+  user-select: none; /* Prevent text selection on hover */
+}

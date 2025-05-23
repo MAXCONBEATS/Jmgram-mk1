@@ -43,7 +43,7 @@ function CreateChatButton({ contacts, onCreateChat }) {
 
   return (
     <>
-      <button className="create-chat-button" onClick={toggleModal}>+ Создать чат</button>
+      <button className="create-chat-button" onClick={toggleModal}>Создать чат</button>
       {isOpen && (
         <div className="modal-overlay" onClick={toggleModal} style={overlayStyle}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={modalStyle}>

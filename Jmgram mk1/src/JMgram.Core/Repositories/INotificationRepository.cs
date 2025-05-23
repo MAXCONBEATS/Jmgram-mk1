@@ -13,6 +13,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<Notification> GetNotificationById(int notificationId);
         Task UpdateNotification(Notification notification);
         Task DeleteNotification(int notificationId);
+        Task<List<Notification>> GetNotificationsForUser(string userId);
     }
     public class NotificationRepository : INotificationRepository
     {
@@ -68,7 +69,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 await _context.SaveChangesAsync();
             }
         }
-
+        public async Task<List<Notification>> GetNotificationsForUser(string userId)
+        {
+            return await _context.Notifications
+                .Where(n => n.UserId == userId)
+                .ToListAsync();
+        }
         private NotificationDto MapToDto(Notification notification)
         {
             return new NotificationDto

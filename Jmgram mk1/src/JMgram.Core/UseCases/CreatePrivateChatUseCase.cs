@@ -73,8 +73,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 _logger.LogInformation($"CreatePrivateChatUseCase.Execute: Chat created with ID = {createdChat.Id}");
 
                 //  Добавляем пользователей в чат с их персональными именами чатов
-                await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId1, ChatName = $"Переписка с {user2.UserName}", JoinedAt = DateTime.UtcNow });
-                await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId2, ChatName = $"Переписка с {user1.UserName}", JoinedAt = DateTime.UtcNow });
+                await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId1, ChatName = $"Переписка с {user2.FirstName}", JoinedAt = DateTime.UtcNow });
+                await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId2, ChatName = $"Переписка с {user1.FirstName}", JoinedAt = DateTime.UtcNow });
 
                 // 4. Вернуть результат
                 _logger.LogInformation("CreatePrivateChatUseCase.Execute: Successfully completed.");

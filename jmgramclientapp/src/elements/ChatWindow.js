@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getMessages, sendMessage } from '../controllers/ChatController';
 import '../css/ChatWindow.css';
 
-function ChatWindow({ chat, onClose }) {
+function ChatWindow({ chat, onClose, senderId, senderName }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
@@ -37,7 +37,7 @@ function ChatWindow({ chat, onClose }) {
             return;
         }
         try {
-            await sendMessage({ chatId: chat.chatId || chat.id, text: newMessage });
+            await sendMessage({ chatId: chat.chatId || chat.id, text: newMessage, senderId: senderId, senderName: senderName });
             // Refresh messages after sending
             const response = await getMessages(chat.chatId || chat.id, 1, 20);
             const mappedMessages = (response.chat || []).map(msg => ({
@@ -59,7 +59,7 @@ function ChatWindow({ chat, onClose }) {
     return (
         <div className="chat-window">
             <div className="chat-header">
-                <h3>{chat.chatName || chat.name || 'Чат'}</h3>
+                <h3>{chat.Name || chat.chatName || chat.name || 'Чат'}</h3>
                 <button onClick={onClose}>Закрыть</button>
             </div>
             <div className="chat-messages-container">

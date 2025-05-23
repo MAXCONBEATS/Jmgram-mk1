@@ -15,17 +15,20 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     public class AcceptContactRequestUseCase
     {
         private readonly IContactRequestRepository _contactRequestRepository;
+        private readonly AddContactUseCase _addContactUseCase;
         private readonly CreatePrivateChatUseCase _createPrivateChatUseCase;
         private readonly ILogger<AcceptContactRequestUseCase> _logger;
 
         public AcceptContactRequestUseCase(
             IContactRequestRepository contactRequestRepository,
-            CreatePrivateChatUseCase createPrivateChatUseCase,
-            ILogger<AcceptContactRequestUseCase> logger)
+            CreatePrivateChatUseCase createPrivateChatUseCase, 
+            ILogger<AcceptContactRequestUseCase> logger,
+            AddContactUseCase addContactUseCase)
         {
             _contactRequestRepository = contactRequestRepository ?? throw new ArgumentNullException(nameof(contactRequestRepository));
             _createPrivateChatUseCase = createPrivateChatUseCase ?? throw new ArgumentNullException(nameof(createPrivateChatUseCase));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _addContactUseCase = addContactUseCase;
         }
 
         public async Task<AcceptContactRequestResponse> Execute(AcceptContactRequestRequest request)
@@ -77,6 +80,16 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     _logger.LogError($"AcceptContactRequestUseCase.Execute: Error creating private chat: {createPrivateChatResponse.ErrorMessage}");
                     return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = $"Запрос на добавление в друзья принят, но произошла ошибка при создании чата: {createPrivateChatResponse.ErrorMessage}" };
                 }
+                var addContactRequest = new AddContactRequest()
+                {
+                    ContactUserId = contactRequest.SenderUserId,
+                };
+                var addContactResponse = await _addContactUseCase.Execute(addContactRequest);
+                var addContactRequestForSender = new AddContactRequest()
+                {
+                    ContactUserId = contactRequest.RecipientUserId,
+                };
+                var addContactResponseForSender = await _addContactUseCase.Execute(addContactRequestForSender);
 
                 // 5. Вернуть результат
                 _logger.LogInformation("AcceptContactRequestUseCase.Execute: Successfully completed.");

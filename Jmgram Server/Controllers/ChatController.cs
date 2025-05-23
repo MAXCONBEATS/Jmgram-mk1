@@ -31,7 +31,7 @@ public class ChatController : ControllerBase
 
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
-    private readonly GetChatListUseCase _getChatListUseCase;
+    private readonly IGetChatListUseCase _getChatListUseCase;
     private readonly SendMessageUseCase _sendMessageUseCase;
     private readonly SendNotificationUseCase _sendNotificationUseCase;
     private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
@@ -46,7 +46,7 @@ public class ChatController : ControllerBase
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
-     IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase,
+     IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase,
      SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
      GetContactListUseCase getContactListUseCase, IChatService chatService,
@@ -208,7 +208,7 @@ public class ChatController : ControllerBase
 
         return Ok(response.SuccessMessage);
     }
-    [HttpGet("UserChats")]
+    [HttpGet("UserChats")] //получение чата пользователя
     [Authorize]
     public async Task<IActionResult> GetUserChats()
     {
@@ -229,7 +229,7 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chats);
     }
-    [HttpPost("SetChatName")]
+    [HttpPost("SetChatName")] //изменение название чата
     public async Task<IActionResult> SetChatName(string chatId, string chatName)
     {
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -244,26 +244,63 @@ public class ChatController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("List")]
-    [Authorize]
-    public async Task<IActionResult> List()
+    [HttpGet("GetChatUsersList")]
+    public async Task<IActionResult> List(string chatId) //  Принимаем ChatId в качестве параметра
     {
+        _logger.LogInformation($"ChatController.List: Attempting to retrieve chat list for ChatId = {chatId}.");
+
         // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
+            _logger.LogWarning("ChatController.List: UserId not found in claims.");
             return Unauthorized("Не удалось получить UserId из claims.");
         }
 
-        // Используем Use Case для получения контактов пользователя
-        var response = await _getContactListUseCase.Execute(userId);
+        // Используем Use Case для получения списка участников чата
+        var response = await _getChatListUseCase.Execute(chatId, userId); //  Передаем ChatId и UserId
 
         if (!response.IsSuccess)
         {
+            _logger.LogError($"ChatController.List: Failed to retrieve chat list: {response.ErrorMessage}");
             return BadRequest(response.ErrorMessage);
         }
 
-        return Ok(response.Contacts);
+        _logger.LogInformation($"ChatController.List: Successfully retrieved chat list for ChatId = {chatId}.");
+        return Ok(response.Users); //  Возвращаем список UserDto
+    }
+    [HttpGet("GetChatNameForUser")]
+    public async Task<IActionResult> GetChatName(string chatId)
+    {
+        _logger.LogInformation($"ChatController.GetChatName: Attempting to retrieve chat name for ChatId = {chatId}.");
+
+        // Получаем UserId из claims
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("ChatController.GetChatName: UserId not found in claims.");
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        try
+        {
+            //  Получаем название чата из сервиса
+            var chatName = await _chatService.GetChatNameForUser(userId, chatId);
+
+            if (chatName == null)
+            {
+                _logger.LogWarning($"ChatController.GetChatName: Chat name not found for ChatId = {chatId} and UserId = {userId}.");
+                return NotFound($"Chat name not found for ChatId = {chatId} and UserId = {userId}.");
+            }
+
+            _logger.LogInformation($"ChatController.GetChatName: Successfully retrieved chat name for ChatId = {chatId} and UserId = {userId}.");
+            return Ok(chatName); //  Возвращаем название чата
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"ChatController.GetChatName: An error occurred: {ex.Message}");
+            return StatusCode(500, $"An error occurred while retrieving chat name: {ex.Message}");
+        }
     }
     [HttpPost("SendMessage")]
     [Authorize]

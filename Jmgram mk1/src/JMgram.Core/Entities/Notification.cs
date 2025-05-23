@@ -13,6 +13,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public DateTime Timestamp { get; set; }
         public bool IsRead { get; set; }
         public string? ChatId { get; set; }
+        public NotificationType NotificationType { get; set; } // Add this line
     }
 
     public class MessageNotification : Notification
@@ -21,18 +22,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
 
     }
 
+    public class SystemNotification : Notification
+    {
+        public string Source { get; set; } // От кого пришло системное уведомление (например, "Telegram Bot")
+    }
+
     public class ContactRequestNotification : Notification
     {
         public string SenderUserId { get; set; }
-        public new string Message { get; set; } // Опциональное приветственное сообщение
-
-    }
-
-    public class SystemNotification : Notification
-    {
-        public new string Message { get; set; }
-        public string Source { get; set; } // От кого пришло системное уведомление (например, "Telegram Bot")
-
     }
     public class ChatInviteNotification : Notification
     {      

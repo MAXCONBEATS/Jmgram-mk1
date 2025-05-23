@@ -5,6 +5,7 @@
         public string Id { get; set; }
         public string Phone { get; set; }
         public UserProfileDto Profile { get; set; }
+        public string FirstName { get; set; }
     }
 
 }

@@ -12,6 +12,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
     {
         Task<List<ChatDto>> GetChatsForUser(string userId);
         Task SetChatNameForUser(string userId, string chatId, string chatName);
+        Task<string> GetChatNameForUser(string userId, string chatId);
     }
     public class ChatService : IChatService
     {
@@ -40,7 +41,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
 
             return chatDtos;
         }
-
+        public async Task<string> GetChatNameForUser(string userId, string chatId)
+        {
+            return await _chatRepository.GetChatNameForUser(userId, chatId);
+        }
         public async Task SetChatNameForUser(string userId, string chatId, string chatName)
         {
             await _chatRepository.SetChatNameForUser(userId, chatId, chatName);

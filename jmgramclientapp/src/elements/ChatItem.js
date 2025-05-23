@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState } from 'react';
 
-function ChatItem({ chat, onChatNameChange }) {
+function ChatItem({ chat, onChatNameChange, onClick, isSelected }) {
     const [chatName, setChatName] = useState(chat.Name); // Используем chat.Name
     const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
@@ -13,8 +13,8 @@ function ChatItem({ chat, onChatNameChange }) {
 
     const handleSaveChatName = async () => {
         try {
-            await axios.post('/Chat/SetChatName', { chatId: chat.ChatId, chatName: chatName }); // Используем chat.ChatId
-            onChatNameChange(chat.ChatId, chatName); // Используем chat.ChatId
+            await axios.post('/Chat/SetChatName', { chatId: chat.ChatId || chat.id, chatName: chatName }); // Используем chat.ChatId или chat.id
+            onChatNameChange(chat.ChatId || chat.id, chatName); // Используем chat.ChatId или chat.id
             setIsEditing(false);
         } catch (error) {
             console.error('Ошибка при изменении имени чата:', error);
@@ -35,14 +35,25 @@ function ChatItem({ chat, onChatNameChange }) {
             return;
         }
         // Placeholder for sending message logic
-        console.log(`Sending message to chat ${chat.ChatId}: ${message}`);
+        console.log(`Sending message to chat ${chat.ChatId || chat.id}: ${message}`);
         // Clear message and close dropdown
         setMessage('');
         setShowDropdown(false);
     };
 
     return (
-        <div>
+        <div
+            onClick={onClick}
+            style={{
+                cursor: 'pointer',
+                backgroundColor: 'transparent', // Remove background color change
+                padding: '5px',
+                marginBottom: '5px',
+                borderRadius: '4px',
+                border: isSelected ? '2px solid #444444' : '2px solid transparent', // Inner border for selected chat only with requested color
+                boxSizing: 'border-box',
+            }}
+        >
             {isEditing ? (
                 <>
                     <input type="text" value={chatName} onChange={handleChatNameChange} />
@@ -51,7 +62,7 @@ function ChatItem({ chat, onChatNameChange }) {
                 </>
             ) : (
                 <>
-                    <div onClick={toggleDropdown} style={{ cursor: 'pointer' }}>
+                    <div>
                         {chat.Name} {/* Используем chat.Name */}
                         <button onClick={(e) => { e.stopPropagation(); setIsEditing(true); }}>Изменить имя</button>
                     </div>

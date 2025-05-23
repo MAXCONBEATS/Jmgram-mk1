@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Identity;
 [EnableCors("AllowReactApp")]
 [ApiController] 
 [Route("[controller]")]
@@ -16,14 +17,16 @@ public class ContactController : ControllerBase
     private readonly CreateContactRequestUseCase _createContactRequestUseCase;
     private readonly AcceptContactRequestUseCase _acceptContactRequestUseCase;
     private readonly UpdateContactNameUseCase _updateContactNameUseCase;
+    private readonly IGetContactRequestsUseCase _getContactRequestsUseCase;
+    private readonly IUserRepository _userRepository;
     private readonly GetContactListUseCase _getContactListUseCase;
     private readonly DeleteContactUseCase _deleteContactUseCase;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ILogger<ContactController> _logger;
 
-    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase, 
+    public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase,  
         UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, GetContactListUseCase getContactListUseCase,
-    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger, IContactRequestRepository contactRequestRepository)
+    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger, IContactRequestRepository contactRequestRepository, IGetContactRequestsUseCase getContactRequestsUseCase, IUserRepository userRepository)
     {
         _createContactRequestUseCase = createContactRequestUseCase ?? throw new ArgumentNullException(nameof(createContactRequestUseCase));
         _acceptContactRequestUseCase = acceptContactRequestUseCase ?? throw new ArgumentNullException(nameof(acceptContactRequestUseCase));
@@ -32,6 +35,8 @@ public class ContactController : ControllerBase
         _deleteContactUseCase = deleteContactUseCase ?? throw new ArgumentNullException(nameof(deleteContactUseCase));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _getContactRequestsUseCase = getContactRequestsUseCase;
+        _userRepository = userRepository;
     }
     [Authorize]
     [HttpPost("Add")]
@@ -64,13 +69,6 @@ public class ContactController : ControllerBase
     {
         _logger.LogInformation($"ContactController.Accept: Accepting contact request with ID: {request.ContactRequestId}");
 
-        //  Получаем UserId из Claims (если необходимо)
-        //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //if (string.IsNullOrEmpty(userId))
-        //{
-        //    _logger.LogError("ContactController.Accept: User ID not found in claims.");
-        //    return Unauthorized("Не удалось получить ID пользователя.");
-        //}
 
         var result = await _acceptContactRequestUseCase.Execute(request); //  Передаем весь объект request
 
@@ -85,6 +83,43 @@ public class ContactController : ControllerBase
             return BadRequest(result.ErrorMessage); //  Возвращаем сообщение об ошибке от UseCase
         }
     }
+    [HttpGet("Requests")]
+    public async Task<IActionResult> GetContactRequests()
+    {
+        _logger.LogInformation("ContactController.GetContactRequests: Attempting to retrieve contact requests.");
+
+        string? userId = await _userRepository.GetUserIdAsync(User);
+        if (userId == null)
+        {
+            _logger.LogWarning("ContactController.GetContactRequests: User not found.");
+            return NotFound("User not found.");
+        }
+
+        var user = await _userRepository.GetById(userId);
+        if (user == null)
+        {
+            _logger.LogWarning("ContactController.GetContactRequests: User not found.");
+            return NotFound("User not found.");
+        }
+
+        var result = await _getContactRequestsUseCase.Execute(user.Id);
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogError($"ContactController.GetContactRequests: Failed to retrieve contact requests: {result.ErrorMessage}");
+            return BadRequest(result.ErrorMessage);
+        }
+
+        _logger.LogInformation("ContactController.GetContactRequests: Contact requests retrieved successfully.");
+
+        //  Return both incoming and outgoing requests
+        return Ok(new
+        {
+            IncomingRequests = result.IncomingRequests,
+            OutgoingRequests = result.OutgoingRequests
+        });
+    }
+
 
     [HttpPost("UpdateName")]
     public async Task<IActionResult> UpdateName([FromBody] UpdateContactNameRequest request)

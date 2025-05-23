@@ -1,11 +1,13 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
@@ -28,16 +30,19 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber);
         Task<List<Contact>> GetContactsForUser(string userId);
         Task<string> GetUserFirstNameById(string userId);
+        Task<string?> GetUserIdAsync(ClaimsPrincipal principal);
     }
     public class UserRepository : IUserRepository
     {
         private readonly JMgramDbContext _dbContext;
         private readonly IChatRepository _chatRepository;
+        private readonly UserManager<AppIdentityUser> _userManager;
 
-        public UserRepository(JMgramDbContext dbContext, IChatRepository chatRepository)
+        public UserRepository(JMgramDbContext dbContext, IChatRepository chatRepository, UserManager<AppIdentityUser> userManager)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _chatRepository = chatRepository;
+            _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
         public async Task<bool> IsPhoneTaken(string phone)
@@ -87,6 +92,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.Users.Include(u => u.UserProfile).FirstOrDefaultAsync(u => u.Id == id.ToString());
         }
+        public async Task<string?> GetUserIdAsync(ClaimsPrincipal principal)
+        {
+            return _userManager.GetUserId(principal);
+        }
         public async Task<List<AppIdentityUser?>> GetByIds(List<string> userIds)
         {
             return await _dbContext.Users.Where(u => userIds.Contains(u.Id.ToString())).ToListAsync();
@@ -95,7 +104,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
         }
-
         public async Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber) // Implement the method
         {
             return await _dbContext.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
