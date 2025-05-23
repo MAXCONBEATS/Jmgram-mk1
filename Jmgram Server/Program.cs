@@ -7,6 +7,8 @@ using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using System.Net;
 using System.Net.WebSockets;
+using Jmgram_mk1.src.JMgram.Core.Services;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -110,6 +112,11 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Jmgram Chat API", Version = "v1" });
+    c.EnableAnnotations(); // Включаем аннотации
+});
 
 builder.Services.AddAuthorization();
 
@@ -123,7 +130,7 @@ builder.Logging.AddDebug();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IMessageRepository, MessageRepository>();
-
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
 builder.Services.AddScoped<IGetLastChatMessageUseCase, GetLastChatMessageUseCase>();
@@ -146,6 +153,7 @@ builder.Services.AddScoped<AddUserToChatNotificationUseCase>();
 builder.Services.AddScoped<RemoveUserFromChatUseCase>();
 builder.Services.AddScoped<DeleteChatUseCase>();
 builder.Services.AddScoped<GetUserChatsUseCase>();
+builder.Services.AddScoped<CreatePrivateChatUseCase>();
 
 
 builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();

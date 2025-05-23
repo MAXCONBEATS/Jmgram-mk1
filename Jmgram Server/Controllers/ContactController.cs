@@ -33,10 +33,11 @@ public class ContactController : ControllerBase
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-
+    [Authorize]
     [HttpPost("Add")]
     public async Task<IActionResult> Add([FromBody] AddContactRequest request)
     {
+        _logger.LogInformation($"ContactController.Add: User.Identity.IsAuthenticated = {User.Identity.IsAuthenticated}");
         var senderUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(senderUserId))
@@ -56,24 +57,32 @@ public class ContactController : ControllerBase
         _logger.LogInformation($"ContactController.Add: Contact request created successfully.");
         return Ok("Запрос на добавление в друзья отправлен.");
     }
-   
+
 
     [HttpPost("Accept")]
-    public async Task<IActionResult> Accept([FromBody] AcceptContactRequest request)
+    public async Task<IActionResult> Accept([FromBody] AcceptContactRequestRequest request)
     {
         _logger.LogInformation($"ContactController.Accept: Accepting contact request with ID: {request.ContactRequestId}");
 
-        var result = await _acceptContactRequestUseCase.Execute(request.ContactRequestId);
+        //  Получаем UserId из Claims (если необходимо)
+        //var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //if (string.IsNullOrEmpty(userId))
+        //{
+        //    _logger.LogError("ContactController.Accept: User ID not found in claims.");
+        //    return Unauthorized("Не удалось получить ID пользователя.");
+        //}
 
-        if (result)
+        var result = await _acceptContactRequestUseCase.Execute(request); //  Передаем весь объект request
+
+        if (result.IsSuccess)
         {
             _logger.LogInformation($"ContactController.Accept: Contact request with ID {request.ContactRequestId} accepted successfully.");
             return Ok("Запрос на добавление в друзья принят.");
         }
         else
         {
-            _logger.LogError($"ContactController.Accept: Failed to accept contact request with ID {request.ContactRequestId}.");
-            return BadRequest("Не удалось принять запрос на добавление в друзья.");
+            _logger.LogError($"ContactController.Accept: Failed to accept contact request with ID {request.ContactRequestId}. Error: {result.ErrorMessage}");
+            return BadRequest(result.ErrorMessage); //  Возвращаем сообщение об ошибке от UseCase
         }
     }
 

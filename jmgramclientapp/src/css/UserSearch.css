@@ -1,0 +1,111 @@
+.user-search {
+  background-color: #181818;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px;
+  direction: rtl; /* Enable right-to-left direction to move scrollbar to left */
+}
+
+.user-search > * {
+  direction: ltr; /* Reset direction for child elements */
+}
+
+.user-search input[type="tel"] {
+  padding: 10px;
+  border: 1px solid #555;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+  box-sizing: border-box;
+  margin-bottom: 10px;
+  width: 100%;
+  max-width: 300px;
+}
+
+.user-search button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+  margin-bottom: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.user-search button:hover {
+  background-color: #0056b3;
+}
+
+.user-search .error-message {
+  color: red;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.user-search ul {
+  list-style: none;
+  padding: 0;
+  width: 280px; /* Reduced width to fit inside search container */
+  max-width: 280px;
+  margin-bottom: 20px;
+  max-height: 250px; /* Reduced height */
+  overflow-y: auto;
+  position: absolute;
+  top: 110px; /* Positioned below search input and button */
+  left: 0;
+  right: 0;
+  background-color: #181818;
+  border-radius: 5px;
+  padding: 10px;
+  box-sizing: border-box;
+  direction: rtl; /* Scrollbar on left */
+}
+
+.user-search ul li {
+  direction: ltr; /* Reset text direction */
+}
+
+.user-search ul li {
+  background-color: #212121;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 5px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  cursor: pointer;
+  max-width: 240px; /* Further reduced max width to fit container */
+  word-wrap: break-word; /* Wrap long text */
+}
+
+.user-search ul li button {
+  margin-top: 5px;
+  align-self: flex-start;
+}
+
+.user-search ul li:hover {
+  background-color: #333;
+  transform: scale(1.05);
+}
+
+.user-search ul li button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.user-search ul li button:hover {
+  background-color: #0056b3;
+}

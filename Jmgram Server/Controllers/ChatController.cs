@@ -16,6 +16,7 @@ using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
+using Jmgram_mk1.src.JMgram.Core.Services;
 
 
 [Authorize]
@@ -27,6 +28,7 @@ public class ChatController : ControllerBase
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChatRepository _chatRepository;
     private readonly IUserRepository _userRepository;
+
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
     private readonly GetChatListUseCase _getChatListUseCase;
@@ -40,13 +42,14 @@ public class ChatController : ControllerBase
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
     private readonly GetContactListUseCase _getContactListUseCase;
+    private readonly IChatService _chatService;
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
      IHttpContextAccessor httpContextAccessor, GetChatListUseCase getChatListUseCase,
      SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
-     GetContactListUseCase getContactListUseCase,
+     GetContactListUseCase getContactListUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
      RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository)
     {
@@ -67,6 +70,7 @@ public class ChatController : ControllerBase
         _getLastChatMessageUseCase = getLastChatMessageUseCase ?? throw new ArgumentNullException(nameof(getLastChatMessageUseCase));
         _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
         _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));
+        _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
 
     }
 
@@ -87,6 +91,25 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chat);
     }
+    //[HttpPost("create-private")]
+    //public async Task<IActionResult> CreatePrivateChat([FromBody] CreateChatRequest request)
+    //{
+    //    if (!ModelState.IsValid)
+    //        return BadRequest(ModelState);
+
+    //    var response = await _createChatUseCase.Execute(request);
+
+    //    if (!response.IsSuccess)
+    //        return BadRequest(response.ErrorMessage);
+
+    //    return Ok(new
+    //    {
+    //        response.Chat.ChatId,
+    //        ChatName = await _chatRepository.GetChatNameForUser(
+    //            User.FindFirstValue(ClaimTypes.NameIdentifier),
+    //            response.Chat.ChatId)
+    //    });
+    //}
     [HttpPost("AddUsersToChat")]
     [Authorize]
     public async Task<IActionResult> AddUsersToChatByPhones([FromBody] AddUserToChatRequest request)
@@ -205,6 +228,20 @@ public class ChatController : ControllerBase
         }
 
         return Ok(response.Chats);
+    }
+    [HttpPost("SetChatName")]
+    public async Task<IActionResult> SetChatName(string chatId, string chatName)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        await _chatService.SetChatNameForUser(userId, chatId, chatName);
+
+        return Ok();
     }
 
     [HttpGet("List")]

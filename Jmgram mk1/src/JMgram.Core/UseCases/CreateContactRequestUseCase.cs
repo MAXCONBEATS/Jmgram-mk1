@@ -44,11 +44,19 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             // 1. Создать запрос на добавление в друзья
             var contactRequest = new ContactRequest
             {
+                Id = Guid.NewGuid(), // Генерируем новый GUID
                 SenderUserId = senderUserId,
                 RecipientUserId = recipientUserId,
                 Status = ContactRequestStatus.Pending
             };
+            // Проверяем, существует ли уже запрос с такими же SenderUserId и RecipientUserId
+            var existingContactRequest = await _contactRequestRepository.GetContactRequest(senderUserId, recipientUserId);
 
+            if (existingContactRequest != null)
+            {
+                _logger.LogWarning($"CreateContactRequestUseCase.Execute: Contact request already exists between {senderUserId} and {recipientUserId}.");
+                return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = "Запрос на добавление в друзья уже существует." };
+            }
             _logger.LogInformation("CreateContactRequestUseCase.Execute: ContactRequest created."); // Add logging
 
             try

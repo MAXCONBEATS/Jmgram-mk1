@@ -1,4 +1,5 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
+﻿using Castle.Core.Logging;
+using Jmgram_mk1.src.JMgram.Core.Dtos;
 using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     public interface IChatRepository
     {
         Task<Chat?> GetById(string id, bool includeChatUsers = false);
+        Task AddUserToChat(string chatId, string userId);
         Task AddUserToChat(ChatUser chatUser);
         Task<Chat> CreateChat(Chat chat);
         Task<List<ChatUser>> GetChatUsers(string chatId);
@@ -20,6 +22,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<List<Chat>> GetUserChats (string userId);
         Task<LastChatMessageDto> GetLastChatMessage(string chatId);
         Task<Chat> GetChatBetweenUsers(string userId1, string userId2);
+        Task<string> GetChatNameForUser(string userId, string chatId);
+        Task SetChatNameForUser(string userId, string chatId, string chatName);
+        Task UpdateChatNamesForUser(string userId, string newName);
     }
     public class ChatRepository : IChatRepository
     {
@@ -44,9 +49,21 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             return await query.FirstOrDefaultAsync();
         }
 
+        public async Task AddUserToChat(string chatId, string userId)
+        {
+            var chatUser = new ChatUser
+            {
+                ChatId = chatId, // Только эти поля
+                UserId = userId,
+                JoinedAt = DateTime.UtcNow
+            };
+            await _dbContext.ChatUsers.AddAsync(chatUser);
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task AddUserToChat(ChatUser chatUser)
         {
-            _dbContext.ChatUsers.Add(chatUser);
+            await _dbContext.ChatUsers.AddAsync(chatUser);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -79,7 +96,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
             return chats;
         }
-        public async Task<LastChatMessageDto> GetLastChatMessage(string chatId)
+
+        public async Task<LastChatMessageDto> GetLastChatMessage(string chatId) 
         {
             var lastMessage = await _dbContext.Messages
              .Where(m => m.ChatId == chatId)
@@ -146,6 +164,42 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                 _dbContext.Chats.Remove(chat);
                 await _dbContext.SaveChangesAsync();
             }
+        }
+        public async Task<string> GetChatNameForUser(string userId, string chatId)
+        {
+            var chatUser = await _dbContext.ChatUsers
+                .FirstOrDefaultAsync(cu => cu.UserId == userId && cu.ChatId == chatId);
+
+            return chatUser?.ChatName;
+        }
+
+
+        public async Task SetChatNameForUser(string userId, string chatId, string chatName)
+        {
+            await _dbContext.ChatUsers
+                .Where(cu => cu.UserId == userId && cu.ChatId == chatId)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(cu => cu.ChatName, chatName));
+        }
+        public async Task UpdateChatNamesForUser(string userId, string newName)
+        {
+            await _dbContext.ChatUsers
+                .Where(cu => cu.ChatName.StartsWith($"Переписка с ") &&
+                            cu.Chat.ChatUsers.Any(u => u.UserId == userId))
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(cu => cu.ChatName,
+                        $"Переписка с {newName}"));
+        }
+        public async Task<List<ChatUserDto>> GetUserChatsWithNames(string userId)
+        {
+            return await _dbContext.ChatUsers
+                .Where(cu => cu.UserId == userId)
+                .Select(cu => new ChatUserDto
+                {
+                    ChatId = cu.ChatId,
+                    ChatName = cu.ChatName
+                })
+                .ToListAsync();
         }
     }
 

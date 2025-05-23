@@ -2,6 +2,7 @@
 using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
+using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,135 +15,77 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     public class AcceptContactRequestUseCase
     {
         private readonly IContactRequestRepository _contactRequestRepository;
-        private readonly IContactRepository _contactRepository;
-        private readonly IUserRepository _userRepository;
-        private readonly IChatRepository _chatRepository;
+        private readonly CreatePrivateChatUseCase _createPrivateChatUseCase;
         private readonly ILogger<AcceptContactRequestUseCase> _logger;
-        private readonly CreateChatUseCase _createChatUseCase;
 
-        public AcceptContactRequestUseCase(IContactRequestRepository contactRequestRepository, IContactRepository contactRepository, IChatRepository chatRepository,
-            IUserRepository userRepository, ILogger<AcceptContactRequestUseCase> logger, CreateChatUseCase createChatUseCase) // Update constructor
+        public AcceptContactRequestUseCase(
+            IContactRequestRepository contactRequestRepository,
+            CreatePrivateChatUseCase createPrivateChatUseCase,
+            ILogger<AcceptContactRequestUseCase> logger)
         {
             _contactRequestRepository = contactRequestRepository ?? throw new ArgumentNullException(nameof(contactRequestRepository));
-            _contactRepository = contactRepository ?? throw new ArgumentNullException(nameof(contactRepository));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-            _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
+            _createPrivateChatUseCase = createPrivateChatUseCase ?? throw new ArgumentNullException(nameof(createPrivateChatUseCase));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _createChatUseCase = createChatUseCase;
         }
 
-        public async Task<bool> Execute(int contactRequestId)
+        public async Task<AcceptContactRequestResponse> Execute(AcceptContactRequestRequest request)
         {
+            _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Starting execution for ContactRequestId = {request.ContactRequestId}");
+
             try
             {
-                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Start accepting contact request with ID: {contactRequestId}");
+                // 1. Валидация входных данных
+                if (request.ContactRequestId == Guid.Empty)
+                {
+                    _logger.LogError("AcceptContactRequestUseCase.Execute: Invalid input data - ContactRequestId is empty.");
+                    return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные: ContactRequestId не указан." };
+                }
 
-                // 1. Get the ContactRequest by Id
-                var contactRequest = await _contactRequestRepository.GetContactRequestById(contactRequestId);
+                // 2. Получить запрос в контакты
+                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Getting ContactRequest from repository for ContactRequestId = {request.ContactRequestId}");
+                var contactRequest = await _contactRequestRepository.GetContactRequestById(request.ContactRequestId);
                 if (contactRequest == null)
                 {
-                    _logger.LogWarning($"AcceptContactRequestUseCase.Execute: Contact request with ID {contactRequestId} not found.");
-                    return false; // or throw an exception
+                    _logger.LogError($"AcceptContactRequestUseCase.Execute: ContactRequest not found for ContactRequestId = {request.ContactRequestId}");
+                    return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = $"Запрос на добавление в друзья с ID {request.ContactRequestId} не найден." };
                 }
 
-                // 2. Check the status of the contact request
-                if (contactRequest.Status != ContactRequestStatus.Pending)
-                {
-                    _logger.LogWarning($"AcceptContactRequestUseCase.Execute: Contact request with ID {contactRequestId} is not in Pending status. Current status: {contactRequest.Status}");
-                    return false; // or throw an exception, or handle it differently
-                }
+                // Проверяем, что RecipientUserId соответствует текущему пользователю (можно получить из Claims)
+                //  Предполагается, что у вас есть способ получить ID текущего пользователя
+                //var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                //if (contactRequest.RecipientUserId != currentUserId)
+                //{
+                //    _logger.LogError($"AcceptContactRequestUseCase.Execute: User is not authorized to accept this ContactRequest.");
+                //    return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = "Вы не можете принять этот запрос на добавление в друзья." };
+                //}
 
-                // 3. Update the ContactRequest status to Accepted
-                await _contactRequestRepository.UpdateContactRequestStatus(contactRequestId, ContactRequestStatus.Accepted);
-                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Contact request with ID {contactRequestId} status updated to Accepted.");
+                // 3. Изменить статус запроса
+                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Updating ContactRequest status to Accepted.");
+                contactRequest.Status = ContactRequestStatus.Accepted;
+                await _contactRequestRepository.UpdateContactRequest(contactRequest);
 
-                // 4. Create contact entries for both users
-                // 4a. Create contact entry for the request sender
-                var senderProfile = await _userRepository.GetUserProfileById(contactRequest.SenderUserId); // Get sender profile
-                var recipientProfile = await _userRepository.GetUserProfileById(contactRequest.RecipientUserId); // Get recipient profile для имени
-                var senderContact = new Contact
+                // 4. Создать приватный чат
+                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Creating private chat between SenderUserId = {contactRequest.SenderUserId} and RecipientUserId = {contactRequest.RecipientUserId}");
+                var createPrivateChatRequest = new CreatePrivateChatRequest
                 {
-                    UserId = contactRequest.SenderUserId,
-                    ContactUserId = contactRequest.RecipientUserId,
-                    Name = recipientProfile?.FirstName ?? "Неизвестный", //  Получаем имя из профиля контакта
-                    Phone = senderProfile?.Phone // Use phone from sender profile
+                    UserId1 = contactRequest.SenderUserId,
+                    UserId2 = contactRequest.RecipientUserId
                 };
-                await _contactRepository.Add(senderContact);
-                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Contact created for sender: {contactRequest.SenderUserId}, ContactUserId: {contactRequest.RecipientUserId}");
-
-                // 4b. Create contact entry for the request recipient
-                var recipientProfile2 = await _userRepository.GetUserProfileById(contactRequest.RecipientUserId); // Get recipient profile
-                var senderProfile2 = await _userRepository.GetUserProfileById(contactRequest.SenderUserId); // Get sender profile для имени
-                var recipientContact = new Contact
+                var createPrivateChatResponse = await _createPrivateChatUseCase.Execute(createPrivateChatRequest);
+                if (!createPrivateChatResponse.IsSuccess)
                 {
-                    UserId = contactRequest.RecipientUserId,
-                    ContactUserId = contactRequest.SenderUserId,
-                    Name = senderProfile2?.FirstName ?? "Неизвестный", //  Получаем имя из профиля контакта
-                    Phone = recipientProfile2?.Phone // Use phone from recipient profile
-                };
-                await _contactRepository.Add(recipientContact);
-                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Contact created for recipient: {contactRequest.RecipientUserId}, ContactUserId: {contactRequest.SenderUserId}");
-
-                // 5. Create or get chat
-                // Get chat if it exists
-                var existingChat = await _chatRepository.GetChatBetweenUsers(contactRequest.SenderUserId, contactRequest.RecipientUserId);
-
-                if (existingChat == null)
-                {
-                    // Chat does not exist, create it
-                    _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Chat does not exist between users, creating new chat");
-
-                    // Get user profiles to get names for the chat title
-                    var senderFirstName = senderProfile?.FirstName ?? "Неизвестный";
-                    var recipientFirstName = recipientProfile?.FirstName ?? "Неизвестный";
-                    var chatName = $"Переписка с {recipientFirstName}";
-
-                    var chatDto = new ChatDto
-                    {
-                        Name = chatName
-                    };
-
-                    var createChatRequest = new CreateChatRequest
-                    {
-                        Chat = chatDto,
-                        Phones = new List<string> { senderProfile?.Phone, recipientProfile?.Phone } // Используем номера телефонов
-                    };
-
-                    var chatResponse = await _createChatUseCase.Execute(createChatRequest);
-
-                    if (!chatResponse.IsSuccess)
-                    {
-                        _logger.LogError($"AcceptContactRequestUseCase.Execute: Failed to create chat for users {contactRequest.SenderUserId} and {contactRequest.RecipientUserId}: {chatResponse.ErrorMessage}");
-                        // Handle the error, maybe log it, but don't necessarily fail the whole operation
-                    }
-                    else
-                    {
-                        _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Successfully created new chat between users");
-                    }
-                }
-                else
-                {
-                    // Chat exists, add the current user to it
-                    _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Chat already exists between users, adding user to chat");
-
-                    var recipientChatUser = new ChatUser
-                    {
-                        ChatId = existingChat.Id,
-                        UserId = contactRequest.RecipientUserId,
-                        JoinedAt = DateTime.UtcNow
-                    };
-
-                    await _chatRepository.AddUserToChat(recipientChatUser);
-                    _logger.LogInformation($"AcceptContactRequestUseCase.Execute: User {contactRequest.RecipientUserId} added to existing chat {existingChat.Id}");
+                    _logger.LogError($"AcceptContactRequestUseCase.Execute: Error creating private chat: {createPrivateChatResponse.ErrorMessage}");
+                    return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = $"Запрос на добавление в друзья принят, но произошла ошибка при создании чата: {createPrivateChatResponse.ErrorMessage}" };
                 }
 
-                _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Contact request with ID {contactRequestId} accepted successfully.");
-                return true;
+                // 5. Вернуть результат
+                _logger.LogInformation("AcceptContactRequestUseCase.Execute: Successfully completed.");
+                return new AcceptContactRequestResponse { IsSuccess = true };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"AcceptContactRequestUseCase.Execute: An error occurred while accepting contact request with ID {contactRequestId}: {ex.Message}");
-                return false;
+                _logger.LogError($"AcceptContactRequestUseCase.Execute: An error occurred: {ex.Message}");
+                return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = $"An error occurred while accepting contact request: {ex.Message}" };
             }
         }
     }

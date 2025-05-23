@@ -67,6 +67,21 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 _logger.LogInformation($"CreateChatUseCase.Execute: Getting users by phones: {string.Join(", ", request.Phones)}");
                 var users = await _userRepository.GetByPhones(request.Phones);
 
+                //  Получаем контакты текущего пользователя
+                var contacts = await _userRepository.GetContactsForUser(creatorUserId);
+
+                //  Список телефонов контактов текущего пользователя
+                var contactPhones = contacts.Select(c => c.Phone).ToList();
+
+                // 6. Проверка, что все пользователи найдены и являются контактами
+                if (users == null || users.Count() != request.Phones.Count() || !request.Phones.All(phone => contactPhones.Contains(phone)))
+                {
+                    _logger.LogWarning($"CreateChatUseCase.Execute: Not all users were found or are not contacts for phones: {string.Join(", ", request.Phones)}");
+                    return new CreateChatResponse { IsSuccess = false, ErrorMessage = "Не все пользователи найдены или не являются вашими контактами." };
+                }
+
+                _logger.LogInformation($"CreateChatUseCase.Execute: Found {users?.Count() ?? 0} users and all are contacts");
+
                 // 6. Проверка, что все пользователи найдены
                 if (users == null || users.Count() != request.Phones.Count())
                 {
@@ -111,6 +126,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 // 9. Преобразование в DTO
                 var chatDto = new ChatDto
                 {
+                    ChatId= createdChat.Id,
                     Name = createdChat.Name
                 };
 

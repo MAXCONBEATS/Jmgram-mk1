@@ -16,10 +16,28 @@
   max-width: 1200px; /* Максимальная ширина контента */
   margin: 0 auto; /* Центрирование по горизонтали */
   position: relative; /* Добавляем relative для позиционирования заголовка */
+  gap: 20px; /* Добавляем промежуток между колонками */
+  align-items: flex-start; /* Выравнивание по верхнему краю */
  }
  
+/* Новый контейнер для UserSearch */
+.user-search-container {
+  width: 250px;
+  background-color: #212121;
+  border-radius: 10px;
+  padding: 20px;
+  height: fit-content;
+  position: fixed;
+  top: 92px;
+  left: 20px; /* Перемещен к левому краю */
+  color: white;
+  box-sizing: border-box;
+  overflow-y: auto;
+  max-height: calc(100vh - 100px);
+}
+ 
  /* Контейнер для контактов */
- .contacts-container {
+.contacts-container {
   background-color: #212121;
   border-radius: 10px;
   padding: 20px;
@@ -27,21 +45,21 @@
   /* Убираем margin-right, так как будем позиционировать заголовок абсолютно */
   position: fixed; /* Фиксированная позиция */
   top: 92px; /* Отступ от верха */
-  left: 20px; /* Отступ слева */
+  left: 290px; /* Отступ слева - сдвинуто правее */
   height: fit-content; /* Автоматическая высота */
- }
+}
  
  /* Заголовок "Контакты" */
- .main-content .contacts-header {
+.main-content .contacts-header {
   position: fixed; /* Абсолютное позиционирование */
   top: 30px; /* Отступ от верха контейнера */
-  left: 20px; /* Отступ от левого края контейнера */
+  left: 290px; /* Отступ от левого края контейнера */
   width: 200px; /* Ширина, равная ширине колонки */
   text-align: center; /* Центрирование текста */
   margin: 0; /* Убираем стандартные отступы */
   padding-top: 10px; /* Добавляем отступ сверху и снизу */
   padding-bottom: 10px;
- }
+}
  
  /* Список контактов */
  .contact-list {
@@ -116,13 +134,23 @@
  }
  
  /* Стили для контейнера кнопки создания чата */
- .chat-container .create-chat-container {
-  text-align: right; /* Выравниваем кнопку по правому краю */
+.chat-container .create-chat-container {
+  display: flex;
+  justify-content: flex-end; /* Выравниваем кнопку по правому краю */
   margin-top: 10px; /* Добавляем отступ сверху */
- }
- 
- /* Стили для кнопки "Создать чат" */
- .chat-container .create-chat-container button {
+  padding-right: 20px; /* Отступ справа для отделения от края */
+  width: 100%; /* Занимает всю ширину контейнера */
+}
+
+.create-chat-button-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-right: 20px;
+  width: 100%;
+}
+
+.create-chat-button {
   background-color: #007bff;
   color: white;
   padding: 10px 20px;
@@ -130,7 +158,14 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 1em;
- }
+  align-self: flex-end;
+  margin-top: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.create-chat-button:hover {
+  background-color: #0056b3;
+}
  
  /* Стили для поля ввода "Название чата" */
  .chat-container .create-chat-container input {

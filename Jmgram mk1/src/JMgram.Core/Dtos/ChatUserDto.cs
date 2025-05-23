@@ -5,6 +5,8 @@
         public string ChatId { get; set; }
         public string UserId { get; set; } // Id пользователя string
         public DateTime JoinedAt { get; set; }
+        public string ChatName { get; set; }
+        public MessageDto LastMessage { get; set; }
     }
 
 }

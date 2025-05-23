@@ -13,12 +13,14 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         private readonly IChatRepository _chatRepository;
         private readonly IMessageRepository _messageRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IUserRepository _userRepository;
 
-        public GetChatMessagesUseCase(IChatRepository chatRepository, IMessageRepository messageRepository, IHttpContextAccessor httpContextAccessor)
+        public GetChatMessagesUseCase(IChatRepository chatRepository, IMessageRepository messageRepository, IHttpContextAccessor httpContextAccessor, IUserRepository userRepository)
         {
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
             _messageRepository = messageRepository ?? throw new ArgumentNullException(nameof(messageRepository));
             _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+            _userRepository = userRepository;
         }
 
         public async Task<GetChatMessagesResponse> Execute(GetChatMessagesRequest request, string userId)
@@ -35,7 +37,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             // 2.1 Check Auth
             if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
-            {
+    {
                 return new GetChatMessagesResponse
                 {
                     Chat = new List<MessageDto>(),
@@ -53,12 +55,19 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             var messages = await _messageRepository.GetMessagesForChat(request.ChatId, request.PageNumber, request.PageSize);
 
             // 5. Преобразовать сообщения в DTO
-            var messageDtos = messages.Select(m => new MessageDto
+            var messageDtos = new List<MessageDto>();
+            foreach (var m in messages)
             {
-                ChatId = m.ChatId,
-                Text = m.Text,
-                Timestamp = m.Timestamp
-            }).ToList();
+                var senderName = await _userRepository.GetUserFirstNameById(m.SenderId);
+                messageDtos.Add(new MessageDto
+                {
+                    ChatId = m.ChatId,
+                    Text = m.Text,
+                    Timestamp = m.Timestamp,
+                    SenderId = m.SenderId,
+                    SenderName = senderName
+                });
+            }
 
             // 6. Вернуть результат
             return new GetChatMessagesResponse
@@ -68,6 +77,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 TotalPages = totalPages
             };
         }
+
     }
 
 }

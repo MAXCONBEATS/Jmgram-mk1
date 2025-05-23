@@ -60,7 +60,7 @@ namespace Jmgram_mk1.Migrations
                 name: "Chats",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    Id = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorUserId = table.Column<string>(type: "nvarchar(max)", nullable: false)
@@ -249,36 +249,30 @@ namespace Jmgram_mk1.Migrations
                 });
 
             migrationBuilder.CreateTable(
- name: "ChatUsers",
- columns: table => new
- {
-     ChatId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-     JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
- },
- constraints: table =>
- {
-     // Удаляем кластерный индекс
-     // table.PrimaryKey("PK_ChatUsers", x => new { x.ChatId, x.UserId });
-     table.ForeignKey(
-                   name: "FK_ChatUsers_AspNetUsers_UserId",
-                   column: x => x.UserId,
-                   principalTable: "AspNetUsers",
-                   principalColumn: "Id",
-                   onDelete: ReferentialAction.Cascade);
-     table.ForeignKey(
-                   name: "FK_ChatUsers_Chats_ChatId",
-                   column: x => x.ChatId,
-                   principalTable: "Chats",
-                   principalColumn: "Id",
-                   onDelete: ReferentialAction.Cascade);
- });
-
-            // Создаем некластерный индекс
-            migrationBuilder.CreateIndex(
-             name: "IX_ChatUsers_ChatId_UserId",
-             table: "ChatUsers",
-             columns: new[] { "ChatId", "UserId" });
+                name: "ChatUsers",
+                columns: table => new
+                {
+                    ChatId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    JoinedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ChatName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ChatUsers", x => new { x.ChatId, x.UserId });
+                    table.ForeignKey(
+                        name: "FK_ChatUsers_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ChatUsers_Chats_ChatId",
+                        column: x => x.ChatId,
+                        principalTable: "Chats",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Messages",
@@ -286,7 +280,7 @@ namespace Jmgram_mk1.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    ChatId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ChatId = table.Column<string>(type: "nvarchar(100)", nullable: false),
                     SenderId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Text = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Timestamp = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -313,8 +307,7 @@ namespace Jmgram_mk1.Migrations
                 name: "ContactRequests",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     SenderUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     RecipientUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false)

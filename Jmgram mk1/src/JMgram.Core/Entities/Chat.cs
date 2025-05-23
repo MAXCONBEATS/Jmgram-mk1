@@ -1,7 +1,10 @@
-﻿namespace Jmgram_mk1.src.JMgram.Core.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Jmgram_mk1.src.JMgram.Core.Entities
 {
     public class Chat
     {
+        [MaxLength(100)]
         public string Id { get; set; }
         public string Name { get; set; }
         public DateTime CreatedAt { get; set; }

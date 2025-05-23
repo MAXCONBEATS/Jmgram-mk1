@@ -5,8 +5,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
@@ -24,14 +26,18 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<List<AppIdentityUser?>> GetByIds(List<string> userIds);
         Task<UserProfile?> GetUserProfileById(string userId);
         Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber);
+        Task<List<Contact>> GetContactsForUser(string userId);
+        Task<string> GetUserFirstNameById(string userId);
     }
     public class UserRepository : IUserRepository
     {
         private readonly JMgramDbContext _dbContext;
+        private readonly IChatRepository _chatRepository;
 
-        public UserRepository(JMgramDbContext dbContext)
+        public UserRepository(JMgramDbContext dbContext, IChatRepository chatRepository)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
+            _chatRepository = chatRepository;
         }
 
         public async Task<bool> IsPhoneTaken(string phone)
@@ -71,6 +77,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             _dbContext.UserProfiles.Update(profile);
             await _dbContext.SaveChangesAsync();
+            await _chatRepository.UpdateChatNamesForUser(profile.UserId, profile.FirstName);
         }
         public async Task<List<AppIdentityUser>> GetByPhones(List<string> phones)
         {
@@ -92,6 +99,22 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber) // Implement the method
         {
             return await _dbContext.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
+        }
+        public async Task<List<Contact>> GetContactsForUser(string userId)
+        {
+            return await _dbContext.Contacts
+                .Where(c => c.UserId == userId) //  Фильтруем контакты по UserId
+                .ToListAsync();
+        }
+        public async Task<string> GetUserFirstNameById(string userId)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return null;
+            var userFirstName = await _dbContext.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.FirstName)
+                .FirstOrDefaultAsync();
+            return userFirstName;
         }
     }
 }

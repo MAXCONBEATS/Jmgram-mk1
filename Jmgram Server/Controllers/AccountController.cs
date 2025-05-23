@@ -144,14 +144,14 @@ public class AccountController : ControllerBase
         return Unauthorized("Invalid phone number or password");
     }
     [HttpPost]
-    public bool Authenticated()
+    public IActionResult Authenticated()
     {
         if (User.Identity == null || !User.Identity.IsAuthenticated)
         {
-            return false;
+            return Unauthorized(); // Возвращаем 401 Unauthorized
         }
 
-        return true;
+        return Ok(); // Возвращаем 200 OK
     }
     [HttpPost]
     public async Task<IActionResult> Logout()
