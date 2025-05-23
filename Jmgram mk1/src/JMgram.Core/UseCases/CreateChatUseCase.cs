@@ -55,7 +55,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     Name = request.Chat.Name,
                     CreatedAt = DateTime.UtcNow,
-                    CreatorUserId = creatorUserId
+                    CreatorUserId = creatorUserId,
                 };
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: About to create chat in database");
@@ -96,7 +96,9 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     ChatId = createdChat.Id,
                     UserId = creatorUserId,
-                    JoinedAt = DateTime.UtcNow
+                    JoinedAt = DateTime.UtcNow,
+                    ChatName = createdChat.Name
+                    
                 };
                 _logger.LogInformation($"CreateChatUseCase.Execute: Adding creator {creatorUserId} to chat {createdChat.Id}");
                 await _chatRepository.AddUserToChat(creatorChatUser);
@@ -113,7 +115,9 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                             {
                                 ChatId = createdChat.Id,
                                 UserId = user.Id,
-                                JoinedAt = DateTime.UtcNow
+                                JoinedAt = DateTime.UtcNow,
+                                ChatName = createdChat.Name
+
                             };
 
                             _logger.LogInformation($"CreateChatUseCase.Execute: Adding user {user.Id} to chat {createdChat.Id}");

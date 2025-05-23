@@ -9,6 +9,7 @@ import ChatWindow from './ChatWindow';
 import NotificationWindow from './NotificationWindow';
 import ChatListContainer from './ChatListContainer';
 import axios from 'axios';
+import CreateChatButton from './CreateChatButton';
 axios.defaults.baseURL = 'https://localhost:5087';
 
 function Main({ error, onLogout }) {
@@ -16,6 +17,7 @@ function Main({ error, onLogout }) {
   const [contactRequests, setContactRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState(null);
+  const [refreshChats, setRefreshChats] = useState(false);
 
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
 
@@ -110,6 +112,11 @@ function Main({ error, onLogout }) {
     }
   };
 
+  const handleCreateChat = (newChat) => {
+    setRefreshChats(prev => !prev);
+    setSelectedChat(newChat);
+  };
+
   return (
     <div className="main-container">
       <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} />
@@ -155,7 +162,8 @@ function Main({ error, onLogout }) {
 
         <div style={{ flex: '2' }}>
           <h2>Чаты:</h2>
-          <ChatListContainer selectedChat={selectedChat} setSelectedChat={setSelectedChat} />
+          <ChatListContainer key={refreshChats} selectedChat={selectedChat} setSelectedChat={setSelectedChat} />
+          <CreateChatButton contacts={contacts} onCreateChat={handleCreateChat} />
         </div>
 
         <div style={{ flex: '3', display: 'flex', justifyContent: 'center' }}>

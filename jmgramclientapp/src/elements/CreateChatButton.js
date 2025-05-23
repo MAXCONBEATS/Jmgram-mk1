@@ -32,7 +32,18 @@ function CreateChatButton({ contacts, onCreateChat }) {
       return;
     }
     try {
-      const newChat = await createChat({ name: chatName, participantIds: selectedContacts });
+      // Map selectedContacts (user IDs) to phone numbers
+      const phones = contacts
+        .filter(contact => selectedContacts.includes(contact.contactUserId))
+        .map(contact => contact.phone)
+        .filter(phone => phone); // filter out undefined/null
+
+      const payload = {
+        chat: { name: chatName },
+        phones: phones
+      };
+
+      const newChat = await createChat(payload);
       onCreateChat(newChat);
       toggleModal();
     } catch (error) {
