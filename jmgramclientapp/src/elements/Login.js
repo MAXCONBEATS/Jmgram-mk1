@@ -11,18 +11,22 @@
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const navigate = useNavigate();
  
-  const handleSubmit = async (e) => {
-   e.preventDefault();
+   const handleSubmit = async (e) => {
+    e.preventDefault();
  
-   try {
-    await login(phone, password);
-    console.log('Вход выполнен!');
-    navigate('/');
-    onLogin();
-   } catch (error) {
-    setError('Ошибка входа: ' + (error.response?.data || error.message));
-   }
-  };
+    try {
+     const response = await login(phone, password);
+     console.log('Вход выполнен!', response);
+     if (response) {
+      localStorage.setItem('UserId', response.userId || response.id || '');
+      localStorage.setItem('UserName', response.userName || response.name || '');
+     }
+     navigate('/');
+     onLogin();
+    } catch (error) {
+     setError('Ошибка входа: ' + (error.response?.data || error.message));
+    }
+   };
  
   const togglePasswordVisibility = () => {
    setIsPasswordVisible(!isPasswordVisible);

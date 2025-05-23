@@ -25,6 +25,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<string> GetChatNameForUser(string userId, string chatId);
         Task SetChatNameForUser(string userId, string chatId, string chatName);
         Task UpdateChatNamesForUser(string userId, string newName);
+        Task DeleteMessage(int messageId);
     }
     public class ChatRepository : IChatRepository
     {
@@ -200,6 +201,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                     ChatName = cu.ChatName
                 })
                 .ToListAsync();
+        }
+        public async Task DeleteMessage(int messageId)
+        {
+            var message = await _dbContext.Messages.FindAsync(messageId);
+            if (message != null)
+            {
+                _dbContext.Messages.Remove(message);
+                await _dbContext.SaveChangesAsync();
+            }
         }
     }
 

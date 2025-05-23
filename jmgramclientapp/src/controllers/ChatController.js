@@ -43,6 +43,7 @@ export async function sendMessage(request) {
     senderName: request.senderName,
    }
   };
+  console.log('sendMessage payload:', messagePayload);
   const response = await axios.post('https://localhost:5087/Chat/SendMessage', messagePayload, { withCredentials: true });
   return response.data;
  } catch (error) {

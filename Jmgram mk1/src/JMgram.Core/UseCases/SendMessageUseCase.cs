@@ -87,19 +87,27 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     ErrorMessage = $"User with Id {senderUserId} does not exist.",
                 };
             }
+            // 5. Получаем имя пользователя
+            var senderName = await _userRepository.GetUserFirstNameById(senderUserId);
+            if (string.IsNullOrEmpty(senderName))
+            {
+                _logger.LogError($"SendMessageUseCase.Execute: Sender with ID = {senderUserId} not found or FirstName is empty.");
+                return new SendMessageResponse { IsSuccess = false, ErrorMessage = $"Пользователь с ID {senderUserId} не найден или у него не указано имя." };
+            }
 
             try
             {
-                // 5. Создание Message Entity
+                // 6. Создание Message Entity
                 var messageEntity = new Message
                 {
                     ChatId = request.Message.ChatId,
                     SenderId = senderUserId, // Используем userId авторизованного пользователя
+                    SenderName = senderName,
                     Text = request.Message.Text,
                     Timestamp = request.Message.Timestamp // Используем Timestamp из request
                 };
 
-                // 6. Добавление сообщения в базу данных
+                // 7. Добавление сообщения в базу данных
                 var id = await _messageRepository.Add(messageEntity);
 
                 // Get the recipient UserId
@@ -117,7 +125,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 var notificationDto = new NotificationDto
                 {
                     UserId = recipientId,
-                    Message = $"Новое сообщение от {senderUserId}: {request.Message.Text.Substring(0, Math.Min(request.Message.Text.Length, 50))}", // Truncate message for notification
+                    Message = $"Новое сообщение от {senderName}: {request.Message.Text.Substring(0, Math.Min(request.Message.Text.Length, 50))}", // Truncate message for notification
                     Timestamp = DateTime.UtcNow,
                     IsRead = false,
                     NotificationType = NotificationType.Message
@@ -131,7 +139,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new SendMessageResponse { IsSuccess = false, ErrorMessage = $"Message sent, but failed to send notification: {notificationResponse.ErrorMessage}" };
                 }
 
-                // 7. Формирование успешного ответа
+                // 8. Формирование успешного ответа
                 return new SendMessageResponse
                 {
                     IsSuccess = true,
@@ -140,7 +148,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 8. Обработка ошибок
+                // 9. Обработка ошибок
                 return new SendMessageResponse
                 {
                     IsSuccess = false,

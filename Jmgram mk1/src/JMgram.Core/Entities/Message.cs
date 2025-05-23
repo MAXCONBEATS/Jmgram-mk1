@@ -5,6 +5,7 @@
         public int Id { get; init; }
         public string ChatId { get; set; } // Изменено на string
         public string SenderId { get; set; } // Изменено на string
+        public string SenderName { get; set; }
         public string Text { get; set; } = "";
         public DateTime Timestamp { get; set; }
         public Chat Chat { get; set; }

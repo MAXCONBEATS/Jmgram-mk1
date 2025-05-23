@@ -31,13 +31,15 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
         fetchMessages();
     }, [chat]);
 
-    const handleSendMessage = async () => {
+const handleSendMessage = async () => {
         if (newMessage.trim() === '') {
             alert('Введите сообщение перед отправкой.');
             return;
         }
         try {
-            await sendMessage({ chatId: chat.chatId || chat.id, text: newMessage, senderId: senderId, senderName: senderName });
+            const messagePayload = { chatId: chat.chatId || chat.id, text: newMessage, senderId: senderId, senderName: senderName };
+            console.log('Sending message payload:', messagePayload);
+            await sendMessage(messagePayload);
             // Refresh messages after sending
             const response = await getMessages(chat.chatId || chat.id, 1, 20);
             const mappedMessages = (response.chat || []).map(msg => ({

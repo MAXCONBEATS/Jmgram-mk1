@@ -433,4 +433,30 @@ public class ChatController : ControllerBase
 
         return Ok("Chat deleted successfully.");
     }
+    [HttpDelete("DeleteMessage")]
+    public async Task<IActionResult> DeleteMessage(int messageId)
+    {
+        _logger.LogInformation($"ChatController.DeleteMessage: Attempting to delete message with ID {messageId}.");
+
+        try
+        {
+            // 1. Validate input
+            if (messageId <= 0)
+            {
+                _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
+                return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
+            }
+
+            // 2. Delete message
+            await _chatRepository.DeleteMessage(messageId);
+
+            _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
+            return NoContent(); // 204 No Content
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
+            return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
+        }
+    }
 }
