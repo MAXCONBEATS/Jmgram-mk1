@@ -7,7 +7,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
     public interface INotificationRepository
     {
-        Task<List<NotificationDto>> GetNotificationsByUserId(string userId);
+        Task<List<Notification>> GetNotificationsByUserId(string userId);
         Task AddNotification(Notification notification);
         Task<NotificationDto?> GetNotificationDtoById(int notificationId); // Renamed method
         Task<Notification> GetNotificationById(int notificationId);
@@ -24,14 +24,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<List<NotificationDto>> GetNotificationsByUserId(string userId)
+        public async Task<List<Notification>> GetNotificationsByUserId(string userId)
         {
-            var notifications = await _context.Notifications
+            return await _context.Notifications
              .Where(n => n.UserId == userId)
              .OrderByDescending(n => n.Timestamp)
              .ToListAsync();
-
-            return notifications.Select(MapToDto).ToList();
         }
 
         public async Task AddNotification(Notification notification)

@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import '../css/NotificationWindow.css';
+import { deleteNotification } from '../controllers/NotificationController';
 
 function NotificationWindow({ notifications, onRemoveNotification }) {
   console.log('Notifications:', notifications);
@@ -30,12 +31,24 @@ function NotificationWindow({ notifications, onRemoveNotification }) {
     }
   };
 
+  const handleMarkAsRead = async (id) => {
+    try {
+      const success = await deleteNotification(id);
+      if (success) {
+        onRemoveNotification(id);
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении уведомления:', error);
+    }
+  };
+
   return (
     <div className="notification-window">
-      {notifications.map(notification => (
-        <div key={notification.Id} className="notification-item">
+      {notifications.map((notification, index) => (
+        <div key={`${notification.id}-${index}`} className="notification-item">
           <div className="notification-message">{renderNotificationMessage(notification)}</div>
-          <button className="notification-close" onClick={() => onRemoveNotification(notification.Id)}>×</button>
+          <button className="notification-close" onClick={() => handleMarkAsRead(notification.id)}>×</button>
+          <button className="notification-read" onClick={() => handleMarkAsRead(notification.id)}>Прочитал</button>
         </div>
       ))}
     </div>

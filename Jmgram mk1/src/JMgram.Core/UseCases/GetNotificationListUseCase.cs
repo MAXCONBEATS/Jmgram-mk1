@@ -23,12 +23,22 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 // 1. Get notifications by userId from repository
                 var notifications = await _notificationRepository.GetNotificationsByUserId(userId);
+                var notificationDtos = notifications.Select(n => new NotificationDto
+                {
+                    Id = n.Id,
+                    UserId = n.UserId,
+                    Message = n.Message,
+                    Timestamp = n.Timestamp,
+                    IsRead = n.IsRead,
+                    NotificationType = n.NotificationType,
+                    ChatId = n.ChatId
+                }).ToList();
 
                 // 2. Form successful response
                 return new GetNotificationListResponse
                 {
                     IsSuccess = true,
-                    Notifications = notifications
+                    Notifications = notificationDtos
                 };
             }
             catch (Exception ex)
@@ -37,7 +47,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new GetNotificationListResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = $"An error occurred while getting notification list: {ex.Message}",
+                    ErrorMessage = ex.Message,
                     Notifications = null
                 };
             }
