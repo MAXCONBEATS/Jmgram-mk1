@@ -11,7 +11,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task AddNotification(Notification notification);
         Task<NotificationDto?> GetNotificationDtoById(int notificationId); // Renamed method
         Task<Notification> GetNotificationById(int notificationId);
-        Task UpdateNotification(Notification notification);
+        //Task UpdateNotification(Notification notification);
+        Task MarkNotificationAsRead(int notificationId);
         Task DeleteNotification(int notificationId);
         Task<List<Notification>> GetNotificationsForUser(string userId);
     }
@@ -52,11 +53,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _context.Notifications.FindAsync(notificationId);
         }
-        public async Task UpdateNotification(Notification notification)
-        {
-            _context.Notifications.Update(notification);
-            await _context.SaveChangesAsync();
-        }
+        //public async Task UpdateNotification(Notification notification)
+        //{
+        //    _context.Notifications.Update(notification);
+        //    await _context.SaveChangesAsync();
+        //}
 
         public async Task DeleteNotification(int notificationId)
         {
@@ -64,6 +65,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             if (notification != null)
             {
                 _context.Notifications.Remove(notification);
+                await _context.SaveChangesAsync();
+            }
+        }
+        public async Task MarkNotificationAsRead(int notificationId)
+        {
+            var notification = await _context.Notifications.FindAsync(notificationId);
+            if (notification != null)
+            {
+                notification.IsRead = true;
                 await _context.SaveChangesAsync();
             }
         }

@@ -32,3 +32,13 @@ export async function deleteNotification(id) {
     throw error;
   }
 }
+
+export async function markAsRead(notificationId) {
+  try {
+    const response = await axios.put(`https://localhost:5087/Notification/MarkAsRead?notificationId=${notificationId}`, null, { withCredentials: true });
+    return response.status === 204;
+  } catch (error) {
+    console.error('Ошибка при пометке уведомления как прочитанного:', error);
+    throw error;
+  }
+}

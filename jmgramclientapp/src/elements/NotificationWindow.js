@@ -1,8 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../css/NotificationWindow.css';
-import { deleteNotification } from '../controllers/NotificationController';
+import { markAsRead } from '../controllers/NotificationController';
 
 function NotificationWindow({ notifications, onRemoveNotification }) {
+  const [closedNotifications, setClosedNotifications] = useState(new Set());
+
   console.log('Notifications:', notifications);
   useEffect(() => {
     if (notifications.length === 0) return;
@@ -33,21 +35,27 @@ function NotificationWindow({ notifications, onRemoveNotification }) {
 
   const handleMarkAsRead = async (id) => {
     try {
-      const success = await deleteNotification(id);
+      const success = await markAsRead(id);
       if (success) {
+        setClosedNotifications(prev => new Set(prev).add(id));
         onRemoveNotification(id);
       }
     } catch (error) {
-      console.error('Ошибка при удалении уведомления:', error);
+      console.error('Ошибка при пометке уведомления как прочитанного:', error);
     }
+  };
+
+  const handleClose = (id) => {
+    setClosedNotifications(prev => new Set(prev).add(id));
+    onRemoveNotification(id);
   };
 
   return (
     <div className="notification-window">
-      {notifications.map((notification, index) => (
+      {notifications.filter(n => !closedNotifications.has(n.id)).map((notification, index) => (
         <div key={`${notification.id}-${index}`} className="notification-item">
           <div className="notification-message">{renderNotificationMessage(notification)}</div>
-          <button className="notification-close" onClick={() => handleMarkAsRead(notification.id)}>×</button>
+          <button className="notification-close" onClick={() => handleClose(notification.id)}>×</button>
           <button className="notification-read" onClick={() => handleMarkAsRead(notification.id)}>Прочитал</button>
         </div>
       ))}

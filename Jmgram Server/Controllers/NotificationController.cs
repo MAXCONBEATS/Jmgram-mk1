@@ -92,6 +92,41 @@ public class NotificationController : ControllerBase
             return StatusCode(500, $"An error occurred while retrieving notifications: {ex.Message}");
         }
     }
+    [HttpPut("MarkAsRead")]
+    public async Task<IActionResult> MarkAsRead(int notificationId)
+    {
+        _logger.LogInformation($"NotificationController.MarkAsRead: Attempting to mark notification with ID {notificationId} as read.");
+
+        try
+        {
+            // Validate input
+            if (notificationId <= 0)
+            {
+                _logger.LogError("NotificationController.MarkAsRead: Invalid input data - notificationId is invalid.");
+                return BadRequest("Неверные входные данные: notificationId должен быть больше 0.");
+            }
+
+            // Get the user ID from claims
+            var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("NotificationController.MarkAsRead: UserId not found in claims.");
+                return Unauthorized("Не удалось получить UserId из claims.");
+            }
+
+            // Mark the notification as read
+            await _notificationRepository.MarkNotificationAsRead(notificationId);
+
+            _logger.LogInformation($"NotificationController.MarkAsRead: Notification with ID {notificationId} marked as read successfully.");
+            return NoContent(); // 204 No Content
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"NotificationController.MarkAsRead: An error occurred while marking notification with ID {notificationId} as read: {ex.Message}");
+            return StatusCode(500, $"An error occurred while marking notification as read: {ex.Message}");
+        }
+    }
+
     [HttpDelete("Delete")]
     public async Task<IActionResult> DeleteNotification(int id)
     {
