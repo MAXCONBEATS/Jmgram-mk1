@@ -115,3 +115,18 @@ export async function setChatName(chatId, chatName) {
   throw error;
  }
 }
+
+export async function getChatUsersList(chatId) {
+ try {
+  const response = await axios.get('/Chat/GetChatUsersList', {
+   withCredentials: true,
+   params: {
+    chatId: chatId,
+   },
+  });
+  return response.data; // Expected to be a list of user objects
+ } catch (error) {
+  console.error('Ошибка при получении списка участников чата:', error);
+  throw error;
+ }
+}

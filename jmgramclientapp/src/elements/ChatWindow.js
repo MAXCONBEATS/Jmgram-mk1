@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { getMessages, sendMessage } from '../controllers/ChatController';
+import { getMessages, sendMessage, getChatUsersList } from '../controllers/ChatController';
 import '../css/ChatWindow.css';
 
 function ChatWindow({ chat, onClose, senderId, senderName }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
+    const [participants, setParticipants] = useState([]);
 
     useEffect(() => {
         async function fetchMessages() {
@@ -29,6 +30,23 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
             setLoading(false);
         }
         fetchMessages();
+    }, [chat]);
+
+    useEffect(() => {
+        async function fetchParticipants() {
+            if (!chat) {
+                setParticipants([]);
+                return;
+            }
+            try {
+                const users = await getChatUsersList(chat.chatId || chat.id);
+                setParticipants(users);
+            } catch (error) {
+                console.error('Ошибка при загрузке участников чата:', error);
+                setParticipants([]);
+            }
+        }
+        fetchParticipants();
     }, [chat]);
 
 const handleSendMessage = async () => {
@@ -59,37 +77,61 @@ const handleSendMessage = async () => {
     }
 
     return (
-        <div className="chat-window">
-            <div className="chat-header">
-                <h3>{chat.Name || chat.chatName || chat.name || 'Чат'}</h3>
-                <button onClick={onClose}>Закрыть</button>
-            </div>
-            <div className="chat-messages-container">
-                <div className="chat-messages">
-                    {loading ? (
-                        <p>Загрузка сообщений...</p>
-                    ) : messages.length > 0 ? (
-                        messages.map((msg) => (
-                            <div key={msg.id || msg.messageId}>
-                                <strong>{msg.senderName}:</strong> {msg.text}
-                            </div>
-                        ))
-                    ) : (
-                        <p>Сообщений пока нет.</p>
-                    )}
-                </div>
-                <div className="chat-input-area">
-                    <textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Введите сообщение"
-                        rows={3}
-                    />
-                    <button onClick={handleSendMessage}>Отправить</button>
-                </div>
-            </div>
+  <div className="chat-window">
+    {/* Шапка чата */}
+    <div className="chat-header">
+      <h3>{chat?.name || chat?.chatName || chat?.chatName || "Чат"}</h3>
+      <button onClick={onClose}>Закрыть</button>
+    </div>
+
+    {/* Основное содержимое: сообщения + участники */}
+    <div className="chat-content">
+      {/* Левый блок: сообщения */}
+      <div className="chat-messages-section">
+        <div className="chat-messages">
+          {loading ? (
+            <p>Загрузка сообщений...</p>
+          ) : messages.length > 0 ? (
+            messages.map((msg) => (
+              <div key={msg.id || msg.messageId}>
+                <strong>{msg.senderName}:</strong> {msg.text}
+              </div>
+            ))
+          ) : (
+            <p>Сообщений пока нет.</p>
+          )}
         </div>
-    );
+
+        {/* Поле ввода (остаётся внизу ЛЕВОЙ колонки) */}
+        <div className="chat-input-area">
+          <textarea
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            placeholder="Введите сообщение"
+            rows={3}
+          />
+          <button onClick={handleSendMessage}>Отправить</button>
+        </div>
+      </div>
+
+      {/* Правый блок: участники */}
+      <div className="chat-participants-column">
+        <h4>Участники</h4>
+        <ul>
+          {participants.length > 0 ? (
+            participants.map((participant) => (
+              <li key={participant.id}>
+                {participant.firstName || participant.phone || "Участник"}
+              </li>
+            ))
+          ) : (
+            <li>Нет участников</li>
+          )}
+        </ul>
+      </div>
+    </div>
+  </div>
+);
 }
 
 export default ChatWindow;
