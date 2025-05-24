@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
+import EmojiPicker from 'emoji-picker-react';
 import { getMessages, sendMessage, getChatUsersList } from '../controllers/ChatController';
 import '../css/ChatWindow.css';
 
@@ -7,6 +8,14 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState([]);
+    const emojiButtonRef = useRef(null);
+    const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    
+    const handleEmojiClick = (emojiData) => {
+    setNewMessage(prev => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
 
     useEffect(() => {
         async function fetchMessages() {
@@ -48,6 +57,17 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
         }
         fetchParticipants();
     }, [chat]);
+    useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (showEmojiPicker && 
+          !e.target.closest('.emoji-picker-wrapper') && 
+          !e.target.closest('.emoji-trigger')) {
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showEmojiPicker]);
 
 const handleSendMessage = async () => {
         if (newMessage.trim() === '') {
@@ -110,7 +130,30 @@ const handleSendMessage = async () => {
             placeholder="Введите сообщение"
             rows={3}
           />
-          <button onClick={handleSendMessage}>Отправить</button>
+          <button 
+        ref={emojiButtonRef}
+        className="emoji-trigger"
+        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+      >
+        😊
+      </button>
+      <button onClick={handleSendMessage}>Отправить</button>
+      {showEmojiPicker && (
+        <div className="emoji-picker-wrapper">
+          <EmojiPicker
+            onEmojiClick={(emojiData) => {
+              setNewMessage(prev => prev + emojiData.emoji);
+              setShowEmojiPicker(false);
+            }}
+            width={300}
+            height={350}
+            previewConfig={{ showPreview: false }}
+            skinTone={false}
+            searchDisabled={false}
+            theme="dark"
+          />
+        </div>
+      )}
         </div>
       </div>
 

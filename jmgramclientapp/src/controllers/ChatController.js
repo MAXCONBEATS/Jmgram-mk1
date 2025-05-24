@@ -130,3 +130,19 @@ export async function getChatUsersList(chatId) {
   throw error;
  }
 }
+
+export async function removeUserFromChat(chatId, userId) {
+ try {
+  const response = await axios.delete('/Chat/RemoveUserFromChat', {
+   withCredentials: true,
+   params: {
+    chatId: chatId,
+    userId: userId,
+   },
+  });
+  return response.data; // Expected to be success message or status
+ } catch (error) {
+  console.error('Ошибка при удалении пользователя из чата:', error);
+  throw error;
+ }
+}
