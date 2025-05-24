@@ -22,6 +22,7 @@ function Main({ error, onLogout }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
 
   const userId = localStorage.getItem('UserId');
+  console.log('Main.js userId from localStorage:', userId);
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -169,7 +170,7 @@ function Main({ error, onLogout }) {
         {selectedChat && (
           <div className="chat-overlay" onClick={() => setSelectedChat(null)}>
             <div onClick={e => e.stopPropagation()}>
-              <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} />
+              <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} currentUserId={userId} />
             </div>
           </div>
         )}

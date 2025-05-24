@@ -375,25 +375,9 @@ public class ChatController : ControllerBase
     [Authorize]
     public async Task<IActionResult> RemoveUserFromChat(string chatId, string userId)
     {
-        // 1. Получаем ID текущего пользователя
-        var currentUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        // 2. Получаем чат из базы данных
-        var chat = await _chatRepository.GetById(chatId);
-
-        // 3. Проверяем, существует ли чат
-        if (chat == null)
-        {
-            return BadRequest($"Chat with id {chatId} not found.");
-        }
-
-        // 4. Проверяем, является ли текущий пользователь создателем чата
-        if (chat.CreatorUserId != currentUserId)
-        {
-            return Forbid("You are not allowed to remove users from this chat."); // Возвращаем ошибку 403
-        }
-
-        var response = await _removeUserFromChatUseCase.Execute(chatId, userId);
+        var response = await _removeUserFromChatUseCase.Execute(chatId, userId, currentUserId);
 
         if (!response.IsSuccess)
         {

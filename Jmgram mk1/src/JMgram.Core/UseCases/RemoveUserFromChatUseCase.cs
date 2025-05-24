@@ -1,4 +1,5 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Repositories;
+﻿using Jmgram_mk1.src.JMgram.Core.Entities;
+using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.Logging;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -20,36 +22,69 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<RemoveUserFromChatResponse> Execute(string chatId, string userId)
+        public async Task<RemoveUserFromChatResponse> Execute(string chatId, string userId, string currentUserId)
         {
             try
             {
-                _logger.LogInformation($"RemoveUserFromChatUseCase.Execute: Removing user {userId} from chat {chatId}");
+                _logger.LogInformation($"Removing user {userId} from chat {chatId} initiated by {currentUserId}");
 
                 // 1. Проверка существования чата
-                if (!await _chatRepository.ChatExists(chatId))
+                var chat = await _chatRepository.GetById(chatId);
+                if (chat == null)
                 {
-                    return new RemoveUserFromChatResponse { IsSuccess = false, ErrorMessage = $"Chat with id {chatId} does not exist." };
+                    return new RemoveUserFromChatResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = $"Chat with id {chatId} does not exist."
+                    };
                 }
 
-                // 2. Проверка, что пользователь состоит в чате
+                // 2. Проверка на удаление самого себя
+                if (userId == currentUserId)
+                {
+                    return new RemoveUserFromChatResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = "Вы не можете удалить себя из чата."
+                    };
+                }
+
+                // 3. Проверка прав (только создатель может удалять)
+                if (chat.CreatorUserId != currentUserId)
+                {
+                    return new RemoveUserFromChatResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = "Только создатель чата может удалять участников."
+                    };
+                }
+
+                // 4. Проверка, что пользователь состоит в чате
                 if (!await _chatRepository.IsUserInChat(chatId, userId))
                 {
-                    return new RemoveUserFromChatResponse { IsSuccess = false, ErrorMessage = $"User with id {userId} is not in chat {chatId}." };
+                    return new RemoveUserFromChatResponse
+                    {
+                        IsSuccess = false,
+                        ErrorMessage = $"Пользователь {userId} не состоит в этом чате."
+                    };
                 }
 
-                // 3. Удаление пользователя из чата
+                // 5. Удаление
                 await _chatRepository.RemoveUserFromChat(chatId, userId);
 
-                _logger.LogInformation($"RemoveUserFromChatUseCase.Execute: User {userId} removed from chat {chatId} successfully.");
-
+                _logger.LogInformation($"User {userId} removed from chat {chatId} by {currentUserId}");
                 return new RemoveUserFromChatResponse { IsSuccess = true };
             }
             catch (Exception ex)
             {
-                _logger.LogError($"RemoveUserFromChatUseCase.Execute: An error occurred while removing user from chat: {ex.Message}");
-                return new RemoveUserFromChatResponse { IsSuccess = false, ErrorMessage = $"An error occurred while removing user from chat: {ex.Message}" };
+                _logger.LogError(ex, $"Error removing user from chat");
+                return new RemoveUserFromChatResponse
+                {
+                    IsSuccess = false,
+                    ErrorMessage = "Ошибка при удалении пользователя из чата"
+                };
             }
         }
     }
+
 }

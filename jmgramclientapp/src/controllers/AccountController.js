@@ -16,17 +16,34 @@
   }
  };
  
- export const login = async (phone, password) => {
+// controllers/AccountController.js
+export const login = async (phone, password) => {
   try {
-   const response = await axios.post(`${API_BASE_URL}/Account/Login`, {
-    phone,
-    password
-   }, { withCredentials: true });
-   return response.data;
+    const response = await fetch('https://localhost:5087/Account/Login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phone, password }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Login failed: ${response.status} - ${errorText}`);
+    }
+
+    // Добавим логирование тела ответа
+    console.log('Login response body:', response);
+
+    // Просто возвращаем `true` (если login действительно ничего не возвращает)
+    return true;
+
   } catch (error) {
-   throw error;
+    console.error('Login error:', error);
+    throw error;
   }
- };
+};
  
  export const logout = async () => {
   try {

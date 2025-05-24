@@ -132,17 +132,19 @@ export async function getChatUsersList(chatId) {
 }
 
 export async function removeUserFromChat(chatId, userId) {
- try {
-  const response = await axios.delete('/Chat/RemoveUserFromChat', {
-   withCredentials: true,
-   params: {
-    chatId: chatId,
-    userId: userId,
-   },
-  });
-  return response.data; // Expected to be success message or status
- } catch (error) {
-  console.error('Ошибка при удалении пользователя из чата:', error);
-  throw error;
- }
+    console.log(`Removing user ${userId} from chat ${chatId}...`);
+    try {
+        const response = await axios.delete('/Chat/RemoveUserFromChat', {
+            withCredentials: true,
+            params: {
+                chatId: chatId,
+                userId: userId,
+            },
+        });
+        console.log('Удаление прошло успешно. Server response:', response.data);
+        return response.data; // Предполагается сообщение об успехе или статус
+    } catch (error) {
+        console.error('Ошибка при удалении пользователя из чата:', error);
+        throw error;
+    }
 }

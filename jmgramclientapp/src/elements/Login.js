@@ -13,19 +13,40 @@
  
    const handleSubmit = async (e) => {
     e.preventDefault();
- 
-    try {
-     const response = await login(phone, password);
-     console.log('Вход выполнен!', response);
-     if (response) {
-      localStorage.setItem('UserId', response.userId || response.id || '');
-      localStorage.setItem('UserName', response.userName || response.name || '');
+    console.log('handleSubmit called with phone:', phone);
+
+     try {
+      const response = await login(phone, password);
+      console.log('Вход выполнен!', response);
+      if (response) {
+       try {
+         // After login, fetch current user info from /Account/Me
+         console.log('Fetching current user info...');
+         const userResponse = await fetch('https://localhost:5087/Account/GetCurrentUser/Me', {
+           method: 'GET',
+           credentials: 'include',
+           headers: {
+             'Accept': 'application/json',
+           },
+         });
+         console.log('User response status:', userResponse.status);
+         if (userResponse.ok) {
+           const userData = await userResponse.json();
+           console.log('Current user data:', userData);
+           localStorage.setItem('UserId', userData.id || '');
+           localStorage.setItem('UserName', userData.userName || userData.name || '');
+         } else {
+           console.error('Failed to fetch current user info:', userResponse.status);
+         }
+       } catch (fetchError) {
+         console.error('Error fetching current user info:', fetchError);
+       }
+      }
+      navigate('/');
+      onLogin();
+     } catch (error) {
+      setError('Ошибка входа: ' + (error.response?.data || error.message));
      }
-     navigate('/');
-     onLogin();
-    } catch (error) {
-     setError('Ошибка входа: ' + (error.response?.data || error.message));
-    }
    };
  
   const togglePasswordVisibility = () => {

@@ -1,13 +1,16 @@
 import React, { useState, useEffect,useRef } from 'react';
 import EmojiPicker from 'emoji-picker-react';
-import { getMessages, sendMessage, getChatUsersList } from '../controllers/ChatController';
+import { getMessages, sendMessage, getChatUsersList, removeUserFromChat } from '../controllers/ChatController';
 import '../css/ChatWindow.css';
 
-function ChatWindow({ chat, onClose, senderId, senderName }) {
+function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState([]);
+    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
+    const [selectedParticipant, setSelectedParticipant] = useState(null);
     const emojiButtonRef = useRef(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const chatRef = useRef(null);
@@ -50,7 +53,9 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
             }
             try {
                 const users = await getChatUsersList(chat.chatId || chat.id);
-                setParticipants(users);
+                // Filter duplicates by id before setting state
+                const uniqueUsers = Array.from(new Map(users.map(u => [u.id, u])).values());
+                setParticipants(uniqueUsers);
             } catch (error) {
                 console.error('Ошибка при загрузке участников чата:', error);
                 setParticipants([]);
@@ -58,6 +63,67 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
         }
         fetchParticipants();
     }, [chat]);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (contextMenuVisible && event.button === 0) { // left click only
+                setContextMenuVisible(false);
+                setSelectedParticipant(null);
+            }
+        };
+        window.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            window.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [contextMenuVisible]);
+
+    const handleContextMenu = (event, participant) => {
+        event.preventDefault();
+        console.log('handleContextMenu called - currentUserId:', currentUserId, 'chat.creatorUserId:', chat.creatorUserId);
+        // Temporarily allow context menu always for testing
+        setSelectedParticipant(participant);
+        setContextMenuPosition({ x: event.pageX, y: event.pageY });
+        setContextMenuVisible(true);
+        /*
+        if (currentUserId === chat.creatorUserId) {
+            setSelectedParticipant(participant);
+            setContextMenuPosition({ x: event.pageX, y: event.pageY });
+            setContextMenuVisible(true);
+        }
+        */
+    };
+
+    const handleRemoveUser = async (participant) => {
+        console.log('Удаление пользователя...');
+        if (!participant) {
+            console.warn('Не выбран участник для удаления.');
+            return;
+        }
+      console.log('participant id:', participant.id);
+      console.log('chat id:', chat.chatId || chat.id);
+  
+        try {
+            console.log(`User ${currentUserId} attempts to remove user ${participant.id} from chat ${chat.chatId || chat.id}`);
+            const response = await removeUserFromChat(chat.chatId || chat.id, participant.id);
+          
+            console.log('Удаление успешно:', response);
+            // Refresh participants list after successful removal
+            const users = await getChatUsersList(chat.chatId || chat.id);
+            const uniqueUsers = Array.from(new Map(users.map(u => [u.id, u])).values());
+            setParticipants(uniqueUsers);
+            setContextMenuVisible(false); // Закрываем контекстное меню
+        } catch (error) {
+            console.error('Ошибка при удалении пользователя:', error);
+            // Show user the error message from backend if available
+            if (error.response && error.response.data) {
+                alert(`Ошибка: ${error.response.data}`);
+            } else if (error.message) {
+                alert(`Ошибка: ${error.message}`);
+            } else {
+                alert('Ошибка при удалении пользователя из чата.');
+            }
+        }
+    };
 
 
    
@@ -150,17 +216,33 @@ const handleSendMessage = async () => {
       <div className="chat-participants-column">
         <h4>Участники</h4>
         <ul>
-          {participants.length > 0 ? (
-            participants.map((participant) => (
-              <li key={participant.id}>
-                {participant.firstName || participant.phone || "Участник"}
-              </li>
-            ))
-          ) : (
-            <li>Нет участников</li>
-          )}
+            {participants.length > 0 ? (
+              Array.from(new Map(participants.map(p => [p.id, p])).values()).map((participant) => {
+                console.log('Rendering participant with id:', participant.id);
+                return (
+                  <li key={participant.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span>{participant.firstName || participant.phone || "Участник"}</span>
+                    {currentUserId === chat.creatorUserId && participant.id !== chat.creatorUserId && (
+                      <button
+                        onClick={() => handleRemoveUser(participant)}
+                        style={{ marginLeft: '10px' }}
+                      >
+                        Удалить из чата
+                      </button>
+                    )}
+                  </li>
+                );
+              })
+            ) : (
+              <li>Нет участников</li>
+            )}
         </ul>
       </div>
+
+      {contextMenuVisible && (
+        // Temporarily removed context menu for removal
+        null
+      )}
     </div>
   </div>
 );

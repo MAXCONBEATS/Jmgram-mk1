@@ -13,6 +13,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Storage;
+using Jmgram_mk1.src.JMgram.Core.Responses;
 [Route("[controller]/[action]")]
 [ApiController]
 public class AccountController : ControllerBase
@@ -142,6 +143,33 @@ public class AccountController : ControllerBase
 
         _logger.LogWarning($"Invalid password for user: {login.Phone}");
         return Unauthorized("Invalid phone number or password");
+    }
+    [HttpGet("Me")]
+    [Authorize]
+    [ProducesResponseType(typeof(UserInfoResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<UserInfoResponse>> GetCurrentUser()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        // Создаем DTO для возврата, а не используем entity напрямую
+        return Ok(new UserInfoResponse
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            PhoneNumber = user.PhoneNumber
+            // Добавьте другие нужные поля
+        });
     }
     [HttpPost]
     public IActionResult Authenticated()
