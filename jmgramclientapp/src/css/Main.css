@@ -44,7 +44,7 @@
   width: 200px; /* Уменьшаем ширину колонки контактов */
   /* Убираем margin-right, так как будем позиционировать заголовок абсолютно */
   /* position: fixed;  Убрано фиксированное позиционирование */
-  /* top: 92px;  Убрано */
+  top: 92px;
   /* left: 290px;  Убрано */
   height: fit-content; /* Автоматическая высота */
   flex-grow: 1;
@@ -274,4 +274,17 @@ color: #333;
 
 .contact-requests-list button:hover {
   background-color: #45a049;
+}
+
+.chat-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }

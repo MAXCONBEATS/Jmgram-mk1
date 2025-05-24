@@ -166,9 +166,13 @@ function Main({ error, onLogout }) {
           <CreateChatButton contacts={contacts} onCreateChat={handleCreateChat} />
         </div>
 
-        <div style={{ flex: '3', display: 'flex', justifyContent: 'center' }}>
-          <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} />
-        </div>
+        {selectedChat && (
+          <div className="chat-overlay" onClick={() => setSelectedChat(null)}>
+            <div onClick={e => e.stopPropagation()}>
+              <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} />
+            </div>
+          </div>
+        )}
       </div>
       <NotificationWindow notifications={notifications} onRemoveNotification={handleRemoveNotification} />
     </div>
