@@ -10,6 +10,7 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
     const [participants, setParticipants] = useState([]);
     const emojiButtonRef = useRef(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const chatRef = useRef(null);
     
     const handleEmojiClick = (emojiData) => {
     setNewMessage(prev => prev + emojiData.emoji);
@@ -57,18 +58,9 @@ function ChatWindow({ chat, onClose, senderId, senderName }) {
         }
         fetchParticipants();
     }, [chat]);
-    useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (showEmojiPicker && 
-          !e.target.closest('.emoji-picker-wrapper') && 
-          !e.target.closest('.emoji-trigger')) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showEmojiPicker]);
 
+
+   
 const handleSendMessage = async () => {
         if (newMessage.trim() === '') {
             alert('Введите сообщение перед отправкой.');
@@ -91,10 +83,7 @@ const handleSendMessage = async () => {
             alert('Ошибка при отправке сообщения.');
         }
     };
-
-    if (!chat) {
-        return <div className="chat-window">Выберите чат для просмотра сообщений</div>;
-    }
+    if (!chat) return null;
 
     return (
   <div className="chat-window">
