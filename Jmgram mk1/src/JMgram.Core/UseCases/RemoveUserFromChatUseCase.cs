@@ -1,13 +1,8 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Entities;
+﻿
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
+
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -28,7 +23,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 _logger.LogInformation($"Removing user {userId} from chat {chatId} initiated by {currentUserId}");
 
-                // 1. Проверка существования чата
                 var chat = await _chatRepository.GetById(chatId);
                 if (chat == null)
                 {
@@ -39,7 +33,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 2. Проверка на удаление самого себя
                 if (userId == currentUserId)
                 {
                     return new RemoveUserFromChatResponse
@@ -49,7 +42,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 3. Проверка прав (только создатель может удалять)
                 if (chat.CreatorUserId != currentUserId)
                 {
                     return new RemoveUserFromChatResponse
@@ -59,7 +51,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 4. Проверка, что пользователь состоит в чате
                 if (!await _chatRepository.IsUserInChat(chatId, userId))
                 {
                     return new RemoveUserFromChatResponse
@@ -69,7 +60,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 5. Удаление
                 await _chatRepository.RemoveUserFromChat(chatId, userId);
 
                 _logger.LogInformation($"User {userId} removed from chat {chatId} by {currentUserId}");

@@ -13,9 +13,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public Guid Id { get; set; }
-        public string SenderUserId { get; set; }
-        public string RecipientUserId { get; set; }
+
+        public string? SenderUserId { get; set; }
+
+        public string? RecipientUserId { get; set; }
+
         public ContactRequestStatus Status { get; set; }
+
+        public virtual AppIdentityUser? SenderUser { get; set; }
+        public virtual AppIdentityUser? RecipientUser { get; set; }
     }
     public enum ContactRequestStatus
     {

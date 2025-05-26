@@ -19,7 +19,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         private readonly SendNotificationUseCase _sendNotificationUseCase;
         private readonly ILogger<AddUserToChatNotificationUseCase> _logger;
 
-        public AddUserToChatNotificationUseCase(IChatRepository chatRepository, IUserRepository userRepository, SendNotificationUseCase sendNotificationUseCase, ILogger<AddUserToChatNotificationUseCase> logger)
+        public AddUserToChatNotificationUseCase(IChatRepository chatRepository, IUserRepository userRepository, 
+            SendNotificationUseCase sendNotificationUseCase, ILogger<AddUserToChatNotificationUseCase> logger)
         {
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
 
@@ -32,38 +33,31 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                _logger.LogInformation($"AddUserToChatNotificationUseCase.Execute: Adding user {userId} to chat {chatId} by {inviterUserId}");
-                // Добавьте логирование для проверки значения chatId
-                _logger.LogInformation($"ChatId value: {chatId}");
 
-                // 1. Проверка существования чата
                 if (!await _chatRepository.ChatExists(chatId))
                 {
                     return new AddUserToChatResponse { IsSuccess = false, Message = $"Chat with id {chatId} does not exist." };
                 }
 
-                // 2. Проверка существования пользователя
                 var user = await _userRepository.GetById(userId);
                 if (user == null)
                 {
                     return new AddUserToChatResponse { IsSuccess = false, Message = $"User with id {userId} does not exist." };
                 }
 
-                // 3. Проверка, что пользователь еще не в чате
                 if (await _chatRepository.IsUserInChat(chatId, userId))
                 {
                     return new AddUserToChatResponse { IsSuccess = false, Message = $"User with id {userId} is already in chat {chatId}." };
                 }
 
-                // 4. Отправка уведомления о приглашении в чат
                 var notificationDto = new NotificationDto
                 {
-                    UserId = userId, // Id пользователя, которого приглашают
-                    Message = $"Вас пригласил в чат {chatId} пользователь {inviterUserId}. Принять или отклонить?", // Сообщение
+                    UserId = userId,
+                    Message = $"Вас пригласил в чат {chatId} пользователь {inviterUserId}. Принять или отклонить?",
                     Timestamp = DateTime.UtcNow,
                     IsRead = false,
                     NotificationType = NotificationType.ChatInvite,
-                    ChatId = chatId // Установите ChatId в NotificationDto
+                    ChatId = chatId
                 };
                 var response = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId);
 

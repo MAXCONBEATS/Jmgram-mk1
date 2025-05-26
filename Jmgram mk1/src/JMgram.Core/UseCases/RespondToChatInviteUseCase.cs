@@ -26,29 +26,24 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             try
             {
                 _logger.LogInformation($"RespondToChatInviteUseCase.Execute: User {userId} responding to invite {notificationId} with accepted = {accepted}");
-                // 1. Загружаем уведомление
                 var notification = await _notificationRepository.GetNotificationById(notificationId);
                 if (notification == null)
                 {
                     return new RespondToChatInviteResponse { IsSuccess = false, ErrorMessage = $"Notification with id {notificationId} not found." };
                 }
-                // 2. Проверяем, что уведомление предназначено для этого пользователя
                 if (notification.UserId != userId)
                 {
                     return new RespondToChatInviteResponse { IsSuccess = false, ErrorMessage = $"Notification with id {notificationId} is not for user {userId}." };
                 }
-                // 3. Проверяем, что уведомление - приглашение в чат
                 if (notification is not ChatInviteNotification chatInviteNotification)
                 {
                     return new RespondToChatInviteResponse { IsSuccess = false, ErrorMessage = $"Notification with id {notificationId} is not a chat invite." };
                 }
-                // 4. Получаем chatId из уведомления
                 string chatId = chatInviteNotification.ChatId;
                 if (string.IsNullOrEmpty(chatId))
                 {
                     return new RespondToChatInviteResponse { IsSuccess = false, ErrorMessage = $"ChatId is empty" };
                 }
-                // 5. Загружаем чат
                 var chat = await _chatRepository.GetById(chatId);
                 if (chat == null)
                 {
@@ -56,7 +51,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 }
                 if (accepted)
                 {
-                    // a. Добавляем пользователя в чат
                     var chatUser = new ChatUser
                     {
                         ChatId = chat.Id,
@@ -70,7 +64,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 {
                     _logger.LogInformation($"RespondToChatInviteUseCase.Execute: User {userId} declined invite to chat {chatId}.");
                 }
-                // b. Удаляем уведомление
                 await _notificationRepository.DeleteNotification(notificationId);
                 _logger.LogInformation($"RespondToChatInviteUseCase.Execute: User {userId} responded to invite {notificationId} successfully.");
                 return new RespondToChatInviteResponse { IsSuccess = true, SuccessMessage = accepted ? "Вы приняли приглашение в чат." : "Вы отклонили приглашение в чат." };

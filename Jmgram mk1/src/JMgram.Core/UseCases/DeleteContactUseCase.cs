@@ -25,12 +25,10 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             {
                 _logger.LogInformation($"DeleteContactUseCase.Execute: Deleting contact for UserId: {userId}, ContactUserId: {contactUserId}");
 
-                // Delete contact for the current user
                 await _contactRepository.Delete(userId, contactUserId);
                 _logger.LogInformation($"DeleteContactUseCase.Execute: Contact deleted successfully for UserId: {userId}, ContactUserId: {contactUserId}");
 
-                // Delete contact for the other user
-                await _contactRepository.Delete(contactUserId, userId); // Delete the reverse relation
+                await _contactRepository.Delete(contactUserId, userId);
                 _logger.LogInformation($"DeleteContactUseCase.Execute: Contact deleted successfully for UserId: {contactUserId}, ContactUserId: {userId}");
 
                 return true;

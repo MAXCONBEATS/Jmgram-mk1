@@ -39,7 +39,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // Get incoming and outgoing requests separately
                 var incomingRequests = await _contactRequestRepository.GetIncomingContactRequests(userId);
                 var outgoingRequests = await _contactRequestRepository.GetOutgoingContactRequests(userId);
 

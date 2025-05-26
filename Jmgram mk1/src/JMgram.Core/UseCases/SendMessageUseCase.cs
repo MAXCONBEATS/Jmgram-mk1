@@ -5,8 +5,6 @@ using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.Logging;
-using System.Net;
-using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -33,7 +31,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<SendMessageResponse> Execute(SendMessageRequest request, string senderUserId)
         {
-            // 1. Валидация входных данных
             if (request == null)
             {
                 return new SendMessageResponse
@@ -59,8 +56,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     ErrorMessage = "Message text cannot be empty.",
                 };
             }
-
-            // 2. Проверка существования Chat
             var chat = await _chatRepository.GetById(request.Message.ChatId, includeChatUsers: true);
             if (chat == null)
             {
@@ -71,7 +66,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
             }
 
-            // 3. Проверить, что отправитель является участником чата
             if (!await _chatRepository.IsUserInChat(request.Message.ChatId, senderUserId))
             {
                 return new SendMessageResponse
@@ -81,7 +75,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
             }
 
-            // 4. Получаем пользователя
             var sender = await _userRepository.GetById(senderUserId);
             if (sender == null)
             {
@@ -91,7 +84,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     ErrorMessage = $"User with Id {senderUserId} does not exist.",
                 };
             }
-            // 5. Получаем имя пользователя
+
             var senderName = await _userRepository.GetUserFirstNameById(senderUserId);
             if (string.IsNullOrEmpty(senderName))
             {
@@ -101,41 +94,38 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 6. Создание Message Entity
                 var messageEntity = new Message
                 {
                     ChatId = request.Message.ChatId,
-                    SenderId = senderUserId, // Используем userId авторизованного пользователя
+                    SenderId = senderUserId,
                     SenderName = senderName,
                     Text = request.Message.Text,
-                    Timestamp = request.Message.Timestamp // Используем Timestamp из request
+                    Timestamp = request.Message.Timestamp
                 };
 
-                // 7. Добавление сообщения в базу данных
                 var id = await _messageRepository.Add(messageEntity);
 
                 // Get the recipient UserId
-                var recipientChatUser = chat.ChatUsers.FirstOrDefault(cu => cu.UserId != senderUserId); // Find the other user in the chat
+                var recipientChatUser = chat.ChatUsers.FirstOrDefault(cu => cu.UserId != senderUserId);
 
                 if (recipientChatUser == null)
                 {
                     _logger.LogWarning($"SendMessageUseCase.Execute: No other user found in chat {request.Message.ChatId} besides user {senderUserId}.");
-                    return new SendMessageResponse { IsSuccess = true, Id = id }; // Message sent, but no notification sent because there's no other user
+                    return new SendMessageResponse { IsSuccess = true, Id = id };
                 }
 
                 var recipientId = recipientChatUser.UserId;
 
-                // Send notification to the recipient
                 var notificationDto = new NotificationDto
                 {
                     UserId = recipientId,
-                    Message = $"Новое сообщение от {senderName}: {request.Message.Text.Substring(0, Math.Min(request.Message.Text.Length, 50))}", // Truncate message for notification
+                    Message = $"Новое сообщение от {senderName}: {request.Message.Text.Substring(0, Math.Min(request.Message.Text.Length, 50))}",
                     Timestamp = DateTime.UtcNow,
                     IsRead = false,
                     NotificationType = NotificationType.Message
                 };
 
-                var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, senderUserId); // Pass senderUserId
+                var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, senderUserId);
 
                 if (!notificationResponse.IsSuccess)
                 {
@@ -143,7 +133,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new SendMessageResponse { IsSuccess = false, ErrorMessage = $"Message sent, but failed to send notification: {notificationResponse.ErrorMessage}" };
                 }
 
-                // 8. Формирование успешного ответа
                 return new SendMessageResponse
                 {
                     IsSuccess = true,
@@ -152,7 +141,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 9. Обработка ошибок
                 return new SendMessageResponse
                 {
                     IsSuccess = false,

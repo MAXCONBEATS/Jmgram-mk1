@@ -35,7 +35,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                // Получаем UserId из Claims через IHttpContextAccessor
                 var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (userId == null)
@@ -52,7 +51,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Profile not found" };
                 }
 
-                // Обновляем поля профиля пользователя
                 if (request.Profile.FirstName is not null)
                     userProfile.FirstName = request.Profile.FirstName;
 
@@ -62,10 +60,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 if (request.Profile.Bio is not null)
                     userProfile.Bio = request.Profile.Bio;
 
-                // ... другие поля
-
                 await _context.SaveChangesAsync();
-                userProfile.LastSeen = DateTime.UtcNow; // Обновляем LastSeen только при успешном сохранении
+                userProfile.LastSeen = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
 
                 return new UpdateUserProfileResponse { IsSuccess = true };

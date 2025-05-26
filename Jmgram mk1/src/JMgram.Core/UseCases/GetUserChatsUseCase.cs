@@ -23,7 +23,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                // Получаем список чатов, в которых состоит пользователь
                 var userChats = await _chatRepository.GetUserChats(userId);
 
                 return new GetUserChatsResponse

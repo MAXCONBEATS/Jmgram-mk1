@@ -27,7 +27,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 var contacts = await _contactRepository.GetContactList(userId);
 
-                // Filter out contacts with "TODO" name AND filter by UserId
                 var filteredContacts = contacts.Where(c => c.Name != "TODO" && c.UserId == userId).ToList();
 
                 var contactDtos = filteredContacts.Select(c => new ContactDto

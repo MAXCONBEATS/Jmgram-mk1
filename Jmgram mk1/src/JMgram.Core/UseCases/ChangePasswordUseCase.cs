@@ -4,8 +4,6 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Responses;
-using Jmgram_mk1.src.JMgram.Core.Services;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Http;
 using System.Security.Claims;
@@ -38,7 +36,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                // 1. Получаем UserId из Claims
                 var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 if (userId == null)
@@ -47,7 +44,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Unauthorized" };
                 }
 
-                // 2. Получаем пользователя из UserManager
                 var user = await _userManager.FindByIdAsync(userId);
 
                 if (user == null)
@@ -56,7 +52,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "User not found" };
                 }
 
-                // 3. Проверяем старый пароль
                 var checkPasswordResult = await _userManager.CheckPasswordAsync(user, request.OldPassword);
 
                 if (!checkPasswordResult)
@@ -65,7 +60,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Invalid old password." };
                 }
 
-                // 4. Меняем пароль
                 var changePasswordResult = await _userManager.ChangePasswordAsync(user, request.OldPassword, request.NewPassword);
 
                 if (!changePasswordResult.Succeeded)
@@ -78,19 +72,17 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new ChangePasswordResponse { IsSuccess = false, ErrorMessage = "Error changing password" };
                 }
 
-                // 5. Создаем UserDto
                 var userDto = new UserDto
                 {
-                    Id = userId, // Больше не преобразуем в int
+                    Id = userId,
                     Phone = user.PhoneNumber,
-                    Profile = new UserProfileDto //Создаем профиль, если его нет
+                    Profile = new UserProfileDto
                     {
                         FirstName = user.FirstName,
                         LastName = user.LastName,
                     }
                 };
 
-                // 6. Возвращаем успешный ответ
                 return new ChangePasswordResponse { IsSuccess = true, User = userDto };
             }
             catch (Exception ex)

@@ -37,14 +37,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 1. Валидация входных данных
                 if (request.ContactRequestId == Guid.Empty)
                 {
                     _logger.LogError("AcceptContactRequestUseCase.Execute: Invalid input data - ContactRequestId is empty.");
                     return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные: ContactRequestId не указан." };
                 }
 
-                // 2. Получить запрос в контакты
                 _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Getting ContactRequest from repository for ContactRequestId = {request.ContactRequestId}");
                 var contactRequest = await _contactRequestRepository.GetContactRequestById(request.ContactRequestId);
                 if (contactRequest == null)
@@ -53,21 +51,10 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = $"Запрос на добавление в друзья с ID {request.ContactRequestId} не найден." };
                 }
 
-                // Проверяем, что RecipientUserId соответствует текущему пользователю (можно получить из Claims)
-                //  Предполагается, что у вас есть способ получить ID текущего пользователя
-                //var currentUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                //if (contactRequest.RecipientUserId != currentUserId)
-                //{
-                //    _logger.LogError($"AcceptContactRequestUseCase.Execute: User is not authorized to accept this ContactRequest.");
-                //    return new AcceptContactRequestResponse { IsSuccess = false, ErrorMessage = "Вы не можете принять этот запрос на добавление в друзья." };
-                //}
-
-                // 3. Изменить статус запроса
                 _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Updating ContactRequest status to Accepted.");
                 contactRequest.Status = ContactRequestStatus.Accepted;
                 await _contactRequestRepository.UpdateContactRequest(contactRequest);
 
-                // 4. Создать приватный чат
                 _logger.LogInformation($"AcceptContactRequestUseCase.Execute: Creating private chat between SenderUserId = {contactRequest.SenderUserId} and RecipientUserId = {contactRequest.RecipientUserId}");
                 var createPrivateChatRequest = new CreatePrivateChatRequest
                 {
@@ -91,7 +78,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
                 var addContactResponseForSender = await _addContactUseCase.Execute(addContactRequestForSender);
 
-                // 5. Вернуть результат
                 _logger.LogInformation("AcceptContactRequestUseCase.Execute: Successfully completed.");
                 return new AcceptContactRequestResponse { IsSuccess = true };
             }

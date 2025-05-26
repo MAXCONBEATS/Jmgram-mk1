@@ -34,7 +34,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     TotalPages = 0
                 };
             }
-            // 2.1 Check Auth
             if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
     {
                 return new GetChatMessagesResponse

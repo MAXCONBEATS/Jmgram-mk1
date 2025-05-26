@@ -21,7 +21,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                // 1. Get notifications by userId from repository
                 var notifications = await _notificationRepository.GetNotificationsByUserId(userId);
                 var notificationDtos = notifications.Select(n => new NotificationDto
                 {
@@ -34,7 +33,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     ChatId = n.ChatId
                 }).ToList();
 
-                // 2. Form successful response
                 return new GetNotificationListResponse
                 {
                     IsSuccess = true,
@@ -43,7 +41,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 3. Handle errors
                 return new GetNotificationListResponse
                 {
                     IsSuccess = false,

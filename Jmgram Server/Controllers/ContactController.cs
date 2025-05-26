@@ -1,13 +1,11 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Entities;
-using Jmgram_mk1.src.JMgram.Core.Dtos;
-using Jmgram_mk1.src.JMgram.Core.Repositories;
+﻿using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Identity;
+using Jmgram_mk1.src.JMgram.Core.Dtos;
 [EnableCors("AllowReactApps")]
 [ApiController] 
 [Route("[controller]")]
@@ -26,7 +24,8 @@ public class ContactController : ControllerBase
 
     public ContactController(CreateContactRequestUseCase createContactRequestUseCase, AcceptContactRequestUseCase acceptContactRequestUseCase,  
         UpdateContactNameUseCase updateContactNameUseCase, DeleteContactUseCase deleteContactUseCase, GetContactListUseCase getContactListUseCase,
-    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger, IContactRequestRepository contactRequestRepository, IGetContactRequestsUseCase getContactRequestsUseCase, IUserRepository userRepository)
+    IHttpContextAccessor httpContextAccessor, ILogger<ContactController> logger, IContactRequestRepository contactRequestRepository, 
+    IGetContactRequestsUseCase getContactRequestsUseCase, IUserRepository userRepository)
     {
         _createContactRequestUseCase = createContactRequestUseCase ?? throw new ArgumentNullException(nameof(createContactRequestUseCase));
         _acceptContactRequestUseCase = acceptContactRequestUseCase ?? throw new ArgumentNullException(nameof(acceptContactRequestUseCase));
@@ -110,12 +109,29 @@ public class ContactController : ControllerBase
             return BadRequest(result.ErrorMessage);
         }
 
+        // Преобразуйте результаты в DTO
+        var incomingRequestsDto = result.IncomingRequests.Select(cr => new ContactRequestDto
+        {
+            Id = cr.Id,
+            SenderUserId = cr.SenderUserId,
+            RecipientUserId = cr.RecipientUserId,
+            Status = cr.Status
+        }).ToList();
+
+        var outgoingRequestsDto = result.OutgoingRequests.Select(cr => new ContactRequestDto
+        {
+            Id = cr.Id,
+            SenderUserId = cr.SenderUserId,
+            RecipientUserId = cr.RecipientUserId,
+            Status = cr.Status
+        }).ToList();
+
         _logger.LogInformation("ContactController.GetContactRequests: Contact requests retrieved successfully.");
 
         return Ok(new
         {
-            IncomingRequests = result.IncomingRequests,
-            OutgoingRequests = result.OutgoingRequests
+            IncomingRequests = incomingRequestsDto,
+            OutgoingRequests = outgoingRequestsDto
         });
     }
 

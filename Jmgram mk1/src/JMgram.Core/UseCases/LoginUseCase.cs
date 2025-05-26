@@ -21,31 +21,24 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<LoginResponse> Execute(LoginRequest request)
         {
-            // 1.  Валидация входных данных
             if (string.IsNullOrWhiteSpace(request.Phone) || string.IsNullOrWhiteSpace(request.Password))
             {
                 return new LoginResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные." };
             }
 
-            // 2.  Найти пользователя по номеру телефона
             var users = await _userRepository.GetByPhones(new List<string> { request.Phone });
             if (users == null || users.Count == 0)
             {
                 return new LoginResponse { IsSuccess = false, ErrorMessage = "Пользователь с таким номером телефона не найден." };
             }
 
-            var user = users[0]; // Получаем первого пользователя из списка
-                                 // 3.  Проверить пароль
+            var user = users[0];
             var result = _passwordHasher.VerifyPassword(user.ToString(), request.Password);
             if (result == PasswordVerificationResult.Failed)
             {
                 return new LoginResponse { IsSuccess = false, ErrorMessage = "Неверный пароль." };
             }
-
-            // 4.  Сгенерировать JWT токен
-
-            // 5.  Вернуть успешный ответ
-            return new LoginResponse { IsSuccess = true }; // TODO: Вернуть JWT токен
+            return new LoginResponse { IsSuccess = true };
         }
     }
 }

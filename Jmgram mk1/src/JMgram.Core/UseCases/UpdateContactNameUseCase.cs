@@ -1,10 +1,5 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -33,7 +28,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 }
 
                 contact.Name = newName;
-                await _contactRepository.Update(contact); // Assuming you have an Update method in your repository
+                await _contactRepository.Update(contact);
 
                 _logger.LogInformation($"UpdateContactNameUseCase.Execute: Contact name updated successfully for UserId: {userId}, ContactUserId: {contactUserId}");
                 return true;

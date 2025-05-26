@@ -9,6 +9,7 @@ import ChatWindow from './ChatWindow';
 import NotificationWindow from './NotificationWindow';
 import ChatListContainer from './ChatListContainer';
 import axios from 'axios';
+import { markAsRead } from '../controllers/NotificationController';
 import CreateChatButton from './CreateChatButton';
 import UserProfile from './UserProfile';  // Added import
 axios.defaults.baseURL = 'https://localhost:5087';
@@ -105,13 +106,31 @@ function Main({ error, onLogout }) {
     }
   };
 
-  const handleRemoveNotification = async (id) => {
+  // Renamed to handleDeleteNotification for explicit DB deletion (if needed)
+  const handleDeleteNotification = async (id) => {
     try {
       await axios.delete('/Notification/Delete', { params: { id }, withCredentials: true });
       setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
     } catch (error) {
       console.error('Ошибка при удалении уведомления:', error.response || error);
       alert('Не удалось удалить уведомление.');
+    }
+  };
+
+  // Remove notification from UI only, no DB delete
+  const handleCloseNotification = (id) => {
+    setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
+  };
+
+  // Mark notification as read in DB and remove from UI
+  const handleMarkAsReadNotification = async (id) => {
+    try {
+      const success = await markAsRead(id);
+      if (success) {
+        setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
+      }
+    } catch (error) {
+      console.error('Ошибка при пометке уведомления как прочитанного:', error);
     }
   };
 
@@ -317,7 +336,11 @@ return (
       </div>
     )}
 
-    <NotificationWindow notifications={notifications} onRemoveNotification={handleRemoveNotification} />
+    <NotificationWindow 
+      notifications={notifications} 
+      onCloseNotification={handleCloseNotification} 
+      onMarkAsReadNotification={handleMarkAsReadNotification} 
+    />
 
     {profileUserId && (
       <UserProfile userId={profileUserId} onClose={() => setProfileUserId(null)} />

@@ -100,15 +100,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
                 entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(cr => cr.Status).HasConversion<string>();
 
-                entity.HasOne<UserProfile>()
+                entity.HasOne<AppIdentityUser>(cr => cr.SenderUser)
                       .WithMany()
                       .HasForeignKey(cr => cr.SenderUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction);
 
-                entity.HasOne<UserProfile>()
+                entity.HasOne<AppIdentityUser>(cr => cr.RecipientUser)
                       .WithMany()
                       .HasForeignKey(cr => cr.RecipientUserId)
-                      .OnDelete(DeleteBehavior.Restrict);
+                      .OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasIndex(cr => new { cr.SenderUserId, cr.RecipientUserId })
                       .IsUnique();

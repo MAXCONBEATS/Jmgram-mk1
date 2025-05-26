@@ -26,14 +26,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 1. Проверка существования чата
                 if (!await _chatRepository.ChatExists(chatId))
                 {
                     _logger.LogError($"DeleteChatUseCase.Execute: Chat with id {chatId} does not exist.");
                     return new DeleteChatResponse { IsSuccess = false, ErrorMessage = $"Chat with id {chatId} does not exist." };
                 }
 
-                // 2. Удаление чата
                 await _chatRepository.DeleteChat(chatId);
 
                 _logger.LogInformation($"DeleteChatUseCase.Execute: Chat {chatId} deleted successfully.");

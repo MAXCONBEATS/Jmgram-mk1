@@ -22,16 +22,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<RegisterUserResponse> Execute(RegisterUserRequest request)
         {
-            // 1. Проверка, что номер телефона не занят
             if (await _userRepository.IsPhoneTaken(request.Phone))
             {
                 return new RegisterUserResponse { IsSuccess = false, ErrorMessage = "Номер телефона уже занят." };
             }
 
-            // 2. Хеширование пароля
             string passwordHash = _passwordHasher.HashPassword(request.Password);
 
-            // 3. Создание нового объекта User и UserProfile из Request
             var user = new AppIdentityUser
             {
                 Phone = request.Phone,    
@@ -45,10 +42,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 }
             };
 
-            // 4. Сохранение пользователя в базе данных
             await _userRepository.Add(user);
 
-            // Преобразование User в UserDto
             UserDto userDto = MapUserToDto(user);
 
             return new RegisterUserResponse { IsSuccess = true, User = userDto };
@@ -58,7 +53,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             if (user == null)
             {
-                return null; // Или выбросить исключение ArgumentNullException
+                return null;
             }
 
             return new UserDto

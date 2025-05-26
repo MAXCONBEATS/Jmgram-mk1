@@ -4,11 +4,7 @@ using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -27,7 +23,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             _contactRequestRepository = contactRequestRepository ?? throw new ArgumentNullException(nameof(contactRequestRepository));
             _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
-            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository)); //  Инициализируем UserRepository
+            _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository)); 
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 

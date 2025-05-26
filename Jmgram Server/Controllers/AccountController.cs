@@ -1,17 +1,10 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Jmgram_mk1.src.JMgram.Core.Entities;
-using System.ComponentModel.DataAnnotations;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.EntityFrameworkCore;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Jmgram_mk1.src.JMgram.Core.Responses;
 [Route("[controller]/[action]")]

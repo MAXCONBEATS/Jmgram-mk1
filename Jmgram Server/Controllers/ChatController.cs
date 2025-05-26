@@ -1,20 +1,10 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Jmgram_mk1.src.JMgram.Core.Entities;
-using System.ComponentModel.DataAnnotations;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
-using System.Diagnostics;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
-using Jmgram_mk1.src.JMgram.Core.Responses;
-using Microsoft.EntityFrameworkCore;
-using Jmgram_mk1.src.JMgram.Core.Storage;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Services;
 
@@ -41,15 +31,13 @@ public class ChatController : ControllerBase
     private readonly IGetLastChatMessageUseCase _getLastChatMessageUseCase;
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
-    private readonly GetContactListUseCase _getContactListUseCase;
     private readonly IChatService _chatService;
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
      IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase,
      ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
-     UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
-     GetContactListUseCase getContactListUseCase, IChatService chatService,
+     UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
      RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository)
     {
@@ -65,8 +53,7 @@ public class ChatController : ControllerBase
         _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
-        _getUserChatsUseCase = getUserChatsUseCase ?? throw new ArgumentNullException(nameof(getUserChatsUseCase));
-        _getContactListUseCase = getContactListUseCase ?? throw new ArgumentNullException(nameof(getContactListUseCase));
+        _getUserChatsUseCase = getUserChatsUseCase ?? throw new ArgumentNullException(nameof(getUserChatsUseCase));       
         _getLastChatMessageUseCase = getLastChatMessageUseCase ?? throw new ArgumentNullException(nameof(getLastChatMessageUseCase));
         _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
         _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));

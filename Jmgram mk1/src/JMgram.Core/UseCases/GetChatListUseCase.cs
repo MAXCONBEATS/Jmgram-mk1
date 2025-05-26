@@ -28,31 +28,26 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             _logger.LogInformation($"GetChatListUseCase.Execute: Attempting to retrieve chat list for ChatId = {chatId} and UserId = {userId}.");
 
-            // 1. Проверить входные данные
             if (string.IsNullOrEmpty(chatId) || string.IsNullOrEmpty(userId))
             {
                 _logger.LogWarning("GetChatListUseCase.Execute: ChatId or UserId is null or empty.");
                 return new GetChatListResponse { IsSuccess = false, ErrorMessage = "ChatId и UserId не могут быть пустыми", Users = new List<UserDto>() };
             }
 
-            // 2. Проверить, что пользователь является участником чата
             if (!await _chatRepository.IsUserInChat(chatId, userId))
             {
                 _logger.LogWarning($"GetChatListUseCase.Execute: User {userId} is not a member of chat {chatId}.");
                 return new GetChatListResponse { IsSuccess = false, ErrorMessage = "Вы не являетесь участником этого чата", Users = new List<UserDto>() };
             }
 
-            // 3. Получаем все записи ChatUser по ChatId
             var chatUsers = await _chatRepository.GetChatUsers(chatId);
 
-            // 4. Если чат не найден (нет записей ChatUser), вернуть пустой список или ошибку
             if (chatUsers == null || chatUsers.Count == 0)
             {
                 _logger.LogInformation($"GetChatListUseCase.Execute: Chat {chatId} not found or has no members.");
                 return new GetChatListResponse { IsSuccess = true, Users = new List<UserDto>() };
             }
 
-            // 5. Преобразуем ChatUser в UserDto
             var userDtos = chatUsers.Select(cu => new UserDto
             {
                 Id = cu.UserId,

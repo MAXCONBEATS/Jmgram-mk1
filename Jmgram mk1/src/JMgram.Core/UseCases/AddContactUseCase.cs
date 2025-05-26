@@ -24,7 +24,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<AddContactResponse> Execute(AddContactRequest request)
         {
-            // 1. Get user ID from the context
             var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId))
@@ -32,7 +31,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "User ID not found in claims." };
             }
 
-            // 2. Validate input
             if (string.IsNullOrEmpty(request.ContactUserId))
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Неверные идентификаторы пользователей." };
@@ -43,7 +41,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Нельзя добавить себя в контакты." };
             }
 
-            // 3. Check if both users exist
             var user = await _userRepository.GetById(userId);
             var contactUser = await _userRepository.GetById(request.ContactUserId);
 
@@ -52,13 +49,11 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Один или оба пользователя не найдены." };
             }
 
-            // 4. Check if the contact is already added
             if (await _contactRepository.IsContact(userId, request.ContactUserId))
             {
                 return new AddContactResponse { IsSuccess = false, ErrorMessage = "Этот пользователь уже добавлен в контакты." };
             }
 
-            // 5. Create the contact
             var contact = new Contact
             {
                 UserId = userId,
@@ -74,18 +69,15 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 Phone = user.Phone
             };
 
-            // 6. Save the contact in the database
             await _contactRepository.Add(contact);
             await _contactRepository.Add(contactForRecipient);
 
-            // 7. Convert to DTO
             var contactDto = new ContactDto
             {
                 UserId = contact.UserId,
                 ContactUserId = contact.ContactUserId,
                 Name = user.FirstName
             };
-            // 8. Return result
             return new AddContactResponse { IsSuccess = true, Contact = contactDto };
         }
     }

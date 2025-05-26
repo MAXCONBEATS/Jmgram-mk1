@@ -30,7 +30,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 1. Валидация входных данных
                 if (string.IsNullOrEmpty(request.UserId1) || string.IsNullOrEmpty(request.UserId2))
                 {
                     _logger.LogError("CreatePrivateChatUseCase.Execute: Invalid input data - UserId1 or UserId2 is null or empty.");
@@ -43,7 +42,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new CreatePrivateChatResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные: UserId1 и UserId2 совпадают." };
                 }
 
-                // 2. Получить имена пользователей
                 _logger.LogInformation($"CreatePrivateChatUseCase.Execute: Getting User1 name for UserId = {request.UserId1}");
                 var user1 = await _userRepository.GetById(request.UserId1);
                 if (user1 == null)
@@ -60,23 +58,19 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new CreatePrivateChatResponse { IsSuccess = false, ErrorMessage = $"Пользователь с ID {request.UserId2} не найден." };
                 }
 
-                // 3. Создать чат
-                // Создаем чат с каким-то общим именем (например, PrivateChat)
                 var chat = new Chat
                 {
-                    Name = "PrivateChat",  //  Имя чата не отображается пользователю
-                    CreatorUserId = request.UserId1, //  Кто создал чат не важно
+                    Name = "PrivateChat",
+                    CreatorUserId = request.UserId1,
                     CreatedAt = DateTime.UtcNow
                 };
 
                 var createdChat = await _chatRepository.CreateChat(chat);
                 _logger.LogInformation($"CreatePrivateChatUseCase.Execute: Chat created with ID = {createdChat.Id}");
 
-                //  Добавляем пользователей в чат с их персональными именами чатов
                 await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId1, ChatName = $"Переписка с {user2.FirstName}", JoinedAt = DateTime.UtcNow });
                 await _chatRepository.AddUserToChat(new ChatUser { ChatId = createdChat.Id, UserId = request.UserId2, ChatName = $"Переписка с {user1.FirstName}", JoinedAt = DateTime.UtcNow });
 
-                // 4. Вернуть результат
                 _logger.LogInformation("CreatePrivateChatUseCase.Execute: Successfully completed.");
                 return new CreatePrivateChatResponse { IsSuccess = true };
             }

@@ -6,7 +6,6 @@ using Jmgram_mk1.src.JMgram.Core.Responses;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Dtos;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
@@ -23,7 +22,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<GetUserProfileResponse> Execute(GetUserProfileRequest request)
         {
-            // 1. Валидация входных данных
             if (request == null)
             {
                 _logger.LogError("GetUserProfileRequest is null.");
@@ -64,7 +62,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 _logger.LogInformation($"UserProfile retrieved successfully for UserId: {request.UserId}");
 
-                // 4. Формирование DTO
                 var profileDto = new UserProfileDto
                 {
                     FirstName = userProfile.FirstName,
@@ -74,7 +71,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     LastSeen = userProfile.LastSeen
                 };
 
-                // 5. Формирование успешного ответа
                 return new GetUserProfileResponse
                 {
                     IsSuccess = true,
@@ -83,7 +79,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 6. Обработка ошибок
                 _logger.LogError(ex, $"An error occurred while retrieving user profile for UserId: {request.UserId}");
                 return new GetUserProfileResponse
                 {

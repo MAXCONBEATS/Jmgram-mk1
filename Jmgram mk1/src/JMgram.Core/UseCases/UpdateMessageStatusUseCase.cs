@@ -24,7 +24,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<UpdateMessageStatusResponse> Execute(UpdateMessageStatusRequest request, string userId)
         {
-            // 1. Валидация входных данных
             if (request == null)
             {
                 return new UpdateMessageStatusResponse
@@ -63,10 +62,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 2. Получаем сообщение из репозитория
                 var message = await _messageRepository.GetMessageById(request.MessageId);
 
-                // 3. Проверяем, существует ли сообщение
                 if (message == null)
                 {
                     return new UpdateMessageStatusResponse
@@ -76,7 +73,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 4. Проверяем, что сообщение принадлежит указанному чату
                 if (message.ChatId != request.ChatId)
                 {
                     return new UpdateMessageStatusResponse
@@ -86,7 +82,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 5. Проверяем, является ли пользователь участником чата
                 if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
                 {
                     return new UpdateMessageStatusResponse
@@ -96,8 +91,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 6. Проверяем, является ли пользователь *получателем* сообщения
-                //    Получателем считаем всех, кто не отправитель сообщения
                 if (message.SenderId == userId)
                 {
                     return new UpdateMessageStatusResponse
@@ -107,13 +100,10 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     };
                 }
 
-                // 7. Обновляем статус сообщения
                 message.Status = (MessageStatus)parsedStatus;
 
-                // 8. Сохраняем изменения в репозитории
                 await _messageRepository.Update(message);
 
-                // 9. Формируем успешный ответ
                 return new UpdateMessageStatusResponse
                 {
                     IsSuccess = true,
@@ -121,7 +111,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             }
             catch (Exception ex)
             {
-                // 10. Обрабатываем ошибку
                 return new UpdateMessageStatusResponse
                 {
                     IsSuccess = false,

@@ -12,28 +12,24 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Настройка DbContext
 builder.Services.AddDbContext<JMgramDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly("Jmgram mk1")));
 
-// 2. Настройка Identity
 builder.Services.AddIdentity<AppIdentityUser, IdentityRole>(options =>
 {
-    // Настройки Identity (Пароли, Lockout, User)
     options.Password.RequireDigit = false;
     options.Password.RequireLowercase = false;
     options.Password.RequireNonAlphanumeric = false;
     options.Password.RequireUppercase = false;
     options.Password.RequiredLength = 6;
     options.User.RequireUniqueEmail = false;
-    options.SignIn.RequireConfirmedAccount = false; // Если требуется подтверждение учетной записи
+    options.SignIn.RequireConfirmedAccount = false;
 })
     .AddEntityFrameworkStores<JMgramDbContext>()
     .AddDefaultTokenProviders()
-    .AddSignInManager<SignInManager<AppIdentityUser>>(); // Добавляем SignInManager
+    .AddSignInManager<SignInManager<AppIdentityUser>>();
 
-// 3. Настройка Cookie Authentication (Упрощенная версия)
 builder.Services.ConfigureApplicationCookie(options =>
 {
     options.Cookie.Name = ".AspNetCore.Identity.Application";
@@ -42,15 +38,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LogoutPath = "/Account/Logout";
     options.SlidingExpiration = true;
     options.Cookie.HttpOnly = true;
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // Только для HTTPS!
-    options.Cookie.SameSite = SameSiteMode.None; // Требуется для работы с CORS
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.SameSite = SameSiteMode.None;
 
-    // Добавляем обработку для API-запросов (возврат 401)
     options.Events.OnRedirectToLogin = context =>
     {
         if (context.Request.Path.StartsWithSegments("/api") || context.Request.Path.StartsWithSegments("/Contact") || context.Request.Path.StartsWithSegments("/User")) // Проверьте, что это API-запрос
         {
-            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized; // Верните 401
+            context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             context.Response.ContentType = "application/json";
             return Task.CompletedTask;
         }
@@ -58,11 +53,10 @@ builder.Services.ConfigureApplicationCookie(options =>
         return Task.CompletedTask;
     };
 });
-// 4. Добавляем Authentication и Authorization
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
- .AddCookie(); // Убираем конфигурацию cookie здесь
 
-// 5. Настройка CORS
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+ .AddCookie();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApps", builder =>
@@ -73,20 +67,19 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 
-// Добавляем CORS-политику для WebSocket
 options.AddPolicy("AllowReactAppWebSocket", builder =>
     {
         builder.WithOrigins("https://localhost:3000", "https://localhost:3001")
-              .AllowAnyMethod() // Разрешаем все методы (GET, POST, OPTIONS и т.д.)
-              .AllowAnyHeader() // Разрешаем все заголовки
-              .AllowCredentials(); // Разрешаем передачу куки (если требуется аутентификация для WebSocket)
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
     });
 });
 
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Jmgram Chat API", Version = "v1" });
-    c.EnableAnnotations(); // Включаем аннотации
+    c.EnableAnnotations();
 });
 
 builder.Services.AddAuthorization();
@@ -136,14 +129,12 @@ builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>(
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 
-// 8. Добавляем MVC и Swagger
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -152,11 +143,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 9. Включаем CORS, Authentication и Authorization
-app.UseStaticFiles(); // Для статических файлов (CSS, JS, Images)
-app.UseRouting(); // Добавляем routing
+app.UseStaticFiles();
+app.UseRouting();
 
-app.UseCors("AllowReactApps"); // <- ВАЖНО: После app.UseRouting()
+app.UseCors("AllowReactApps");
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -164,47 +154,6 @@ app.UseAuthorization();
 app.MapHub<ChatHub>("/chatHub");
 app.UseWebSockets();
 
-//app.Use(async (context, next) =>
-//{
-//    if (context.Request.Path == "/ws")
-//    {
-//        // Проверяем, является ли запрос WebSocket
-//        if (context.WebSockets.IsWebSocketRequest)
-//        {
-//            // Проверяем Origin заголовка запроса
-//            var origin = context.Request.Headers["Origin"].ToString();
 
-//            // Добавляем логирование для отладки
-//            Console.WriteLine($"WebSocket request from Origin: {origin}");
-
-//            // Сверяем с разрешенными Origin
-//            if (origin == "https://localhost:3000") // Сравниваем Origin с разрешенным
-//            {
-//                // Применяем CORS политику для WebSocket
-//                context.Response.Headers.Append("Access-Control-Allow-Origin", origin);
-//                context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
-
-//                using (WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync())
-//                {
-//                    // Обработка WebSocket-соединения
-//                    // Ваш код обработки WebSocket-соединения здесь
-//                }
-//            }
-//            else
-//            {
-//                Console.WriteLine($"WebSocket connection blocked from Origin: {origin}");
-//                context.Response.StatusCode = 403; // Запрещено
-//            }
-//        }
-//        else
-//        {
-//            context.Response.StatusCode = 400;
-//        }
-//    }
-//    else
-//    {
-//        await next.Invoke();
-//    }
-//});
 app.MapControllers();
 app.Run();

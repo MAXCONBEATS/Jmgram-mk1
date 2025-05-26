@@ -2,23 +2,20 @@ import React, { useEffect, useState } from 'react';
 import '../css/NotificationWindow.css';
 import { markAsRead } from '../controllers/NotificationController';
 
-function NotificationWindow({ notifications, onRemoveNotification }) {
+function NotificationWindow({ notifications, onCloseNotification, onMarkAsReadNotification }) {
   const [closedNotifications, setClosedNotifications] = useState(new Set());
 
-  useEffect(() => {
-    if (notifications.length === 0) return;
+  useEffect(() => { if (notifications.length === 0) return;
 
     const timers = notifications.map(notification => {
       console.log('Notification id for auto-dismiss:', notification.id);
       return setTimeout(() => {
-        onRemoveNotification(notification.id);
+        onCloseNotification(notification.id);
       }, 5000); // Auto dismiss after 5 seconds
     });
 
-    return () => {
-      timers.forEach(timer => clearTimeout(timer));
-    };
-  }, [notifications, onRemoveNotification]);
+    return () => {timers.forEach(timer => clearTimeout(timer));};
+  }, [notifications, onCloseNotification]);
 
   const renderNotificationMessage = (notification) => {
     if (notification.notificationType === 'Message') {
@@ -37,7 +34,7 @@ function NotificationWindow({ notifications, onRemoveNotification }) {
       const success = await markAsRead(id);
       if (success) {
         setClosedNotifications(prev => new Set(prev).add(id));
-        onRemoveNotification(id);
+        onMarkAsReadNotification(id);
       }
     } catch (error) {
       console.error('Ошибка при пометке уведомления как прочитанного:', error);
@@ -46,7 +43,7 @@ function NotificationWindow({ notifications, onRemoveNotification }) {
 
   const handleClose = (id) => {
     setClosedNotifications(prev => new Set(prev).add(id));
-    onRemoveNotification(id);
+    onCloseNotification(id);
   };
 
   return (

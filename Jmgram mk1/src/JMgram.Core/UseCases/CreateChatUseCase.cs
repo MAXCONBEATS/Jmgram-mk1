@@ -31,7 +31,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _logger.LogInformation("CreateChatUseCase.Execute: Starting execution");
             try
             {
-                // 1. Валидация входных данных
                 if (request.Chat == null || string.IsNullOrWhiteSpace(request.Chat.Name) || request.Phones == null || request.Phones.Count == 0)
                 {
                     _logger.LogError("CreateChatUseCase.Execute: Invalid input data");
@@ -40,7 +39,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: Chat name = {request.Chat.Name}, Phones = {string.Join(", ", request.Phones)}");
 
-                // 2. Получение UserId создателя чата из Claims
                 var creatorUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(creatorUserId))
                 {
@@ -50,7 +48,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: CreatorUserId = {creatorUserId}");
 
-                // 3. Создание чата
                 var chat = new Chat
                 {
                     Name = request.Chat.Name,
@@ -59,21 +56,16 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: About to create chat in database");
-                // 4. Создание чата в БД
                 var createdChat = await _chatRepository.CreateChat(chat);
                 _logger.LogInformation($"CreateChatUseCase.Execute: Chat created with ID = {createdChat.Id}");
 
-                // 5. Получение списка пользователей по телефонам
                 _logger.LogInformation($"CreateChatUseCase.Execute: Getting users by phones: {string.Join(", ", request.Phones)}");
                 var users = await _userRepository.GetByPhones(request.Phones);
 
-                //  Получаем контакты текущего пользователя
                 var contacts = await _userRepository.GetContactsForUser(creatorUserId);
 
-                //  Список телефонов контактов текущего пользователя
                 var contactPhones = contacts.Select(c => c.Phone).ToList();
 
-                // 6. Проверка, что все пользователи найдены и являются контактами
                 if (users == null || users.Count() != request.Phones.Count() || !request.Phones.All(phone => contactPhones.Contains(phone)))
                 {
                     _logger.LogWarning($"CreateChatUseCase.Execute: Not all users were found or are not contacts for phones: {string.Join(", ", request.Phones)}");
@@ -82,16 +74,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: Found {users?.Count() ?? 0} users and all are contacts");
 
-                // 6. Проверка, что все пользователи найдены
                 if (users == null || users.Count() != request.Phones.Count())
                 {
                     _logger.LogWarning($"CreateChatUseCase.Execute: Not all users were found for phones: {string.Join(", ", request.Phones)}");
-                    // You can choose to return an error or proceed with the found users
                 }
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: Found {users?.Count() ?? 0} users");
 
-                // 7. Добавление создателя чата в чат
                 var creatorChatUser = new ChatUser
                 {
                     ChatId = createdChat.Id,
@@ -104,7 +93,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 await _chatRepository.AddUserToChat(creatorChatUser);
                 _logger.LogInformation($"CreateChatUseCase.Execute: Creator added to chat");
 
-                // 8. Добавление пользователей в чат
                 if (users != null)
                 {
                     foreach (var user in users)
@@ -127,14 +115,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     }
                 }
 
-                // 9. Преобразование в DTO
                 var chatDto = new ChatDto
                 {
                     ChatId= createdChat.Id,
                     Name = createdChat.Name
                 };
 
-                // 10. Вернуть результат
                 _logger.LogInformation("CreateChatUseCase.Execute: Successfully completed");
                 return new CreateChatResponse { IsSuccess = true, Chat = chatDto };
             }
