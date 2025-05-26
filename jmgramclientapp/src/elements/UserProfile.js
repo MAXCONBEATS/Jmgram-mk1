@@ -8,7 +8,6 @@ const UserProfile = ({ userId, onClose }) => {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    avatarPath: '',
     bio: ''
   });
 
@@ -21,7 +20,6 @@ const UserProfile = ({ userId, onClose }) => {
         setFormData({
           firstName: data.firstName || '',
           lastName: data.lastName || '',
-          avatarPath: data.avatarPath || '',
           bio: data.bio || ''
         });
       } catch (error) {
@@ -59,12 +57,6 @@ const UserProfile = ({ userId, onClose }) => {
     <div className="user-profile-overlay">
       <div className="user-profile-container">
         <button className="close-btn" onClick={onClose}>×</button>
-        
-        {profile.avatarPath && (
-          <div className="avatar-container">
-            <img src={profile.avatarPath} alt="Profile" className="profile-avatar" />
-          </div>
-        )}
 
         {editMode ? (
           <form onSubmit={handleSubmit}>
@@ -77,15 +69,52 @@ const UserProfile = ({ userId, onClose }) => {
                 onChange={handleChange}
               />
             </div>
-            {/* Аналогично для других полей */}
-            <button type="submit">Сохранить</button>
+
+            <div className="form-group">
+              <label>Фамилия:</label>
+              <input
+                type="text"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>О себе:</label>
+              <textarea
+                name="bio"
+                value={formData.bio}
+                onChange={handleChange}
+                rows="4"
+              />
+            </div>
+
+            <div className="form-actions">
+              <button type="submit" className="save-btn">Сохранить</button>
+              <button 
+                type="button" 
+                className="cancel-btn"
+                onClick={() => setEditMode(false)}
+              >
+                Отмена
+              </button>
+            </div>
           </form>
         ) : (
           <div className="profile-info">
             <h2>{profile.firstName} {profile.lastName}</h2>
-            <p>{profile.bio}</p>
-            <p>Был в сети: {new Date(profile.lastSeen).toLocaleString()}</p>
-            {isOwnProfile && <button onClick={() => setEditMode(true)}>Редактировать</button>}
+            {profile.bio && <p className="bio-text">{profile.bio}</p>}
+            <p className="last-seen">Был в сети: {new Date(profile.lastSeen).toLocaleString()}</p>
+            
+            {isOwnProfile && (
+              <button 
+                onClick={() => setEditMode(true)}
+                className="edit-btn"
+              >
+                Редактировать профиль
+              </button>
+            )}
           </div>
         )}
       </div>
