@@ -10,7 +10,11 @@ using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext
 
 namespace Jmgram_mk1.src.JMgram.Core.UseCases
 {
-    public class SendMessageUseCase
+    public interface ISendMessageUseCase
+    {
+        Task<SendMessageResponse> Execute(SendMessageRequest request, string senderUserId);
+    }
+    public class SendMessageUseCase : ISendMessageUseCase
     {
         private readonly IMessageRepository _messageRepository;
         private readonly IChatRepository _chatRepository;

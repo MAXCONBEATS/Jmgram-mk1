@@ -200,6 +200,21 @@
   background: #555555;
 }
 
+/* Button style for chat header and remove user buttons */
+.chat-header-button {
+  background: #222222;
+  color: #cccccc;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.chat-header-button:hover {
+  background: #333333;
+}
+
 .emoji-icon {
   font-size: 20px;
   line-height: 1;

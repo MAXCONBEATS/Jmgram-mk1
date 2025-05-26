@@ -32,7 +32,7 @@ public class ChatController : ControllerBase
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
     private readonly IGetChatListUseCase _getChatListUseCase;
-    private readonly SendMessageUseCase _sendMessageUseCase;
+    private readonly ISendMessageUseCase _sendMessageUseCase;
     private readonly SendNotificationUseCase _sendNotificationUseCase;
     private readonly RespondToChatInviteUseCase _respondToChatInviteUseCase;
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
@@ -47,7 +47,7 @@ public class ChatController : ControllerBase
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
      IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase,
-     SendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
+     ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase,
      GetContactListUseCase getContactListUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,

@@ -53,7 +53,17 @@ function ChatListContainer({ selectedChat, setSelectedChat }) {
             await deleteChat(chatId);
             setChats((prevChats) => prevChats.filter(chat => chat.id !== chatId));
             if (selectedChat && (selectedChat.id === chatId || selectedChat.ChatId === chatId)) {
+                // If the deleted chat is currently open, close it and select another chat if available
                 setSelectedChat(null);
+                // Optionally, select the first chat in the updated list if any
+                setTimeout(() => {
+                    setChats((prevChats) => {
+                        if (prevChats.length > 0) {
+                            setSelectedChat(prevChats[0]);
+                        }
+                        return prevChats;
+                    });
+                }, 0);
             }
         } catch (error) {
             console.error('Ошибка при удалении чата:', error);

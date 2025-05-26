@@ -1,4 +1,5 @@
 import React, { useState, useEffect,useRef } from 'react';
+import { HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 import EmojiPicker from 'emoji-picker-react';
 import { getMessages, sendMessage, getChatUsersList, removeUserFromChat } from '../controllers/ChatController';
 import '../css/ChatWindow.css';
@@ -8,17 +9,21 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState([]);
-    const [contextMenuVisible, setContextMenuVisible] = useState(false);
+    // Removed contextMenuVisible state
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const emojiButtonRef = useRef(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
     const chatRef = useRef(null);
+
+    const [connection, setConnection] = useState(null);
+    const [isConnected, setIsConnected] = useState(false); // Added isConnected state
     
     const handleEmojiClick = (emojiData) => {
     setNewMessage(prev => prev + emojiData.emoji);
     setShowEmojiPicker(false);
   };
+
 
 
     useEffect(() => {
@@ -46,6 +51,82 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     }, [chat]);
 
     useEffect(() => {
+        if (!chat) return;
+
+const newConnection = new HubConnectionBuilder()
+    .withUrl('https://localhost:5087/chatHub')
+    .configureLogging(LogLevel.Information)
+    .withAutomaticReconnect()
+    .build();
+
+console.log('Creating new SignalR connection:', newConnection);
+
+setConnection(newConnection);
+
+return () => {
+    // Removed connection.stop() here to avoid stopping connection prematurely
+};
+    }, [chat]);
+
+    useEffect(() => {
+        if (connection) {
+connection.start()
+    .then(() => {
+        console.log('SignalR Connected.');
+        setIsConnected(true); // Set isConnected to true on successful connection
+
+        // Join the chat group
+        connection.invoke('JoinChat', chat.chatId || chat.id)
+            .then(() => console.log('Joined chat group:', chat.chatId || chat.id))
+            .catch(err => console.error('JoinChat error:', err));
+
+        // Listen for incoming messages
+connection.on('ReceiveMessage', (user, message) => {
+    console.log('Received message from SignalR:', user, message);
+    setMessages(prevMessages => {
+        const newMessages = [...prevMessages, { senderName: user, text: message }];
+        console.log('Updated messages:', newMessages);
+        return newMessages;
+    });
+});
+    })
+    .catch(e => console.error('Connection failed: ', e));
+
+connection.onclose(error => {
+    setIsConnected(false); // Set isConnected to false on connection close
+    console.log("Соединение закрыто:", error); // Added log for connection close
+    if (error) {
+        console.error('SignalR connection closed with error:', error);
+    } else {
+        console.log('SignalR connection closed.');
+    }
+});
+
+connection.onreconnecting(error => {
+    setIsConnected(false); // Set isConnected to false on reconnecting
+    console.warn('SignalR reconnecting due to error:', error);
+});
+
+connection.onreconnected(connectionId => {
+    setIsConnected(true); // Set isConnected to true on reconnected
+    console.log('SignalR reconnected. ConnectionId:', connectionId);
+});
+        }
+
+return () => {
+            if (connection && isConnected) { // Only leave chat if connected
+                connection.off('ReceiveMessage');
+                console.log('Attempting to leave chat:', chat.chatId || chat.id);
+                connection.invoke('LeaveChat', chat.chatId || chat.id)
+                    .then(() => console.log('Successfully left chat:', chat.chatId || chat.id))
+                    .catch(err => console.error('LeaveChat error:', err));
+                // Temporarily removed connection.stop() to check if error persists
+                // connection.stop();
+            }
+        };
+    }, [connection, chat, isConnected]);
+
+    useEffect(() => {
         async function fetchParticipants() {
             if (!chat) {
                 setParticipants([]);
@@ -66,8 +147,7 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
 
     useEffect(() => {
         const handleClickOutside = (event) => {
-            if (contextMenuVisible && event.button === 0) { // left click only
-                setContextMenuVisible(false);
+            if (selectedParticipant && event.button === 0) { // left click only
                 setSelectedParticipant(null);
             }
         };
@@ -75,53 +155,38 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
         return () => {
             window.removeEventListener('mousedown', handleClickOutside);
         };
-    }, [contextMenuVisible]);
+    }, [selectedParticipant]);
 
-    const handleContextMenu = (event, participant) => {
-        event.preventDefault();
-        console.log('handleContextMenu called - currentUserId:', currentUserId, 'chat.creatorUserId:', chat.creatorUserId);
-        // Temporarily allow context menu always for testing
-        setSelectedParticipant(participant);
-        setContextMenuPosition({ x: event.pageX, y: event.pageY });
-        setContextMenuVisible(true);
-        /*
-        if (currentUserId === chat.creatorUserId) {
-            setSelectedParticipant(participant);
-            setContextMenuPosition({ x: event.pageX, y: event.pageY });
-            setContextMenuVisible(true);
-        }
-        */
+    const handleContextMenu = (e, participant) => {
+        e.preventDefault();
+        console.log('Right click on participant:', participant);
+
+        setContextMenuPosition({ x: e.clientX, y: e.clientY });
+        setSelectedParticipant(participant); // Set selected participant
     };
 
-    const handleRemoveUser = async (participant) => {
-        console.log('Удаление пользователя...');
-        if (!participant) {
-            console.warn('Не выбран участник для удаления.');
+    const handleRemoveUser = async (participantToRemove) => {
+        console.log('Attempting to remove user:', participantToRemove);
+
+        if (!participantToRemove) {
+            console.warn('No participant selected for removal.');
+            // setContextMenuVisible(false); // Removed since contextMenuVisible state is removed
             return;
         }
-      console.log('participant id:', participant.id);
-      console.log('chat id:', chat.chatId || chat.id);
-  
+
+        console.log(`Removing user ${participantToRemove.id} from chat ${chat.chatId || chat.id}`);
+
         try {
-            console.log(`User ${currentUserId} attempts to remove user ${participant.id} from chat ${chat.chatId || chat.id}`);
-            const response = await removeUserFromChat(chat.chatId || chat.id, participant.id);
-          
-            console.log('Удаление успешно:', response);
-            // Refresh participants list after successful removal
-            const users = await getChatUsersList(chat.chatId || chat.id);
-            const uniqueUsers = Array.from(new Map(users.map(u => [u.id, u])).values());
-            setParticipants(uniqueUsers);
-            setContextMenuVisible(false); // Закрываем контекстное меню
+            await removeUserFromChat(chat.chatId || chat.id, participantToRemove.id);
+            console.log('User removed successfully');
+
+            // Update participants state
+            setParticipants(prevParticipants => prevParticipants.filter(p => p.id !== participantToRemove.id));
+            // setContextMenuVisible(false); // Removed since contextMenuVisible state is removed
+
         } catch (error) {
-            console.error('Ошибка при удалении пользователя:', error);
-            // Show user the error message from backend if available
-            if (error.response && error.response.data) {
-                alert(`Ошибка: ${error.response.data}`);
-            } else if (error.message) {
-                alert(`Ошибка: ${error.message}`);
-            } else {
-                alert('Ошибка при удалении пользователя из чата.');
-            }
+            console.error('Error removing user:', error);
+            // TODO: Show user the error
         }
     };
 
@@ -133,19 +198,11 @@ const handleSendMessage = async () => {
             return;
         }
         try {
-            const messagePayload = { chatId: chat.chatId || chat.id, text: newMessage, senderId: senderId, senderName: senderName };
-            console.log('Sending message payload:', messagePayload);
-            await sendMessage(messagePayload);
-            // Refresh messages after sending
-            const response = await getMessages(chat.chatId || chat.id, 1, 20);
-            const mappedMessages = (response.chat || []).map(msg => ({
-                ...msg,
-                senderName: msg.senderName || 'Unknown'
-            }));
-            setMessages(mappedMessages);
+            console.log('Sending message via SignalR:', newMessage);
+            await connection.invoke('SendMessage', chat.chatId || chat.id, newMessage);
             setNewMessage('');
         } catch (error) {
-            console.error('Ошибка при отправке сообщения:', error);
+            console.error('Ошибка при отправке сообщения через SignalR:', error);
             alert('Ошибка при отправке сообщения.');
         }
     };
@@ -164,17 +221,29 @@ const handleSendMessage = async () => {
       {/* Левый блок: сообщения */}
       <div className="chat-messages-section">
         <div className="chat-messages">
-          {loading ? (
-            <p>Загрузка сообщений...</p>
-          ) : messages.length > 0 ? (
-            messages.map((msg) => (
-              <div key={msg.id || msg.messageId}>
-                <strong>{msg.senderName}:</strong> {msg.text}
-              </div>
-            ))
-          ) : (
-            <p>Сообщений пока нет.</p>
-          )}
+        {loading ? (
+  <p>Загрузка сообщений...</p>
+) : messages.length > 0 ? (
+  (() => {
+    // Create a map from participant IDs to display names
+    const participantNameMap = new Map();
+    participants.forEach(p => {
+      const displayName = p.firstName || p.phone || "Участник";
+      participantNameMap.set(p.id, displayName);
+    });
+    return messages.map((message, index) => {
+      // If senderName is an ID in participants, replace with display name
+      const displayName = participantNameMap.get(message.senderName) || message.senderName || 'Unknown';
+      return (
+        <div key={index}>
+          <strong>{displayName}:</strong> {message.text}
+        </div>
+      );
+    });
+  })()
+) : (
+  <p>Сообщений пока нет.</p>
+)}
         </div>
 
         {/* Поле ввода (остаётся внизу ЛЕВОЙ колонки) */}
@@ -225,6 +294,7 @@ const handleSendMessage = async () => {
                     {currentUserId === chat.creatorUserId && participant.id !== chat.creatorUserId && (
                       <button
                         onClick={() => handleRemoveUser(participant)}
+                        className="chat-header-button"
                         style={{ marginLeft: '10px' }}
                       >
                         Удалить из чата
@@ -239,10 +309,7 @@ const handleSendMessage = async () => {
         </ul>
       </div>
 
-      {contextMenuVisible && (
-        // Temporarily removed context menu for removal
-        null
-      )}
+      {/* Removed global context menu rendering */}
     </div>
   </div>
 );

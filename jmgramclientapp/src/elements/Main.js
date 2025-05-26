@@ -10,6 +10,7 @@ import NotificationWindow from './NotificationWindow';
 import ChatListContainer from './ChatListContainer';
 import axios from 'axios';
 import CreateChatButton from './CreateChatButton';
+import UserProfile from './UserProfile';  // Added import
 axios.defaults.baseURL = 'https://localhost:5087';
 
 function Main({ error, onLogout }) {
@@ -18,6 +19,7 @@ function Main({ error, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState(null);
   const [refreshChats, setRefreshChats] = useState(false);
+  const [profileUserId, setProfileUserId] = useState(null);  // Added state for profile user id
 
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
 
@@ -118,66 +120,217 @@ function Main({ error, onLogout }) {
     setSelectedChat(newChat);
   };
 
-  return (
-    <div className="main-container">
-      <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} />
+return (
+  <div className="main-container" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
+      <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} style={{ cursor: 'pointer', width: '24px', height: '24px' }} />
+    </div>
 
-      {error && <p className="error-message">{error}</p>}
+    {error && <p className="error-message" style={{ textAlign: 'center', color: '#ff5555', margin: '10px 0' }}>{error}</p>}
 
-      <div className="main-content" style={{ display: 'flex', gap: '20px' }}>
-        <div style={{ flex: '1', maxWidth: '200px' }}>
-          <h2 className="contacts-header">Контакты:</h2>
-          <div className="user-search-container">
-            <UserSearch />
+    <div className="main-content" style={{ 
+      display: 'flex', 
+      flex: 1,
+      gap: '30px',
+      padding: '20px',
+      overflow: 'hidden'
+    }}>
+      {/* Левая колонка (Контакты) */}
+      <div style={{ 
+        flex: '0 0 250px',
+        display: 'flex',
+        flexDirection: 'column',
+        borderRight: '1px solid #424242',
+        paddingRight: '20px',
+        height: '100%'
+      }}>
+        <div style={{ 
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '15px'
+        }}>
+          <h2 className="contacts-header">Контакты</h2>
+          <button
+            onClick={() => setProfileUserId(userId)}
+            style={{ 
+              fontSize: '0.8rem', 
+              padding: '6px 12px', 
+              cursor: 'pointer',
+              background: '#212121',
+              color: 'white',
+              border: '1px solid #424242',
+              borderRadius: '4px'
+            }}
+            title="Открыть мой профиль"
+          >
+            Мой профиль
+          </button>
+        </div>
+
+        <div className="user-search-container" style={{ marginBottom: '20px' }}>
+          <UserSearch />
+        </div>
+
+        <div className="contacts-wrapper" style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          paddingRight: '5px'
+        }}>
+          <div className="contacts-container">
+            <ul className="contact-list" style={{ 
+              listStyle: 'none',
+              padding: 0,
+              margin: 0
+            }}>
+              {contacts.length > 0 ? (
+                contacts.map((contact) => (
+                  <li
+                    key={contact.contactUserId}
+                    onClick={() => setProfileUserId(contact.contactUserId)}
+                    style={{ 
+                      cursor: 'pointer',
+                      padding: '8px 12px',
+                      marginBottom: '5px',
+                      borderRadius: '4px',
+                      backgroundColor: '#212121',
+                      color: 'white',
+                      transition: 'background-color 0.2s'
+                    }}
+                    onMouseOver={(e) => e.target.style.backgroundColor = '#424242'}
+                    onMouseOut={(e) => e.target.style.backgroundColor = '#212121'}
+                    title={`Открыть профиль ${contact.name}`}
+                  >
+                    {contact.name}
+                  </li>
+                ))
+              ) : (
+                <li style={{ 
+                  padding: '8px 12px',
+                  color: '#bdbdbd'
+                }}>У вас пока нет контактов</li>
+              )}
+            </ul>
           </div>
 
-          <div className="contacts-wrapper">
-            <div className="contacts-container">
-              <ul className="contact-list">
-                {contacts.length > 0 ? (
-                  contacts.map((contact) => (
-                    <li key={contact.contactUserId}>{contact.name}</li>
-                  ))
-                ) : (
-                  <li>У вас пока нет контактов</li>
-                )}
+          {contactRequests.length > 0 && (
+            <div className="contact-requests-container" style={{ 
+              marginTop: '20px',
+              backgroundColor: '#212121',
+              padding: '12px',
+              borderRadius: '4px'
+            }}>
+              <h3 style={{ 
+                marginTop: 0,
+                marginBottom: '10px',
+                color: 'white'
+              }}>Запросы в контакты:</h3>
+              <ul className="contact-requests-list" style={{ 
+                listStyle: 'none',
+                padding: 0,
+                margin: 0
+              }}>
+                {contactRequests.map((request) => (
+                  <li key={request.id} style={{ 
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '8px 0',
+                    borderBottom: '1px solid #424242'
+                  }}>
+                    <span style={{ color: 'white' }}>{request.senderName || 'Неизвестный пользователь'}</span>
+                    <button 
+                      onClick={() => handleAcceptContactRequest(request.id)} 
+                      style={{ 
+                        marginLeft: '10px',
+                        background: '#424242',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        padding: '4px 8px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Принять
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
-            {contactRequests.length > 0 && (
-              <div className="contact-requests-container" style={{ marginTop: '10px' }}>
-                <h3>Запросы в контакты:</h3>
-                <ul className="contact-requests-list">
-                  {contactRequests.map((request) => (
-                    <li key={request.id}>
-                      {request.senderName || 'Неизвестный пользователь'}
-                      <button onClick={() => handleAcceptContactRequest(request.id)} style={{ marginLeft: '10px' }}>
-                        Принять
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+      </div>
 
-        <div style={{ flex: '2' }}>
-          <h2>Чаты:</h2>
-          <ChatListContainer key={refreshChats} selectedChat={selectedChat} setSelectedChat={setSelectedChat} />
+      {/* Правая колонка (Чаты) */}
+      <div style={{ 
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        minWidth: 0  // Для правильной работы flex с overflow
+      }}>
+        <h2 style={{ 
+          marginTop: 0,
+          marginBottom: '15px',
+          color: 'white'
+        }}>Чаты</h2>
+        
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          marginBottom: '15px'
+        }}>
+          <ChatListContainer 
+            key={refreshChats} 
+            selectedChat={selectedChat} 
+            setSelectedChat={setSelectedChat} 
+          />
+        </div>
+        
+        <div style={{ 
+          marginTop: 'auto',
+          paddingTop: '15px'
+        }}>
           <CreateChatButton contacts={contacts} onCreateChat={handleCreateChat} />
         </div>
-
-        {selectedChat && (
-          <div className="chat-overlay" onClick={() => setSelectedChat(null)}>
-            <div onClick={e => e.stopPropagation()}>
-              <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} senderId={userId} senderName={localStorage.getItem('UserName')} currentUserId={userId} />
-            </div>
-          </div>
-        )}
       </div>
-      <NotificationWindow notifications={notifications} onRemoveNotification={handleRemoveNotification} />
     </div>
-  );
+
+    {/* Всплывающие окна */}
+    {selectedChat && (
+      <div className="chat-overlay" style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(24, 24, 24, 0.8)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+      }} onClick={() => setSelectedChat(null)}>
+        <div style={{ 
+          backgroundColor: '#212121',
+          borderRadius: '8px',
+          width: '80%',
+          maxWidth: '800px',
+          maxHeight: '90vh',
+          overflow: 'hidden'
+        }} onClick={e => e.stopPropagation()}>
+          <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} 
+            senderId={userId} senderName={localStorage.getItem('UserName')} 
+            currentUserId={userId} />
+        </div>
+      </div>
+    )}
+
+    <NotificationWindow notifications={notifications} onRemoveNotification={handleRemoveNotification} />
+
+    {profileUserId && (
+      <UserProfile userId={profileUserId} onClose={() => setProfileUserId(null)} />
+    )}
+  </div>
+);
 }
 
 export default Main;

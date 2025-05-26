@@ -288,3 +288,22 @@ color: #333;
   align-items: center;
   z-index: 1000;
 }
+button[title="Открыть мой профиль"] {
+  background-color: #212121; /* Основной цвет фона */
+  color: #ffffff; /* Белый текст */
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  border: 1px solid #424242; /* Граница */
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+button[title="Открыть мой профиль"]:hover {
+  background-color: #424242; /* Темнее при наведении */
+}
+
+button[title="Открыть мой профиль"]:active {
+  background-color: #181818; /* Самый темный при нажатии */
+  transform: scale(0.98); /* Легкое сжатие */
+}

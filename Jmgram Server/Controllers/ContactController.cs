@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
-[EnableCors("AllowReactApp")]
+[EnableCors("AllowReactApps")]
 [ApiController] 
 [Route("[controller]")]
 [Authorize]
