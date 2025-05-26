@@ -6,7 +6,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Responses
     {
         public bool IsSuccess { get; set; }
         public string? ErrorMessage { get; set; }
-        public UserDto User { get; set; } // DTO пользователя, если регистрация успешна
+        public UserDto User { get; set; }
     }
 
 

@@ -38,7 +38,7 @@ public class ChatController : ControllerBase
     private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
     private readonly GetUserChatsUseCase _getUserChatsUseCase;
-    private readonly IGetLastChatMessageUseCase _getLastChatMessageUseCase; //  Измените тип здесь!
+    private readonly IGetLastChatMessageUseCase _getLastChatMessageUseCase;
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
     private readonly GetContactListUseCase _getContactListUseCase;
@@ -91,49 +91,27 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chat);
     }
-    //[HttpPost("create-private")]
-    //public async Task<IActionResult> CreatePrivateChat([FromBody] CreateChatRequest request)
-    //{
-    //    if (!ModelState.IsValid)
-    //        return BadRequest(ModelState);
 
-    //    var response = await _createChatUseCase.Execute(request);
-
-    //    if (!response.IsSuccess)
-    //        return BadRequest(response.ErrorMessage);
-
-    //    return Ok(new
-    //    {
-    //        response.Chat.ChatId,
-    //        ChatName = await _chatRepository.GetChatNameForUser(
-    //            User.FindFirstValue(ClaimTypes.NameIdentifier),
-    //            response.Chat.ChatId)
-    //    });
-    //}
     [HttpPost("AddUsersToChat")]
     [Authorize]
     public async Task<IActionResult> AddUsersToChatByPhones([FromBody] AddUserToChatRequest request)
     {
-        // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized("Не удалось получить UserId из claims.");
         }
-        var addedUsers = new List<string>(); // To store added user IDs
-        var errorMessages = new List<string>(); // To store error messages
-                                                // Перебираем список телефонных номеров
+        var addedUsers = new List<string>();
+        var errorMessages = new List<string>();
         foreach (var phoneNumber in request.PhoneNumbers)
         {
-            // 1. Находим пользователя по номеру телефона
             var user = await _userRepository.GetUserByPhoneNumber(phoneNumber);
             if (user == null)
             {
                 _logger.LogWarning($"User with phone number {phoneNumber} not found.");
                 errorMessages.Add($"User with phone number {phoneNumber} not found.");
-                continue; // Skip to the next phone number
+                continue;
             }
-            // 2. Добавляем пользователя в чат
             var response = await _addUserToChatUseCase.Execute(request.ChatId, user.Id);
             if (!response.IsSuccess)
             {
@@ -142,14 +120,14 @@ public class ChatController : ControllerBase
             }
             else
             {
-                addedUsers.Add(user.Id); // Add the user ID to the list of added users
+                addedUsers.Add(user.Id);
             }
         }
         if (errorMessages.Any())
         {
-            return BadRequest(string.Join(" ", errorMessages)); // Return all error messages
+            return BadRequest(string.Join(" ", errorMessages));
         }
-        return Ok(addedUsers); // Return the list of added user IDs
+        return Ok(addedUsers);
     }
 
     [HttpPost("InviteToChat")]
@@ -164,7 +142,6 @@ public class ChatController : ControllerBase
         _logger.LogInformation($"ChatId value: {request.ChatId}");
         foreach (var invitedUserId in request.InvitedUserIds)
         {
-            // Проверяем, существует ли пользователь с указанным invitedUserId
             var user = await _userRepository.GetById(invitedUserId);
             if (user == null)
             {
@@ -180,7 +157,7 @@ public class ChatController : ControllerBase
                 NotificationType = NotificationType.ChatInvite,
                 ChatId = request.ChatId
             };
-            var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); // Send invite notif
+            var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); 
             if (!notificationResponse.IsSuccess)
             {
                 return BadRequest(notificationResponse.ErrorMessage);
@@ -208,18 +185,16 @@ public class ChatController : ControllerBase
 
         return Ok(response.SuccessMessage);
     }
-    [HttpGet("UserChats")] //получение чата пользователя
+    [HttpGet("UserChats")]
     [Authorize]
     public async Task<IActionResult> GetUserChats()
     {
-        // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
             return Unauthorized("Не удалось получить UserId из claims.");
         }
 
-        // Используем Use Case для получения чатов пользователя
         var response = await _getUserChatsUseCase.Execute(userId);
 
         if (!response.IsSuccess)
@@ -229,7 +204,7 @@ public class ChatController : ControllerBase
 
         return Ok(response.Chats);
     }
-    [HttpPost("SetChatName")] //изменение название чата
+    [HttpPost("SetChatName")] 
     public async Task<IActionResult> SetChatName(string chatId, string chatName)
     {
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -245,11 +220,10 @@ public class ChatController : ControllerBase
     }
 
     [HttpGet("GetChatUsersList")]
-    public async Task<IActionResult> List(string chatId) //  Принимаем ChatId в качестве параметра
+    public async Task<IActionResult> List(string chatId) 
     {
         _logger.LogInformation($"ChatController.List: Attempting to retrieve chat list for ChatId = {chatId}.");
 
-        // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
@@ -257,8 +231,7 @@ public class ChatController : ControllerBase
             return Unauthorized("Не удалось получить UserId из claims.");
         }
 
-        // Используем Use Case для получения списка участников чата
-        var response = await _getChatListUseCase.Execute(chatId, userId); //  Передаем ChatId и UserId
+        var response = await _getChatListUseCase.Execute(chatId, userId);
 
         if (!response.IsSuccess)
         {
@@ -267,14 +240,13 @@ public class ChatController : ControllerBase
         }
 
         _logger.LogInformation($"ChatController.List: Successfully retrieved chat list for ChatId = {chatId}.");
-        return Ok(response.Users); //  Возвращаем список UserDto
+        return Ok(response.Users);
     }
     [HttpGet("GetChatNameForUser")]
     public async Task<IActionResult> GetChatName(string chatId)
     {
         _logger.LogInformation($"ChatController.GetChatName: Attempting to retrieve chat name for ChatId = {chatId}.");
 
-        // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
@@ -284,7 +256,6 @@ public class ChatController : ControllerBase
 
         try
         {
-            //  Получаем название чата из сервиса
             var chatName = await _chatService.GetChatNameForUser(userId, chatId);
 
             if (chatName == null)
@@ -294,7 +265,7 @@ public class ChatController : ControllerBase
             }
 
             _logger.LogInformation($"ChatController.GetChatName: Successfully retrieved chat name for ChatId = {chatId} and UserId = {userId}.");
-            return Ok(chatName); //  Возвращаем название чата
+            return Ok(chatName);
         }
         catch (Exception ex)
         {
@@ -393,14 +364,12 @@ public class ChatController : ControllerBase
 
         try
         {
-            // 1. Проверка входных данных (убедитесь, что chatId не null и не пустой)
             if (string.IsNullOrEmpty(chatId))
             {
                 _logger.LogError("ChatController.DeleteChat: Invalid input - chatId is null or empty.");
                 return BadRequest("chatId не может быть пустым.");
             }
 
-            // 2. Вызов Use Case для удаления чата
             var response = await _deleteChatUseCase.Execute(chatId);
 
             if (!response.IsSuccess)
@@ -410,7 +379,7 @@ public class ChatController : ControllerBase
             }
 
             _logger.LogInformation($"ChatController.DeleteChat: Chat with ID {chatId} deleted successfully.");
-            return NoContent(); // 204 No Content
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -425,18 +394,16 @@ public class ChatController : ControllerBase
 
         try
         {
-            // 1. Validate input
             if (messageId <= 0)
             {
                 _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
                 return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
             }
 
-            // 2. Delete message
             await _chatRepository.DeleteMessage(messageId);
 
             _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
-            return NoContent(); // 204 No Content
+            return NoContent();
         }
         catch (Exception ex)
         {

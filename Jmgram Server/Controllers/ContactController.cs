@@ -70,7 +70,7 @@ public class ContactController : ControllerBase
         _logger.LogInformation($"ContactController.Accept: Accepting contact request with ID: {request.ContactRequestId}");
 
 
-        var result = await _acceptContactRequestUseCase.Execute(request); //  Передаем весь объект request
+        var result = await _acceptContactRequestUseCase.Execute(request);
 
         if (result.IsSuccess)
         {
@@ -80,7 +80,7 @@ public class ContactController : ControllerBase
         else
         {
             _logger.LogError($"ContactController.Accept: Failed to accept contact request with ID {request.ContactRequestId}. Error: {result.ErrorMessage}");
-            return BadRequest(result.ErrorMessage); //  Возвращаем сообщение об ошибке от UseCase
+            return BadRequest(result.ErrorMessage); 
         }
     }
     [HttpGet("Requests")]
@@ -112,7 +112,6 @@ public class ContactController : ControllerBase
 
         _logger.LogInformation("ContactController.GetContactRequests: Contact requests retrieved successfully.");
 
-        //  Return both incoming and outgoing requests
         return Ok(new
         {
             IncomingRequests = result.IncomingRequests,

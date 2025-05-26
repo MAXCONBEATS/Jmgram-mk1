@@ -6,7 +6,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Requestes
     {
         public int MessageId { get; set; }
         public string NewStatus { get; set; }
-        public string ChatId { get; set; } // Добавлено
+        public string ChatId { get; set; }
     }
 
 }

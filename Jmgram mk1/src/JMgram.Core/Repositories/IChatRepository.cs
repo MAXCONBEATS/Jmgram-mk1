@@ -55,7 +55,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             var chatUser = new ChatUser
             {
-                ChatId = chatId, // Только эти поля
+                ChatId = chatId,
                 UserId = userId,
                 JoinedAt = DateTime.UtcNow
             };
@@ -119,10 +119,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
         public async Task<Chat> CreateChat(Chat chat)
         {
-            // Get the current UserId
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            // Set the CreatorUserId if available
             if (!string.IsNullOrEmpty(userId))
             {
                 chat.CreatorUserId = userId;
@@ -158,11 +156,9 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
             if (chat != null)
             {
-                // 1. Удаляем все записи из ChatUsers, связанные с этим чатом
                 var chatUsers = _dbContext.ChatUsers.Where(cu => cu.ChatId == chatId);
                 _dbContext.ChatUsers.RemoveRange(chatUsers);
 
-                // 2. Удаляем сам чат
                 _dbContext.Chats.Remove(chat);
                 await _dbContext.SaveChangesAsync();
             }

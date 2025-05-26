@@ -16,13 +16,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     {
         private readonly IContactRequestRepository _contactRequestRepository;
         private readonly SendNotificationUseCase _sendNotificationUseCase;
-        private readonly IUserRepository _userRepository; //  Добавляем UserRepository
+        private readonly IUserRepository _userRepository;
         private readonly ILogger<CreateContactRequestUseCase> _logger;
 
         public CreateContactRequestUseCase(
             IContactRequestRepository contactRequestRepository,
             SendNotificationUseCase sendNotificationUseCase,
-            IUserRepository userRepository, //  Добавляем UserRepository
+            IUserRepository userRepository,
             ILogger<CreateContactRequestUseCase> logger)
         {
             _contactRequestRepository = contactRequestRepository ?? throw new ArgumentNullException(nameof(contactRequestRepository));
@@ -47,7 +47,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 return new CreateContactRequestResponse { IsSuccess = false, ErrorMessage = "Нельзя добавить себя в друзья." };
             }
 
-            // 1. Создать запрос на добавление в друзья
             var contactRequest = new ContactRequest
             {
                 Id = Guid.NewGuid(),
@@ -56,7 +55,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 Status = ContactRequestStatus.Pending
             };
 
-            // Проверяем, существует ли уже запрос с такими же SenderUserId и RecipientUserId
             var existingContactRequest = await _contactRequestRepository.GetContactRequest(senderUserId, recipientUserId);
 
             if (existingContactRequest != null)
@@ -69,22 +67,19 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
             try
             {
-                // 2. Сохранить запрос в базу данных
                 await _contactRequestRepository.AddContactRequest(contactRequest);
                 _logger.LogInformation("CreateContactRequestUseCase.Execute: ContactRequest saved to database.");
 
-                // 3. Отправить уведомление
-                var senderUser = await _userRepository.GetById(senderUserId); //  Получаем пользователя, отправившего запрос
-                string senderName = senderUser?.FirstName ?? "Неизвестный пользователь"; //  Получаем имя пользователя или "Неизвестный пользователь", если не удалось получить
-
+                var senderUser = await _userRepository.GetById(senderUserId); 
+                string senderName = senderUser?.FirstName ?? "Неизвестный пользователь"; 
                 NotificationDto notificationDto = new NotificationDto
                 {
-                    UserId = recipientUserId,  //  ID получателя запроса
+                    UserId = recipientUserId,
                     NotificationType = NotificationType.ContactRequest,
-                    Message = $"Запрос на добавление в друзья от {senderName}", //  Сообщение с именем пользователя
+                    Message = $"Запрос на добавление в друзья от {senderName}",
                     Timestamp = DateTime.UtcNow,
                     IsRead = false,
-                    ChatId = null //  Для запросов на добавление в контакты chatId обычно null
+                    ChatId = null
                 };
 
                 var sendNotificationResponse = await _sendNotificationUseCase.Execute(notificationDto, senderUserId);

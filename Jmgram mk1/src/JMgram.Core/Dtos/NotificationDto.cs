@@ -12,19 +12,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Dtos
         public string ChatId { get; set; }
     }
 
-    // DTO для уведомления о сообщении
     public class MessageNotificationDto : NotificationDto
     {
         public int MessageId { get; set; }
     }
-
-    // DTO для уведомления о запросе контакта
     public class ContactRequestNotificationDto : NotificationDto
     {
         public string SenderUserId { get; set; }
     }
 
-    // DTO для системного уведомления
     public class SystemNotificationDto : NotificationDto
     {
         public string Source { get; set; } = "";

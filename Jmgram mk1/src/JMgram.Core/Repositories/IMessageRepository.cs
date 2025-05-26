@@ -24,7 +24,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.Messages
              .Where(m => m.ChatId == chatId)
-             .OrderByDescending(m => m.Timestamp) // Или OrderBy, если хотите в другом порядке
+             .OrderByDescending(m => m.Timestamp)
              .Skip((pageNumber - 1) * pageSize)
              .Take(pageSize)
              .ToListAsync();

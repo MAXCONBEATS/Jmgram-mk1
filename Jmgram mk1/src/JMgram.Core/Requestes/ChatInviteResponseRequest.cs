@@ -2,7 +2,7 @@
 {
     public class ChatInviteResponseRequest
     {
-        public int NotificationId { get; set; } // ID уведомления
-        public bool Accepted { get; set; } // True, если принял, false - отклонил
+        public int NotificationId { get; set; }
+        public bool Accepted { get; set; }
     }
 }

@@ -25,7 +25,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
         public async Task<GetChatMessagesResponse> Execute(GetChatMessagesRequest request, string userId)
         {
-            // 1. Проверить входные данные
             if (string.IsNullOrEmpty(request.ChatId) || request.PageNumber <= 0 || request.PageSize <= 0)
             {
                 return new GetChatMessagesResponse
@@ -33,7 +32,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     Chat = new List<MessageDto>(),
                     TotalMessages = 0,
                     TotalPages = 0
-                }; // Или выбросить ArgumentException
+                };
             }
             // 2.1 Check Auth
             if (!await _chatRepository.IsUserInChat(request.ChatId, userId))
@@ -43,18 +42,14 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     Chat = new List<MessageDto>(),
                     TotalMessages = 0,
                     TotalPages = 0
-                }; // Или выбросить ArgumentException
+                };
             }
-            // 2. Получить общее количество сообщений
             var totalMessages = await _messageRepository.GetTotalMessageCount(request.ChatId);
 
-            // 3. Рассчитать общее количество страниц
             var totalPages = (int)Math.Ceiling((double)totalMessages / request.PageSize);
 
-            // 4. Получить сообщения для текущей страницы
             var messages = await _messageRepository.GetMessagesForChat(request.ChatId, request.PageNumber, request.PageSize);
 
-            // 5. Преобразовать сообщения в DTO
             var messageDtos = new List<MessageDto>();
             foreach (var m in messages)
             {
@@ -69,7 +64,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 });
             }
 
-            // 6. Вернуть результат
             return new GetChatMessagesResponse
             {
                 Chat = messageDtos,

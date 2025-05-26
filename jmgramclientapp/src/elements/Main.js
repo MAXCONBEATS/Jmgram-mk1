@@ -309,14 +309,7 @@ return (
         justifyContent: 'center',
         zIndex: 1000
       }} onClick={() => setSelectedChat(null)}>
-        <div style={{ 
-          backgroundColor: '#212121',
-          borderRadius: '8px',
-          width: '80%',
-          maxWidth: '800px',
-          maxHeight: '90vh',
-          overflow: 'hidden'
-        }} onClick={e => e.stopPropagation()}>
+        <div onClick={e => e.stopPropagation()}>
           <ChatWindow chat={selectedChat} onClose={() => setSelectedChat(null)} 
             senderId={userId} senderName={localStorage.getItem('UserName')} 
             currentUserId={userId} />

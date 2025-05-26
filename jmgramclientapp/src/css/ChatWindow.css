@@ -16,7 +16,8 @@
   overflow: hidden;
   position: relative;
   margin: 0 auto; /* Центрирование по горизонтали */
-  resize: both; /* Позволяет изменять размер вручную (опционально) */
+  resize: both;
+  resize: none; /* Позволяет изменять размер вручную (опционально) */
   min-width: 300px; /* Минимальная ширина */
   min-height: 400px; /* Минимальная высота */
 }

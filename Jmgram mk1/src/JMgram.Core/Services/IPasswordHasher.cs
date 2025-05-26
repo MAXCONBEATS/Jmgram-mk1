@@ -14,12 +14,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
 
         public string HashPassword(string password)
         {
-            return _passwordHasher.HashPassword(null, password); // Первый аргумент null, т.к. не нужен User object
+            return _passwordHasher.HashPassword(null, password);
         }
 
         public PasswordVerificationResult VerifyPassword(string hashedPassword, string providedPassword)
         {
-            return _passwordHasher.VerifyHashedPassword(null, hashedPassword, providedPassword); // Первый аргумент null, т.к. не нужен User object
+            return _passwordHasher.VerifyHashedPassword(null, hashedPassword, providedPassword);
         }
     }
 }

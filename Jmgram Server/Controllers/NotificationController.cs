@@ -36,7 +36,7 @@ public class NotificationController : ControllerBase
             return BadRequest("Notification data is required.");
         }
 
-        var senderUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier); // Get sender's UserId
+        var senderUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
         if (string.IsNullOrEmpty(senderUserId))
         {
@@ -46,7 +46,7 @@ public class NotificationController : ControllerBase
 
         _logger.LogInformation($"NotificationController.Send: Attempting to send notification from UserId: {senderUserId}");
 
-        var response = await _sendNotificationUseCase.Execute(notificationDto, senderUserId); // Pass senderUserId
+        var response = await _sendNotificationUseCase.Execute(notificationDto, senderUserId);
 
         if (!response.IsSuccess)
         {
@@ -64,7 +64,6 @@ public class NotificationController : ControllerBase
     {
         _logger.LogInformation("NotificationController.GetNotifications: Attempting to retrieve notifications.");
 
-        // Получаем UserId из claims
         var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(userId))
         {
@@ -74,7 +73,6 @@ public class NotificationController : ControllerBase
 
         try
         {
-            // Используем Use Case для получения списка уведомлений
             var response = await _getNotificationListUseCase.Execute(userId);
 
             if (!response.IsSuccess)
@@ -84,7 +82,7 @@ public class NotificationController : ControllerBase
             }
 
             _logger.LogInformation($"NotificationController.GetNotifications: Successfully retrieved notifications for user {userId}.");
-            return Ok(response.Notifications); // Возвращаем список NotificationDto
+            return Ok(response.Notifications);
         }
         catch (Exception ex)
         {
@@ -99,14 +97,11 @@ public class NotificationController : ControllerBase
 
         try
         {
-            // Validate input
             if (notificationId <= 0)
             {
                 _logger.LogError("NotificationController.MarkAsRead: Invalid input data - notificationId is invalid.");
                 return BadRequest("Неверные входные данные: notificationId должен быть больше 0.");
             }
-
-            // Get the user ID from claims
             var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
             {
@@ -114,11 +109,10 @@ public class NotificationController : ControllerBase
                 return Unauthorized("Не удалось получить UserId из claims.");
             }
 
-            // Mark the notification as read
             await _notificationRepository.MarkNotificationAsRead(notificationId);
 
             _logger.LogInformation($"NotificationController.MarkAsRead: Notification with ID {notificationId} marked as read successfully.");
-            return NoContent(); // 204 No Content
+            return NoContent();
         }
         catch (Exception ex)
         {
@@ -134,14 +128,14 @@ public class NotificationController : ControllerBase
 
         try
         {
-            await _notificationRepository.DeleteNotification(id); //  Вызываем метод репозитория напрямую
+            await _notificationRepository.DeleteNotification(id);
             _logger.LogInformation($"NotificationController.DeleteNotification: Notification with ID {id} deleted successfully.");
-            return NoContent(); //  Возвращаем NoContent (204) после успешного удаления
+            return NoContent(); 
         }
         catch (Exception ex)
         {
             _logger.LogError($"NotificationController.DeleteNotification: An error occurred while deleting notification with ID {id}: {ex.Message}, Inner Exception: {ex.InnerException}");
-            return BadRequest("Failed to delete notification."); //  Возвращаем BadRequest при ошибке
+            return BadRequest("Failed to delete notification."); 
         }
     }
 }

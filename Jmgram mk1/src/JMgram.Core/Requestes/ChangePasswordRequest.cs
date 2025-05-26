@@ -10,7 +10,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Requestes
 
         [Required]
         [DataType(DataType.Password)]
-        [StringLength(100, MinimumLength = 6)] // Или ваши требования к сложности пароля
+        [StringLength(100, MinimumLength = 6)]
         public string NewPassword { get; set; }
     }
 

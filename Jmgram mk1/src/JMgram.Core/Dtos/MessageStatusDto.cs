@@ -2,9 +2,9 @@
 {
     public enum MessageStatusDto
     {
-        Sent,       // Отправлено, но не доставлено
-        Delivered,  // Отправлено и доставлено
-        Read        // Отправлено, доставлено и прочитано
+        Sent,
+        Delivered,
+        Read
     }
 
 }

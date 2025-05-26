@@ -10,8 +10,8 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public DateTime CreatedAt { get; set; }
         public DateTime LastLogin { get; set; }
         public bool IsActive { get; set; }
-        public virtual UserProfile? UserProfile { get; set; } // Добавлено свойство
-        public virtual ICollection<Contact> Contacts { get; set; } = new List<Contact>(); // Добавлено свойство
+        public virtual UserProfile? UserProfile { get; set; } 
+        public virtual ICollection<Contact> Contacts { get; set; } = new List<Contact>(); 
     }
     
 }

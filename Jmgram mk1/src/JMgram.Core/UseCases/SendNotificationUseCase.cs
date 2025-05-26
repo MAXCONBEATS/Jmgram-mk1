@@ -20,14 +20,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<SendNotificationResponse> Execute(NotificationDto notificationDto, string senderUserId) // Add senderUserId
+        public async Task<SendNotificationResponse> Execute(NotificationDto notificationDto, string senderUserId)
         {
             try
             {
                 _logger.LogInformation($"SendNotificationUseCase.Execute: Attempting to send notification of type {notificationDto.NotificationType} from UserId: {senderUserId}");
 
-                // Check if the user is trying to send a system notification
-                if (notificationDto.NotificationType == NotificationType.System) // Assuming System = 2 is the system notification type
+                if (notificationDto.NotificationType == NotificationType.System)
                 {
                     _logger.LogWarning($"SendNotificationUseCase.Execute: User {senderUserId} attempted to send a system notification, which is not allowed.");
                     return new SendNotificationResponse { IsSuccess = false, ErrorMessage = "Отправка системных уведомлений от пользователей запрещена." };

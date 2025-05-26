@@ -7,7 +7,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Responses
     {
         public bool IsSuccess { get; set; }
         public string? ErrorMessage { get; set; }
-        public ContactDto? Contact { get; set; } // DTO добавленного контакта
+        public ContactDto? Contact { get; set; }
     }
 
 }

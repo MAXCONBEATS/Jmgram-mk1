@@ -25,7 +25,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task Delete(AppIdentityUser user);
         Task<AppIdentityUser?> GetById(string id);
         Task<List<AppIdentityUser>> GetByPhones(List<string> phones);
-        Task<List<AppIdentityUser?>> GetByIds(List<string> userIds);
         Task<UserProfile?> GetUserProfileById(string userId);
         Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber);
         Task<List<Contact>> GetContactsForUser(string userId);
@@ -65,12 +64,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             if (user != null)
             {
-                _dbContext.Users.Attach(user); //Прикрепляем user к контексту
-                _dbContext.Entry(user).Property(x => x.Phone).IsModified = true; // говорим что меняем только Phone
+                _dbContext.Users.Attach(user);
+                _dbContext.Entry(user).Property(x => x.Phone).IsModified = true;
                 await _dbContext.SaveChangesAsync();
             }
         }
-        public async Task Delete(AppIdentityUser user) // Исправлено: Реализован метод Delete(User)
+        public async Task Delete(AppIdentityUser user)
         {
             if (user != null)
             {
@@ -96,22 +95,18 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return _userManager.GetUserId(principal);
         }
-        public async Task<List<AppIdentityUser?>> GetByIds(List<string> userIds)
-        {
-            return await _dbContext.Users.Where(u => userIds.Contains(u.Id.ToString())).ToListAsync();
-        }
         public async Task<UserProfile?> GetUserProfileById(string userId)
         {
             return await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.UserId == userId);
         }
-        public async Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber) // Implement the method
+        public async Task<AppIdentityUser?> GetUserByPhoneNumber(string phoneNumber)
         {
             return await _dbContext.Users.FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber);
         }
         public async Task<List<Contact>> GetContactsForUser(string userId)
         {
             return await _dbContext.Contacts
-                .Where(c => c.UserId == userId) //  Фильтруем контакты по UserId
+                .Where(c => c.UserId == userId)
                 .ToListAsync();
         }
         public async Task<string> GetUserFirstNameById(string userId)

@@ -39,26 +39,23 @@ public class UserController : ControllerBase
     [Authorize]
     public async Task<IActionResult> GetProfile(string? userId = null)
     {
-        string currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // получаем id текущего пользователя
+        string currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(currentUserId))
         {
             _logger.LogError("Unable to retrieve user ID from claims.");
             return Unauthorized("Unable to retrieve user ID from claims.");
         }
-        // Если userId не указан, получаем профиль текущего пользователя
+
         if (string.IsNullOrEmpty(userId))
         {
             userId = currentUserId;
         }
 
-        // Формирование запроса
         var request = new GetUserProfileRequest { UserId = userId };
 
-        // Вызов use case
         var response = await _getUserProfileUseCase.Execute(request);
 
-        // Обработка результата
         if (!response.IsSuccess)
         {
             return BadRequest(response.ErrorMessage);
@@ -94,7 +91,6 @@ public class UserController : ControllerBase
             return NotFound();
         }
 
-        // Обновляем поля профиля пользователя
         if (request.Profile.FirstName is not null)
             userProfile.FirstName = request.Profile.FirstName;
 
@@ -135,7 +131,7 @@ public class UserController : ControllerBase
             return BadRequest(response.ErrorMessage);
         }
 
-        return Ok(response); // Возвращаем response в случае успеха
+        return Ok(response);
     }
     [HttpGet("/User/Search")]
     public async Task<IActionResult> Search([FromQuery] string phone)

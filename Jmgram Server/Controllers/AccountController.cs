@@ -36,7 +36,6 @@ public class AccountController : ControllerBase
     UserManager<AppIdentityUser> userManager,
     SignInManager<AppIdentityUser> signInManager)
     {
-        // Check if user with the same phone number already exists
         var existingUser = await userManager.FindByNameAsync(registration.Phone);
         if (existingUser != null)
         {
@@ -75,13 +74,12 @@ public class AccountController : ControllerBase
                 UserId = user.Id,
                 FirstName = registration.FirstName,
                 LastName = registration.LastName,
-                Phone = registration.Phone, //добавлено
+                Phone = registration.Phone,
                 LastSeen = DateTime.UtcNow
             };
 
             context.UserProfiles.Add(userProfile);
 
-            // Сохраняем изменения
             await context.SaveChangesAsync();
 
             await signInManager.SignInAsync(user, isPersistent: false);
@@ -115,8 +113,7 @@ public class AccountController : ControllerBase
         {
             _logger.LogInformation($"User {login.Phone} successfully logged in with Id: {user.Id}");
 
-            //  Используйте SignInManager.SignInAsync
-            await _signInManager.SignInAsync(user, isPersistent: true); // Используем SignInManager
+            await _signInManager.SignInAsync(user, isPersistent: true);
 
             _logger.LogInformation("User successfully signed in");
 
@@ -162,13 +159,11 @@ public class AccountController : ControllerBase
             return NotFound();
         }
 
-        // Создаем DTO для возврата, а не используем entity напрямую
         return Ok(new UserInfoResponse
         {
             Id = user.Id,
             UserName = user.UserName,
             PhoneNumber = user.PhoneNumber
-            // Добавьте другие нужные поля
         });
     }
     [HttpPost]
@@ -176,10 +171,10 @@ public class AccountController : ControllerBase
     {
         if (User.Identity == null || !User.Identity.IsAuthenticated)
         {
-            return Unauthorized(); // Возвращаем 401 Unauthorized
+            return Unauthorized();
         }
 
-        return Ok(); // Возвращаем 200 OK
+        return Ok();
     }
     [HttpPost]
     public async Task<IActionResult> Logout()
@@ -189,36 +184,7 @@ public class AccountController : ControllerBase
         return Ok();
     }
 
-    private static ValidationProblem CreateValidationProblem(string errorCode, string errorDescription) =>
-    TypedResults.ValidationProblem(new Dictionary<string, string[]> {
-                { errorCode, [errorDescription] }
-    });
-
-    private static ValidationProblem CreateValidationProblem(IdentityResult result)
-    {
-        Debug.Assert(!result.Succeeded);
-        var errorDictionary = new Dictionary<string, string[]>(1);
-
-        foreach (var error in result.Errors)
-        {
-            string[] newDescriptions;
-
-            if (errorDictionary.TryGetValue(error.Code, out var descriptions))
-            {
-                newDescriptions = new string[descriptions.Length + 1];
-                Array.Copy(descriptions, newDescriptions, descriptions.Length);
-                newDescriptions[descriptions.Length] = error.Description;
-            }
-            else
-            {
-                newDescriptions = [error.Description];
-            }
-
-            errorDictionary[error.Code] = newDescriptions;
-        }
-
-        return TypedResults.ValidationProblem(errorDictionary);
-    }
+   
 }
 
 
