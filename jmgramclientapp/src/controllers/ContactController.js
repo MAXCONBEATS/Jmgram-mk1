@@ -35,4 +35,17 @@ export async function acceptContactRequest(contactRequestId) {
     throw error;
   }
 }
- 
+
+// New function to update contact name
+export async function updateContactName(contactUserId, newName) {
+  try {
+    const response = await axios.post('/Contact/UpdateName', 
+      { ContactUserId: contactUserId, NewName: newName }, 
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при обновлении имени контакта:', error);
+    throw error;
+  }
+}
