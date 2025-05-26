@@ -108,12 +108,7 @@ const UserProfile = ({ userId, onClose }) => {
             <p className="last-seen">Был в сети: {new Date(profile.lastSeen).toLocaleString()}</p>
             
             {isOwnProfile && (
-              <button 
-                onClick={() => setEditMode(true)}
-                className="edit-btn"
-              >
-                Редактировать профиль
-              </button>
+              <button onClick={() => setEditMode(true)} className="edit-btn"><i className="bi bi-pencil-square"></i> Редактировать профиль</button>
             )}
           </div>
         )}

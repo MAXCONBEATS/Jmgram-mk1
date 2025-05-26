@@ -1,8 +1,7 @@
  import React, { useState } from 'react';
  import { useNavigate, Link } from 'react-router-dom';
  import { register } from '../controllers/AccountController';
- import login_icon from '../assets/images/login_icon.png'; // Используем тот же логотип
- import '../css/Register.css'; // Ссылка на новый файл стилей
+ import '../css/Register.css';
  
  function Register() {
   const [firstName, setFirstName] = useState('');
@@ -27,7 +26,7 @@
   return (
    <div className="register-container">
     <div className="register-form-area">
-     <img src={login_icon} alt="Логотип" className="register-logo" />
+     <i className="bi bi-person register-logo" style={{ fontSize: '5em', color: 'white' }}></i>
      <h2>Регистрация</h2>
      {error && <p className="error-message">{error}</p>}
      <form onSubmit={handleSubmit}>
@@ -71,11 +70,10 @@
        Зарегистрироваться
       </button>
      </form>
- 
-     <p>Уже зарегистрированы?</p>
-     <Link to="/login">
-      <button className="login-button">Войти</button>
-     </Link>
+     <p>
+        Уже зарегистрированы?
+         <Link to="/login" className="login-link">Войти</Link>
+    </p>
     </div>
    </div>
   );

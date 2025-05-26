@@ -1,7 +1,6 @@
  import React, { useState } from 'react';
  import { useNavigate, Link } from 'react-router-dom';
  import { login } from '../controllers/AccountController';
- import login_icon from '../assets/images/login_icon.png';
  import '../css/Login.css';
  
  function Login({ onLogin }) {
@@ -56,7 +55,8 @@
   return (
    <div className="login-container">
     <div className="login-form-area">
-     <img src={login_icon} alt="Логотип" className="login-logo" />
+     {/* <img src={login_icon} alt="Логотип" className="login-logo" /> */}
+     <i className="bi bi-person login-logo" style={{ fontSize: '5rem', color: 'white' }}></i>
      <h2>Вход</h2>
      {error && <p className="error-message">{error}</p>}
      <form onSubmit={handleSubmit}>
@@ -92,10 +92,10 @@
       </button>
      </form>
  
-     <p>Еще не зарегистрированы?</p>
-     <Link to="/register">
-      <button className="register-button">Зарегистрироваться</button>
-     </Link>
+      <p>
+        Еще не зарегистрированы?
+          <Link to="/register" className="register-link">Зарегистрироваться</Link>
+      </p>
     </div>
    </div>
   );

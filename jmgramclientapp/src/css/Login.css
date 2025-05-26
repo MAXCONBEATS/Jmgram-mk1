@@ -20,11 +20,11 @@
   text-align: center;
  }
  
- .login-logo {
-  width: 100px;
-  height: 100px;
+.login-logo {
+  font-size: 3rem;
+  color: #fff;
   margin-bottom: 20px;
- }
+}
  
  /* Стили для групп полей (Телефон, Пароль) */
  .form-group {
@@ -93,26 +93,13 @@
   background-color: #0056b3;
  }
  
- /* Стили для кнопки "Зарегистрироваться" */
- .register-button {
-  background-color: #28a745;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  width: auto; /* Изменяем ширину на auto */
-  margin-top: 10px;
+.register-link {
+  color: #007bff;
   text-decoration: none;
- }
- 
- .register-button:hover {
-  background-color: #1e7e34;
- }
- 
- /* Стили для сообщения об ошибке */
- .error-message {
-  color: red;
-  margin-bottom: 10px;
- }
+  font-weight: bold;
+  margin-left: 5px;
+}
+
+.register-link:hover {
+  text-decoration: underline;
+}

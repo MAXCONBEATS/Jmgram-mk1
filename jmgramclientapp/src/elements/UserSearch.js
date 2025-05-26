@@ -48,7 +48,7 @@ function UserSearch() {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
             />
-            <button onClick={handleSearch}>Поиск</button>
+            <button onClick={handleSearch} className="btn btn-primary"><i className="bi bi-search"></i></button>
 
             {error && <p className="error-message">{error}</p>}
 

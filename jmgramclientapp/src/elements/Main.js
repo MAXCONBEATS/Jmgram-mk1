@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import '../css/Main.css';
 import '../css/ContextMenu.css';
-import logoutIcon from '../assets/images/logout_icon.png';
 import { getContactList, getContactRequests, acceptContactRequest } from '../controllers/ContactController';
 import { getNotifications } from '../controllers/NotificationController';
 import UserSearch from './UserSearch';
@@ -11,7 +10,7 @@ import ChatListContainer from './ChatListContainer';
 import axios from 'axios';
 import { markAsRead } from '../controllers/NotificationController';
 import CreateChatButton from './CreateChatButton';
-import UserProfile from './UserProfile';  // Added import
+import UserProfile from './UserProfile';
 axios.defaults.baseURL = 'https://localhost:5087';
 
 function Main({ error, onLogout }) {
@@ -20,7 +19,7 @@ function Main({ error, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState(null);
   const [refreshChats, setRefreshChats] = useState(false);
-  const [profileUserId, setProfileUserId] = useState(null);  // Added state for profile user id
+  const [profileUserId, setProfileUserId] = useState(null); 
 
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
 
@@ -141,9 +140,14 @@ function Main({ error, onLogout }) {
 
 return (
   <div className="main-container" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+
+    <button onClick={() => setProfileUserId(userId)} className="btn btn-outline-light btn-sm"
+  style={{ fontSize: '0.8rem', padding: '4px 8px', cursor: 'pointer' }}>Мой профиль</button>
+
     <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '10px' }}>
-      <img src={logoutIcon} alt="Выйти" className="logout-icon" onClick={onLogout} style={{ cursor: 'pointer', width: '24px', height: '24px' }} />
-    </div>
+  <i className="bi bi-box-arrow-right logout-icon" onClick={onLogout} 
+    style={{ cursor: 'pointer', fontSize: '24px', color: 'white' }} title="Выйти"></i>
+</div>
 
     {error && <p className="error-message" style={{ textAlign: 'center', color: '#ff5555', margin: '10px 0' }}>{error}</p>}
 
@@ -170,21 +174,6 @@ return (
           marginBottom: '15px'
         }}>
           <h2 className="contacts-header">Контакты</h2>
-          <button
-            onClick={() => setProfileUserId(userId)}
-            style={{ 
-              fontSize: '0.8rem', 
-              padding: '6px 12px', 
-              cursor: 'pointer',
-              background: '#212121',
-              color: 'white',
-              border: '1px solid #424242',
-              borderRadius: '4px'
-            }}
-            title="Открыть мой профиль"
-          >
-            Мой профиль
-          </button>
         </div>
 
         <div className="user-search-container" style={{ marginBottom: '20px' }}>
