@@ -39,27 +39,15 @@ function Main({ error, onLogout }) {
   }, []);
 
   useEffect(() => {
-    if (contacts.length === 0) return;
-
     const fetchContactRequests = async () => {
       try {
         const requestsData = await getContactRequests();
         const mappedRequests = requestsData.map((request) => {
           let name = 'Неизвестный пользователь';
           if (request.senderUserId === userId) {
-            const recipientContact = contacts.find(contact => contact.contactUserId === request.recipientUserId);
-            if (recipientContact && recipientContact.name) {
-              name = recipientContact.name;
-            } else {
-              name = 'Неизвестный номер';
-            }
+            name = 'Неизвестный номер';
           } else {
-            const senderContact = contacts.find(contact => contact.contactUserId === request.senderUserId);
-            if (senderContact && senderContact.name) {
-              name = senderContact.name;
-            } else {
-              name = 'Неизвестный номер';
-            }
+            name = 'Неизвестный номер';
           }
           return {
             ...request,
@@ -72,7 +60,7 @@ function Main({ error, onLogout }) {
       }
     };
     fetchContactRequests();
-  }, [contacts]);
+  }, []);
 
   const [notifications, setNotifications] = useState([]);
 
@@ -80,7 +68,8 @@ function Main({ error, onLogout }) {
     const fetchNotifications = async () => {
       try {
         const data = await getNotifications();
-        setNotifications(data);
+        const unreadNotifications = data.filter(notification => !notification.isRead);
+        setNotifications(unreadNotifications);
       } catch (error) {
         console.error('Ошибка при получении уведомлений:', error);
       }
@@ -105,7 +94,6 @@ function Main({ error, onLogout }) {
     }
   };
 
-  // Renamed to handleDeleteNotification for explicit DB deletion (if needed)
   const handleDeleteNotification = async (id) => {
     try {
       await axios.delete('/Notification/Delete', { params: { id }, withCredentials: true });
@@ -116,12 +104,10 @@ function Main({ error, onLogout }) {
     }
   };
 
-  // Remove notification from UI only, no DB delete
   const handleCloseNotification = (id) => {
     setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
   };
 
-  // Mark notification as read in DB and remove from UI
   const handleMarkAsReadNotification = async (id) => {
     try {
       const success = await markAsRead(id);
@@ -186,11 +172,7 @@ return (
           paddingRight: '5px'
         }}>
           <div className="contacts-container">
-            <ul className="contact-list" style={{ 
-              listStyle: 'none',
-              padding: 0,
-              margin: 0
-            }}>
+            <ul className="contact-list" style={{ listStyle: 'none', padding: 0,margin: 0}}>
               {contacts.length > 0 ? (
                 contacts.map((contact) => (
                   <li
@@ -257,10 +239,7 @@ return (
                         borderRadius: '4px',
                         padding: '4px 8px',
                         cursor: 'pointer'
-                      }}
-                    >
-                      Принять
-                    </button>
+                      }}>Принять</button>
                   </li>
                 ))}
               </ul>
@@ -274,7 +253,7 @@ return (
         flex: 1,
         display: 'flex',
         flexDirection: 'column',
-        minWidth: 0  // Для правильной работы flex с overflow
+        minWidth: 0 
       }}>
         <h2 style={{ 
           marginTop: 0,

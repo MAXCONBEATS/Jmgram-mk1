@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { UserController } from '../controllers/UserController';
+import { deleteContact, getContactList } from '../controllers/ContactController';
 import '../css/UserProfile.css';
 
 const UserProfile = ({ userId, onClose }) => {
@@ -16,6 +17,7 @@ const UserProfile = ({ userId, onClose }) => {
     const loadProfile = async () => {
       try {
         const data = await UserController.getProfile(userId);
+        console.log('Loaded profile:', data);
         setProfile(data);
         setFormData({
           firstName: data.firstName || '',
@@ -52,6 +54,20 @@ const UserProfile = ({ userId, onClose }) => {
   if (!profile) return <div className="user-profile-loading">Loading...</div>;
 
   const isOwnProfile = userId === localStorage.getItem('UserId');
+
+  const handleDeleteContact = async () => {
+    if (window.confirm('Вы уверены, что хотите удалить этот контакт?')) {
+      try {
+        await deleteContact(userId);
+        alert('Контакт успешно удален.');
+        await getContactList(); // Refresh contact list after deletion
+        onClose();
+      } catch (error) {
+        console.error('Ошибка при удалении контакта:', error);
+        alert('Не удалось удалить контакт.');
+      }
+    }
+  };
 
   return (
     <div className="user-profile-overlay">
@@ -107,8 +123,10 @@ const UserProfile = ({ userId, onClose }) => {
             {profile.bio && <p className="bio-text">{profile.bio}</p>}
             <p className="last-seen">Был в сети: {new Date(profile.lastSeen).toLocaleString()}</p>
             
-            {isOwnProfile && (
+            {isOwnProfile ? (
               <button onClick={() => setEditMode(true)} className="edit-btn"><i className="bi bi-pencil-square"></i> Редактировать профиль</button>
+            ) : (
+                <button onClick={handleDeleteContact} className="delete-btn">Удалить контакт</button>
             )}
           </div>
         )}

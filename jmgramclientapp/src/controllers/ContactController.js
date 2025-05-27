@@ -32,15 +32,15 @@ export async function acceptContactRequest(contactRequestId) {
   }
 }
 
-export async function updateContactName(contactUserId, newName) {
+export async function deleteContact(contactUserId) {
   try {
-    const response = await axios.post('/Contact/UpdateName', 
-      { ContactUserId: contactUserId, NewName: newName }, 
+    const response = await axios.post('/Contact/Delete', 
+      { contactUserId: contactUserId }, 
       { withCredentials: true }
     );
     return response.data;
   } catch (error) {
-    console.error('Ошибка при обновлении имени контакта:', error);
+    console.error('Ошибка при удалении контакта:', error);
     throw error;
   }
 }
