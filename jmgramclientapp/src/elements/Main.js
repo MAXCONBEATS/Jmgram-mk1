@@ -94,16 +94,6 @@ function Main({ error, onLogout }) {
     }
   };
 
-  const handleDeleteNotification = async (id) => {
-    try {
-      await axios.delete('/Notification/Delete', { params: { id }, withCredentials: true });
-      setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
-    } catch (error) {
-      console.error('Ошибка при удалении уведомления:', error.response || error);
-      alert('Не удалось удалить уведомление.');
-    }
-  };
-
   const handleCloseNotification = (id) => {
     setNotifications((prev) => prev.filter((notif) => notif.Id !== id));
   };

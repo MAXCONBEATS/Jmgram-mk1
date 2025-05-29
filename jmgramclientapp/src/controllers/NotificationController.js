@@ -23,16 +23,6 @@ export async function sendNotification(notificationDto) {
   }
 }
 
-export async function deleteNotification(id) {
-  try {
-    const response = await axios.delete(`https://localhost:5087/Notification/Delete?id=${id}`, { withCredentials: true });
-    return response.status === 204;
-  } catch (error) {
-    console.error('Ошибка при удалении уведомления:', error);
-    throw error;
-  }
-}
-
 export async function markAsRead(notificationId) {
   try {
     const response = await axios.put(`https://localhost:5087/Notification/MarkAsRead?notificationId=${notificationId}`, null, { withCredentials: true });
