@@ -11,6 +11,7 @@ import axios from 'axios';
 import { markAsRead } from '../controllers/NotificationController';
 import CreateChatButton from './CreateChatButton';
 import UserProfile from './UserProfile';
+
 axios.defaults.baseURL = 'https://localhost:5087';
 
 function Main({ error, onLogout }) {
@@ -24,7 +25,16 @@ function Main({ error, onLogout }) {
   const [contextMenu, setContextMenu] = useState({ visible: false, x: 0, y: 0, chatId: null });
 
   const userId = localStorage.getItem('UserId');
-  console.log('Main.js userId from localStorage:', userId);
+
+  const refreshContactsAndChats = async () => {
+    try {
+      const updatedContacts = await getContactList();
+      setContacts(updatedContacts);
+      setRefreshChats(prev => !prev);
+    } catch (error) {
+      console.error('Ошибка при обновлении контактов и чатов:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchContacts = async () => {
@@ -84,8 +94,7 @@ function Main({ error, onLogout }) {
       const result = await acceptContactRequest(contactRequestId);
       if (typeof result === 'string' || (result && result.isSuccess)) {
         setContactRequests((prev) => prev.filter((req) => req.id !== contactRequestId));
-        const updatedContacts = await getContactList();
-        setContacts(updatedContacts);
+        await refreshContactsAndChats();
       } else {
         alert(`Ошибка при принятии запроса: ${result.errorMessage || 'Неизвестная ошибка'}`);
       }
@@ -301,7 +310,11 @@ return (
     />
 
     {profileUserId && (
-      <UserProfile userId={profileUserId} onClose={() => setProfileUserId(null)} />
+      <UserProfile 
+        userId={profileUserId} 
+        onClose={() => setProfileUserId(null)} 
+        onContactDeleted={refreshContactsAndChats} 
+      />
     )}
   </div>
 );

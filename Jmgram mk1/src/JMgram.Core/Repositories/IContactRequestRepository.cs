@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Jmgram_mk1.src.JMgram.Core.Entities;
+using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task UpdateContactRequest(ContactRequest contactRequest);
         Task<List<ContactRequest>> GetIncomingContactRequests(string userId);
         Task<List<ContactRequest>> GetOutgoingContactRequests(string userId);
+        Task DeleteContactRequest(ContactRequest contactRequest);
     }
     public class ContactRequestRepository : IContactRequestRepository
     {
@@ -70,6 +72,23 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             return await _context.ContactRequests
                 .Where(cr => cr.SenderUserId == userId)
                 .ToListAsync();
+        }
+        public async Task DeleteContactRequest(ContactRequest contactRequest)
+        {
+            if (contactRequest == null)
+            {
+                throw new ArgumentNullException(nameof(contactRequest), "ContactRequest cannot be null.");
+            }
+            try
+            {
+                _context.ContactRequests.Remove(contactRequest);
+                await _context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
         }
     }
 }

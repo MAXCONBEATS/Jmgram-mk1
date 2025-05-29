@@ -8,7 +8,6 @@ function CreateChatButton({ contacts, onCreateChat }) {
   const toggleModal = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      // Reset form when opening
       setChatName('');
       setSelectedContacts([]);
     }
@@ -32,11 +31,10 @@ function CreateChatButton({ contacts, onCreateChat }) {
       return;
     }
     try {
-      // Map selectedContacts (user IDs) to phone numbers
       const phones = contacts
         .filter(contact => selectedContacts.includes(contact.contactUserId))
         .map(contact => contact.phone)
-        .filter(phone => phone); // filter out undefined/null
+        .filter(phone => phone);
 
       const payload = {
         chat: { name: chatName },
@@ -94,7 +92,6 @@ function CreateChatButton({ contacts, onCreateChat }) {
   );
 }
 
-// Inline styles for simplicity; ideally move to CSS file
 const overlayStyle = {
   position: 'fixed',
   top: 0, left: 0, right: 0, bottom: 0,

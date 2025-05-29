@@ -3,7 +3,7 @@ import { UserController } from '../controllers/UserController';
 import { deleteContact, getContactList } from '../controllers/ContactController';
 import '../css/UserProfile.css';
 
-const UserProfile = ({ userId, onClose }) => {
+const UserProfile = ({ userId, onClose, onContactDeleted }) => {
   const [profile, setProfile] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
@@ -60,7 +60,9 @@ const UserProfile = ({ userId, onClose }) => {
       try {
         await deleteContact(userId);
         alert('Контакт успешно удален.');
-        await getContactList(); // Refresh contact list after deletion
+        if (onContactDeleted) {
+          await onContactDeleted();
+        }
         onClose();
       } catch (error) {
         console.error('Ошибка при удалении контакта:', error);
