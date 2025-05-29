@@ -44,3 +44,16 @@ export async function deleteContact(contactUserId) {
     throw error;
   }
 }
+
+export async function addContact(contactUserId, senderId) {
+  try {
+    const response = await axios.post('/Contact/Add', 
+      { contactUserId: contactUserId, senderId: senderId }, 
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при добавлении контакта:', error);
+    throw error;
+  }
+}

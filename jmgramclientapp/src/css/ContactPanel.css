@@ -1,0 +1,72 @@
+.contacts-header {
+  color: white;
+  margin-bottom: 15px;
+}
+
+.user-search-container {
+  margin-bottom: 20px;
+}
+
+.contacts-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 5px;
+}
+
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contact-list li {
+  cursor: pointer;
+  padding: 8px 12px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+  background-color: #212121;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.contact-list li:hover {
+  background-color: #424242;
+}
+
+.contact-requests-container {
+  margin-top: 20px;
+  background-color: #212121;
+  padding: 12px;
+  border-radius: 4px;
+}
+
+.contact-requests-container h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: white;
+}
+
+.contact-requests-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contact-requests-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #424242;
+  color: white;
+}
+
+.contact-requests-list button {
+  margin-left: 10px;
+  background: #424242;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+}
