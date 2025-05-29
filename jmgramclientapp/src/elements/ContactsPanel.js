@@ -1,15 +1,8 @@
 import React from 'react';
 import UserSearch from './UserSearch';
-import { useContacts } from '../hooks/useContacts';
 import '../css/ContactPanel.css';
 
-function ContactsPanel({ userId, refreshTrigger, setProfileUserId }) {
-  const {
-    contacts,
-    contactRequests,
-    handleAcceptContactRequest,
-    refreshContactsAndChats,
-  } = useContacts(userId, refreshTrigger);
+function ContactsPanel({ userId, contacts, contactRequests, onAcceptContactRequest, refreshTrigger, setProfileUserId, refreshContactsAndChats }) {
 
   return (
     <div className="contacts-panel">
@@ -22,7 +15,7 @@ function ContactsPanel({ userId, refreshTrigger, setProfileUserId }) {
       </div>
 
       <div className="contacts-wrapper">
-        <div>
+        <div className="contacts-container">
           <ul className="contact-list">
             {contacts.length > 0 ? (
               contacts.map((contact) => (
@@ -45,14 +38,14 @@ function ContactsPanel({ userId, refreshTrigger, setProfileUserId }) {
             <h3>Запросы в контакты:</h3>
             <ul className="contact-requests-list">
               {contactRequests.map((request) => (
-                  <li key={request.id}>
+                <li key={request.id}>
                   <span>{request.senderName || 'Неизвестный пользователь'}</span>
                   <button onClick={async () => {
-                    await handleAcceptContactRequest(request.id);
+                    await onAcceptContactRequest(request.id);
                     refreshContactsAndChats();
                   }}>Принять</button>
-                  </li>
-                ))}
+                </li>
+              ))}
             </ul>
           </div>
         )}

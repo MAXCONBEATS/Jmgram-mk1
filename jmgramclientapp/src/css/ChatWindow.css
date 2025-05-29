@@ -14,7 +14,11 @@
   flex-direction: column;
   box-sizing: border-box;
   overflow: hidden;
-  position: relative;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1100;
   margin: 0 auto; /* Центрирование по горизонтали */
   resize: both;
   resize: none; /* Позволяет изменять размер вручную (опционально) */

@@ -70,50 +70,54 @@ return () => {
 
     useEffect(() => {
         if (connection) {
-connection.start()
-    .then(() => {
-        console.log('SignalR Connected.');
-        setIsConnected(true); // Set isConnected to true on successful connection
+            if (connection.state === "Disconnected") {
+                connection.start()
+                    .then(() => {
+                        console.log('SignalR Connected.');
+                        setIsConnected(true); // Set isConnected to true on successful connection
 
-        // Join the chat group
-        connection.invoke('JoinChat', chat.chatId || chat.id)
-            .then(() => console.log('Joined chat group:', chat.chatId || chat.id))
-            .catch(err => console.error('JoinChat error:', err));
+                        // Join the chat group
+                        connection.invoke('JoinChat', chat.chatId || chat.id)
+                            .then(() => console.log('Joined chat group:', chat.chatId || chat.id))
+                            .catch(err => console.error('JoinChat error:', err));
 
-        // Listen for incoming messages
-connection.on('ReceiveMessage', (user, message) => {
-    console.log('Received message from SignalR:', user, message);
-    setMessages(prevMessages => {
-        const newMessages = [...prevMessages, { senderName: user, text: message }];
-        console.log('Updated messages:', newMessages);
-        return newMessages;
-    });
-});
-    })
-    .catch(e => console.error('Connection failed: ', e));
+                        // Listen for incoming messages
+                        connection.on('ReceiveMessage', (user, message) => {
+                            console.log('Received message from SignalR:', user, message);
+                            setMessages(prevMessages => {
+                                const newMessages = [...prevMessages, { senderName: user, text: message }];
+                                console.log('Updated messages:', newMessages);
+                                return newMessages;
+                            });
+                        });
+                    })
+                    .catch(e => console.error('Connection failed: ', e));
+            } else {
+                console.log('SignalR connection already started or connecting. Current state:', connection.state);
+            }
 
-connection.onclose(error => {
-    setIsConnected(false); // Set isConnected to false on connection close
-    console.log("Соединение закрыто:", error); // Added log for connection close
-    if (error) {
-        console.error('SignalR connection closed with error:', error);
-    } else {
-        console.log('SignalR connection closed.');
-    }
-});
+            connection.onclose(error => {
+                setIsConnected(false); // Set isConnected to false on connection close
+                console.log("Соединение закрыто:", error); // Added log for connection close
+                if (error) {
+                    console.error('SignalR connection closed with error:', error);
+                } else {
+                    console.log('SignalR connection closed.');
+                }
+            });
 
-connection.onreconnecting(error => {
-    setIsConnected(false); // Set isConnected to false on reconnecting
-    console.warn('SignalR reconnecting due to error:', error);
-});
+            connection.onreconnecting(error => {
+                setIsConnected(false); // Set isConnected to false on reconnecting
+                console.warn('SignalR reconnecting due to error:', error);
+            });
 
-connection.onreconnected(connectionId => {
-    setIsConnected(true); // Set isConnected to true on reconnected
-    console.log('SignalR reconnected. ConnectionId:', connectionId);
-});
+            connection.onreconnected(connectionId => {
+                setIsConnected(true); // Set isConnected to true on reconnected
+                console.log('SignalR reconnected. ConnectionId:', connectionId);
+            });
         }
 
-return () => {
+        return () => {
             if (connection && isConnected) { // Only leave chat if connected
                 connection.off('ReceiveMessage');
                 console.log('Attempting to leave chat:', chat.chatId || chat.id);
@@ -287,7 +291,6 @@ const handleSendMessage = async () => {
         <ul>
             {participants.length > 0 ? (
               Array.from(new Map(participants.map(p => [p.id, p])).values()).map((participant) => {
-                console.log('Rendering participant with id:', participant.id);
                 return (
                   <li key={participant.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span>{participant.firstName || participant.phone || "Участник"}</span>
