@@ -12,7 +12,6 @@ const UserProfile = ({ userId, onClose, onContactDeleted }) => {
     bio: ''
   });
 
-  // Загрузка профиля
   useEffect(() => {
     const loadProfile = async () => {
       try {
@@ -31,7 +30,6 @@ const UserProfile = ({ userId, onClose, onContactDeleted }) => {
     loadProfile();
   }, [userId]);
 
-  // Обработка изменений формы
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -39,7 +37,6 @@ const UserProfile = ({ userId, onClose, onContactDeleted }) => {
     });
   };
 
-  // Сохранение изменений
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
