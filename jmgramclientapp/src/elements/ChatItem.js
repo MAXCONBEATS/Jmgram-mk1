@@ -89,13 +89,13 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat })
                 position: 'relative',
             }}
         >
-            {isEditing ? (
-                <>
-                    <input type="text" value={chatName} onChange={handleChatNameChange} />
-                    <button onClick={handleSaveChatName}>Сохранить</button>
-                    <button onClick={() => setIsEditing(false)}>Отмена</button>
-                </>
-            ) : (
+                {isEditing ? (
+                    <>
+                        <input type="text" value={chatName} onChange={handleChatNameChange} onClick={(event) => event.stopPropagation()} />
+                        <button onClick={(event) => { event.stopPropagation(); handleSaveChatName(); }}>Сохранить</button>
+                        <button onClick={(event) => { event.stopPropagation(); setIsEditing(false); }}>Отмена</button>
+                    </>
+                ) : (
                 <>
                     <div>
                         {chat.Name}
@@ -129,7 +129,8 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat })
                 >
                     <li
                         className="context-menu-item"
-                        onClick={() => {
+                        onClick={(event) => {
+                            event.stopPropagation();
                             setIsEditing(true);
                             setContextMenuVisible(false);
                         }}
@@ -138,7 +139,10 @@ function ChatItem({ chat, onChatNameChange, onClick, isSelected, onDeleteChat })
                     </li>
                     <li
                         className="context-menu-item"
-                        onClick={handleDeleteChat}
+                        onClick={(event) => {
+                            event.stopPropagation();
+                            handleDeleteChat();
+                        }}
                     >
                         Удалить чат
                     </li>
