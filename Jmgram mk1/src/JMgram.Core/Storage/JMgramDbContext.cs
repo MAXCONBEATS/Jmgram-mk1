@@ -93,6 +93,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
              .HasValue<ContactRequestNotification>(NotificationType.ContactRequest)
              .HasValue<SystemNotification>(NotificationType.System)
              .HasValue<ChatInviteNotification>(NotificationType.ChatInvite);
+            modelBuilder.Entity<Notification>()
+                .HasOne(n => n.User)
+                .WithMany()
+                .HasForeignKey(n => n.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ContactRequest>(entity =>
             {

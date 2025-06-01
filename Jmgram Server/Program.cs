@@ -119,10 +119,7 @@ builder.Services.AddScoped<RemoveUserFromChatUseCase>();
 builder.Services.AddScoped<DeleteChatUseCase>();
 builder.Services.AddScoped<GetUserChatsUseCase>();
 builder.Services.AddScoped<CreatePrivateChatUseCase>();
-
-
 builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptContactRequestUseCase>>();
-
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();

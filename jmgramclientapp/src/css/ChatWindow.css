@@ -1,11 +1,11 @@
 /* Основной контейнер */
 .chat-window {
   border: none;
-  padding: 1.5vmin; /* 1.5% от минимального размера viewport */
+  padding: 1.5vmin;
   border-radius: 3vmin;
-  width: 80vw; /* 80% от ширины экрана */
-  height: 90vh; /* 90% от высоты экрана */
-  max-width: 900px; /* Ограничение на максимальный размер */
+  width: 80vw;
+  height: 90vh;
+  max-width: 900px;
   max-height: 1200px;
   background-color: #0a0a0a;
   color: #cccccc;
@@ -19,11 +19,11 @@
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 1100;
-  margin: 0 auto; /* Центрирование по горизонтали */
+  margin: 0 auto;
   resize: both;
-  resize: none; /* Позволяет изменять размер вручную (опционально) */
-  min-width: 300px; /* Минимальная ширина */
-  min-height: 400px; /* Минимальная высота */
+  resize: none;
+  min-width: 300px;
+  min-height: 400px;
 }
 
 /* Шапка чата */

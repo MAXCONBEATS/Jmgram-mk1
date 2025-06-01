@@ -9,7 +9,6 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(false);
     const [participants, setParticipants] = useState([]);
-    // Removed contextMenuVisible state
     const [contextMenuPosition, setContextMenuPosition] = useState({ x: 0, y: 0 });
     const [selectedParticipant, setSelectedParticipant] = useState(null);
     const emojiButtonRef = useRef(null);
@@ -17,7 +16,7 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     const chatRef = useRef(null);
 
     const [connection, setConnection] = useState(null);
-    const [isConnected, setIsConnected] = useState(false); // Added isConnected state
+    const [isConnected, setIsConnected] = useState(false);
     
     const handleEmojiClick = (emojiData) => {
     setNewMessage(prev => prev + emojiData.emoji);
@@ -35,7 +34,6 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
             setLoading(true);
             try {
                 const response = await getMessages(chat.chatId || chat.id, 1, 20);
-                // Use senderName directly from message objects
                 const mappedMessages = (response.chat || []).map(msg => ({
                     ...msg,
                     senderName: msg.senderName || 'Unknown'
@@ -64,7 +62,6 @@ console.log('Creating new SignalR connection:', newConnection);
 setConnection(newConnection);
 
 return () => {
-    // Removed connection.stop() here to avoid stopping connection prematurely
 };
     }, [chat]);
 

@@ -8,12 +8,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+        [Required]
+        [MaxLength(450)]
         public string UserId { get; set; }
         public string Message { get; set; } = "";
         public DateTime Timestamp { get; set; }
         public bool IsRead { get; set; }
         public string? ChatId { get; set; }
         public NotificationType NotificationType { get; set; }
+        public virtual AppIdentityUser User { get; set; }
     }
 
     public class MessageNotification : Notification

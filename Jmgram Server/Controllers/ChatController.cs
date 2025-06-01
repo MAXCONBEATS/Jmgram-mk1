@@ -8,7 +8,6 @@ using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Services;
 
-
 [Authorize]
 [ApiController]
 [Route("[controller]")]
@@ -117,61 +116,61 @@ public class ChatController : ControllerBase
         return Ok(addedUsers);
     }
 
-    [HttpPost("InviteToChat")]
-    [Authorize]
-    public async Task<IActionResult> InviteToChat([FromBody] InviteToChatRequest request)
-    {
-        var inviterUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(inviterUserId))
-        {
-            return Unauthorized("Не удалось получить UserId из claims.");
-        }
-        _logger.LogInformation($"ChatId value: {request.ChatId}");
-        foreach (var invitedUserId in request.InvitedUserIds)
-        {
-            var user = await _userRepository.GetById(invitedUserId);
-            if (user == null)
-            {
-                _logger.LogWarning($"User with id {invitedUserId} not found.");
-                return BadRequest($"User with id {invitedUserId} not found.");
-            }
-            var notificationDto = new NotificationDto
-            {
-                UserId = invitedUserId,
-                Message = $"Вас пригласили в чат {request.ChatId} от {inviterUserId}. Принять или отклонить?",
-                Timestamp = DateTime.UtcNow,
-                IsRead = false,
-                NotificationType = NotificationType.ChatInvite,
-                ChatId = request.ChatId
-            };
-            var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); 
-            if (!notificationResponse.IsSuccess)
-            {
-                return BadRequest(notificationResponse.ErrorMessage);
-            }
-        }
-        return Ok("Приглашение в чат отправлено.");
-    }
-    [HttpPost("RespondToInvite")]
-    [Authorize]
-    public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
-    {
-        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //[HttpPost("InviteToChat")]
+    //[Authorize]
+    //public async Task<IActionResult> InviteToChat([FromBody] InviteToChatRequest request)
+    //{
+    //    var inviterUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    //    if (string.IsNullOrEmpty(inviterUserId))
+    //    {
+    //        return Unauthorized("Не удалось получить UserId из claims.");
+    //    }
+    //    _logger.LogInformation($"ChatId value: {request.ChatId}");
+    //    foreach (var invitedUserId in request.InvitedUserIds)
+    //    {
+    //        var user = await _userRepository.GetById(invitedUserId);
+    //        if (user == null)
+    //        {
+    //            _logger.LogWarning($"User with id {invitedUserId} not found.");
+    //            return BadRequest($"User with id {invitedUserId} not found.");
+    //        }
+    //        var notificationDto = new NotificationDto
+    //        {
+    //            UserId = invitedUserId,
+    //            Message = $"Вас пригласили в чат {request.ChatId} от {inviterUserId}. Принять или отклонить?",
+    //            Timestamp = DateTime.UtcNow,
+    //            IsRead = false,
+    //            NotificationType = NotificationType.ChatInvite,
+    //            ChatId = request.ChatId
+    //        };
+    //        var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); 
+    //        if (!notificationResponse.IsSuccess)
+    //        {
+    //            return BadRequest(notificationResponse.ErrorMessage);
+    //        }
+    //    }
+    //    return Ok("Приглашение в чат отправлено.");
+    //}
+    //[HttpPost("RespondToInvite")]
+    //[Authorize]
+    //public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
+    //{
+    //    var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-        if (string.IsNullOrEmpty(userId))
-        {
-            return Unauthorized("Не удалось получить UserId из claims.");
-        }
-        _logger.LogInformation($"RespondToInvite: NotificationId = {request.NotificationId}, Accepted = {request.Accepted}");
-        var response = await _respondToChatInviteUseCase.Execute(request.NotificationId, userId, request.Accepted);
+    //    if (string.IsNullOrEmpty(userId))
+    //    {
+    //        return Unauthorized("Не удалось получить UserId из claims.");
+    //    }
+    //    _logger.LogInformation($"RespondToInvite: NotificationId = {request.NotificationId}, Accepted = {request.Accepted}");
+    //    var response = await _respondToChatInviteUseCase.Execute(request.NotificationId, userId, request.Accepted);
 
-        if (!response.IsSuccess)
-        {
-            return BadRequest(response.ErrorMessage);
-        }
+    //    if (!response.IsSuccess)
+    //    {
+    //        return BadRequest(response.ErrorMessage);
+    //    }
 
-        return Ok(response.SuccessMessage);
-    }
+    //    return Ok(response.SuccessMessage);
+    //}
     [HttpGet("UserChats")]
     [Authorize]
     public async Task<IActionResult> GetUserChats()
@@ -374,28 +373,28 @@ public class ChatController : ControllerBase
             return StatusCode(500, "An unexpected error occurred. Please check the server logs.");
         }
     }
-    [HttpDelete("DeleteMessage")]
-    public async Task<IActionResult> DeleteMessage(int messageId)
-    {
-        _logger.LogInformation($"ChatController.DeleteMessage: Attempting to delete message with ID {messageId}.");
+    //[HttpDelete("DeleteMessage")]
+    //public async Task<IActionResult> DeleteMessage(int messageId)
+    //{
+    //    _logger.LogInformation($"ChatController.DeleteMessage: Attempting to delete message with ID {messageId}.");
 
-        try
-        {
-            if (messageId <= 0)
-            {
-                _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
-                return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
-            }
+    //    try
+    //    {
+    //        if (messageId <= 0)
+    //        {
+    //            _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
+    //            return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
+    //        }
 
-            await _chatRepository.DeleteMessage(messageId);
+    //        await _chatRepository.DeleteMessage(messageId);
 
-            _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
-            return NoContent();
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
-            return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
-        }
-    }
+    //        _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
+    //        return NoContent();
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
+    //        return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
+    //    }
+    //}
 }
