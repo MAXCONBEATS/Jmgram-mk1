@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
  import Register from './elements/Register';
  import { isAuthenticated } from './controllers/AccountController';
  import { getUserChats } from './controllers/ChatController';
- import Main from './elements/Main'; //  <-- Импортируйте Main
+ import Main from './elements/Main';
  import axios from 'axios';
   axios.defaults.baseURL = 'https://localhost:5087';
   axios.defaults.withCredentials = true;

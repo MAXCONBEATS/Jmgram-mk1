@@ -14,7 +14,7 @@ export async function getLastChatMessage(chatId) {
     chatId: chatId,
    },
   });
-  return response.data; // Предполагаем, что API возвращает LastChatMessageDto
+  return response.data;
  } catch (error) {
   console.error(`Ошибка при получении последнего сообщения для чата ${chatId}:`, error);
   return null;
@@ -24,7 +24,7 @@ export async function getLastChatMessage(chatId) {
 export async function createChat(request) {
  try {
   const response = await axios.post('https://localhost:5087/Chat/Create', request, { withCredentials: true });
-  return response.data; // Предполагаем, что API возвращает данные созданного чата
+  return response.data; 
  } catch (error) {
   console.error('Ошибка при создании чата:', error);
   throw error;
@@ -33,7 +33,6 @@ export async function createChat(request) {
 
 export async function sendMessage(request) {
  try {
-  // Wrap request in "message" and add timestamp if missing
   const messagePayload = {
    message: {
     chatId: request.chatId,
@@ -99,6 +98,23 @@ export async function deleteChat(chatId) {
   throw error;
  }
 }
+export async function removeUserFromChat(chatId, userId) {
+    console.log(`Removing user ${userId} from chat ${chatId}...`);
+    try {
+        const response = await axios.delete('/Chat/RemoveUserFromChat', {
+            withCredentials: true,
+            params: {
+                chatId: chatId,
+                userId: userId,
+            },
+        });
+        console.log('Удаление прошло успешно. Server response:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Ошибка при удалении пользователя из чата:', error);
+        throw error;
+    }
+}
 
 export async function setChatName(chatId, chatName) {
  try {
@@ -124,27 +140,11 @@ export async function getChatUsersList(chatId) {
     chatId: chatId,
    },
   });
-  return response.data; // Expected to be a list of user objects
+  return response.data;
  } catch (error) {
   console.error('Ошибка при получении списка участников чата:', error);
   throw error;
  }
 }
 
-export async function removeUserFromChat(chatId, userId) {
-    console.log(`Removing user ${userId} from chat ${chatId}...`);
-    try {
-        const response = await axios.delete('/Chat/RemoveUserFromChat', {
-            withCredentials: true,
-            params: {
-                chatId: chatId,
-                userId: userId,
-            },
-        });
-        console.log('Удаление прошло успешно. Server response:', response.data);
-        return response.data; // Предполагается сообщение об успехе или статус
-    } catch (error) {
-        console.error('Ошибка при удалении пользователя из чата:', error);
-        throw error;
-    }
-}
+

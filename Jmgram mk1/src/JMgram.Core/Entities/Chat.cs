@@ -11,7 +11,4 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();
         public string CreatorUserId { get; set; }
     }
-
-
-
 }

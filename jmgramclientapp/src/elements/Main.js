@@ -22,7 +22,6 @@ function Main({ error, onLogout }) {
   const [contactRequests, setContactRequests] = useState([]);
 
   const userId = localStorage.getItem('UserId');
-
   const refreshContactsAndChats = async () => {
     try {
       const updatedContacts = await getContactList();
