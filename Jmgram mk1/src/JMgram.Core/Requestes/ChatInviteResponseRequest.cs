@@ -2,7 +2,7 @@
 {
     public class ChatInviteResponseRequest
     {
-        public int NotificationId { get; set; }
+        public Guid ChatInvitationId { get; set; }
         public bool Accepted { get; set; }
     }
 }

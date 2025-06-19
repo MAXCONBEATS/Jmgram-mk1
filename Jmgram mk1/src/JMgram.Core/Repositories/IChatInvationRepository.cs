@@ -1,4 +1,5 @@
-﻿using Jmgram_mk1.src.JMgram.Core.Entities;
+﻿using Castle.Core.Logging;
+using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.AspNetCore.Http;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Jmgram_mk1.src.JMgram.Core.Repositories
 {
@@ -17,11 +19,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task<ChatInvitation> GetChatInvitation(string chatId, string senderUserId, string recipientUserId);
         Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId);
         Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId);
+        Task UpdateChatInvitation(ChatInvitation chatInvitation);
     }
     public class ChatInvationRepository : IChatInvationRepository
     {
         private readonly JMgramDbContext _dbContext;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ILogger _logger;
         public ChatInvationRepository(JMgramDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
@@ -43,6 +47,16 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId)
         {
             return await _dbContext.ChatInvitations.Where(ch => ch.RecipientUserId == userId).ToListAsync();
+        }
+        public async Task UpdateChatInvitation(ChatInvitation chatInvitation)
+        {
+            if (chatInvitation == null)
+            {
+                throw new ArgumentNullException(nameof(chatInvitation));
+            }
+            _dbContext.ChatInvitations.Update(chatInvitation);
+            await _dbContext.SaveChangesAsync();
+
         }
     }
 }

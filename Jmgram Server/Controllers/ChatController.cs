@@ -137,26 +137,26 @@ public class ChatController : ControllerBase
 
         return Ok("Приглашение в чат отправлено.");
     }
-    //[HttpPost("RespondToInvite")]
-    //[Authorize]
-    //public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
-    //{
-    //    var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+    [HttpPost("RespondToInvite")]
+    [Authorize]
+    public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-    //    if (string.IsNullOrEmpty(userId))
-    //    {
-    //        return Unauthorized("Не удалось получить UserId из claims.");
-    //    }
-    //    _logger.LogInformation($"RespondToInvite: NotificationId = {request.NotificationId}, Accepted = {request.Accepted}");
-    //    var response = await _respondToChatInviteUseCase.Execute(request.NotificationId, userId, request.Accepted);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+        _logger.LogInformation($"RespondToInvite: NotificationId = {request.ChatInvitationId}, Accepted = {request.Accepted}");
+        var response = await _respondToChatInviteUseCase.Execute(request.ChatInvitationId, userId, request.Accepted);
 
-    //    if (!response.IsSuccess)
-    //    {
-    //        return BadRequest(response.ErrorMessage);
-    //    }
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
 
-    //    return Ok(response.SuccessMessage);
-    //}
+        return Ok(response.SuccessMessage);
+    }
     [HttpGet("ChatInvites")]
     [Authorize]
     public async Task<IActionResult> GetChatInvitations()
