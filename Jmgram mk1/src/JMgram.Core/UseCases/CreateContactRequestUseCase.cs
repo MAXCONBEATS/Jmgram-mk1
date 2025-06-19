@@ -26,7 +26,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository)); 
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
         public async Task<CreateContactRequestResponse> Execute(string senderUserId, string recipientUserId)
         {
             _logger.LogInformation("CreateContactRequestUseCase.Execute: Starting execution...");
@@ -66,8 +65,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 await _contactRequestRepository.AddContactRequest(contactRequest);
                 _logger.LogInformation("CreateContactRequestUseCase.Execute: ContactRequest saved to database.");
 
-                var senderUser = await _userRepository.GetById(senderUserId); 
-                string senderName = senderUser?.FirstName ?? "Неизвестный пользователь"; 
+                var senderUser = await _userRepository.GetById(senderUserId);
+                string senderName = senderUser?.FirstName ?? "Неизвестный пользователь";
                 NotificationDto notificationDto = new NotificationDto
                 {
                     UserId = recipientUserId,

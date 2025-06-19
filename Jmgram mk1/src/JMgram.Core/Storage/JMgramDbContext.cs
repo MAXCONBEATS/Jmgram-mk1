@@ -18,6 +18,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
         public DbSet<UserProfile> UserProfiles { get; set; } = null!;
         public DbSet<ChatUser> ChatUsers { get; set; } = null!;
         public DbSet<ContactRequest> ContactRequests { get; set; } = null!;
+        public DbSet<ChatInvitation> ChatInvitations { get; set; } = null!;
         public JMgramDbContext(DbContextOptions<JMgramDbContext> options) : base(options) { }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -104,6 +105,28 @@ namespace Jmgram_mk1.src.JMgram.Core.Storage
                 entity.HasKey(cr => cr.Id);
                 entity.Property(e => e.Id).ValueGeneratedNever();
                 entity.Property(cr => cr.Status).HasConversion<string>();
+
+                entity.HasOne<AppIdentityUser>(cr => cr.SenderUser)
+                      .WithMany()
+                      .HasForeignKey(cr => cr.SenderUserId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasOne<AppIdentityUser>(cr => cr.RecipientUser)
+                      .WithMany()
+                      .HasForeignKey(cr => cr.RecipientUserId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+                entity.HasIndex(cr => new { cr.SenderUserId, cr.RecipientUserId })
+                      .IsUnique();
+            });
+            modelBuilder.Entity<ChatInvitation>(entity =>
+            {
+                entity.HasKey(cr => cr.Id);
+                entity.Property(e => e.Id).ValueGeneratedNever();
+                entity.Property(cr => cr.Status).HasConversion<string>();
+
+                entity.HasOne<Chat>(ch => ch.Chat).WithMany()
+                .HasForeignKey(ch => ch.ChatId).OnDelete(DeleteBehavior.NoAction);
 
                 entity.HasOne<AppIdentityUser>(cr => cr.SenderUser)
                       .WithMany()
