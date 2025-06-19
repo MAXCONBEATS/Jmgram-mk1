@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace Jmgram_mk1.src.JMgram.Core.Requestes
 {
-    public class InviteToChatRequest
+    public class CreateChatInvitationRequest
     {
         public string ChatId { get; set; }
-        public List<string> InvitedUserIds { get; set; }
+        public string? SenderId { get; set; }
+        public string? RecipientId { get; set; }
     }
 }

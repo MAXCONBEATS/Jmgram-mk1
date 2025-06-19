@@ -106,6 +106,7 @@ builder.Services.AddScoped<ISendMessageUseCase,SendMessageUseCase>();
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
 builder.Services.AddScoped<GetChatMessagesUseCase>();
 builder.Services.AddScoped<AddContactUseCase>();
+builder.Services.AddScoped<CreateChatInvitationUseCase>();
 builder.Services.AddScoped<SendNotificationUseCase>();
 builder.Services.AddScoped<GetNotificationListUseCase>();
 builder.Services.AddScoped<CreateContactRequestUseCase>();
@@ -123,6 +124,7 @@ builder.Services.AddScoped<ILogger<AcceptContactRequestUseCase>, Logger<AcceptCo
 builder.Services.AddScoped<IContactRepository, ContactRepository>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>();
+builder.Services.AddScoped<IChatInvationRepository, ChatInvationRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
 

@@ -7,6 +7,8 @@ using System.Security.Claims;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Services;
+using NuGet.Packaging.Signing;
+using static Microsoft.ApplicationInsights.MetricDimensionNames.TelemetryContext;
 
 [Authorize]
 [ApiController]
@@ -19,6 +21,7 @@ public class ChatController : ControllerBase
     private readonly IUserRepository _userRepository;
 
     private readonly CreateChatUseCase _createChatUseCase;
+    private readonly CreateChatInvitationUseCase _createChatInvitationUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
     private readonly IGetChatListUseCase _getChatListUseCase;
     private readonly ISendMessageUseCase _sendMessageUseCase;
@@ -35,7 +38,7 @@ public class ChatController : ControllerBase
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
      IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase,
-     ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase,
+     ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase, CreateChatInvitationUseCase createChatInvitationUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
      RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository)
@@ -48,6 +51,7 @@ public class ChatController : ControllerBase
         _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
         _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));
         _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
+        _createChatInvitationUseCase = createChatInvitationUseCase ?? throw new ArgumentNullException(nameof(createChatInvitationUseCase));
         _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
         _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
@@ -116,41 +120,20 @@ public class ChatController : ControllerBase
         return Ok(addedUsers);
     }
 
-    //[HttpPost("InviteToChat")]
-    //[Authorize]
-    //public async Task<IActionResult> InviteToChat([FromBody] InviteToChatRequest request)
-    //{
-    //    var inviterUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    //    if (string.IsNullOrEmpty(inviterUserId))
-    //    {
-    //        return Unauthorized("Не удалось получить UserId из claims.");
-    //    }
-    //    _logger.LogInformation($"ChatId value: {request.ChatId}");
-    //    foreach (var invitedUserId in request.InvitedUserIds)
-    //    {
-    //        var user = await _userRepository.GetById(invitedUserId);
-    //        if (user == null)
-    //        {
-    //            _logger.LogWarning($"User with id {invitedUserId} not found.");
-    //            return BadRequest($"User with id {invitedUserId} not found.");
-    //        }
-    //        var notificationDto = new NotificationDto
-    //        {
-    //            UserId = invitedUserId,
-    //            Message = $"Вас пригласили в чат {request.ChatId} от {inviterUserId}. Принять или отклонить?",
-    //            Timestamp = DateTime.UtcNow,
-    //            IsRead = false,
-    //            NotificationType = NotificationType.ChatInvite,
-    //            ChatId = request.ChatId
-    //        };
-    //        var notificationResponse = await _sendNotificationUseCase.Execute(notificationDto, inviterUserId); 
-    //        if (!notificationResponse.IsSuccess)
-    //        {
-    //            return BadRequest(notificationResponse.ErrorMessage);
-    //        }
-    //    }
-    //    return Ok("Приглашение в чат отправлено.");
-    //}
+    [HttpPost("InviteToChat")]
+    [Authorize]
+    public async Task<IActionResult> InviteToChat([FromBody] CreateChatInvitationRequest request)
+    {
+        var inviterUserId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(inviterUserId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+        var response = await _createChatInvitationUseCase.Execute(request.ChatId, request.SenderId, request.RecipientId);
+
+        return Ok("Приглашение в чат отправлено.");
+    }
     //[HttpPost("RespondToInvite")]
     //[Authorize]
     //public async Task<IActionResult> RespondToInvite([FromBody] ChatInviteResponseRequest request)
