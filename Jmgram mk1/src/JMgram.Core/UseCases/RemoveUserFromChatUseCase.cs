@@ -9,16 +9,20 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     public class RemoveUserFromChatUseCase
     {
         private readonly IChatRepository _chatRepository;
+        private readonly IChatInvationRepository _invationRepository;
         private readonly ILogger<RemoveUserFromChatUseCase> _logger;
 
-        public RemoveUserFromChatUseCase(IChatRepository chatRepository, ILogger<RemoveUserFromChatUseCase> logger)
+        public RemoveUserFromChatUseCase(IChatRepository chatRepository, ILogger<RemoveUserFromChatUseCase> logger, IChatInvationRepository invationRepository)
         {
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _invationRepository = invationRepository;
         }
 
         public async Task<RemoveUserFromChatResponse> Execute(string chatId, string userId, string currentUserId)
         {
+            var chatInvitation = await _invationRepository.GetChatInvitation(userId);
+            
             try
             {
                 _logger.LogInformation($"Removing user {userId} from chat {chatId} initiated by {currentUserId}");
@@ -59,9 +63,11 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                         ErrorMessage = $"Пользователь {userId} не состоит в этом чате."
                     };
                 }
-
-                await _chatRepository.RemoveUserFromChat(chatId, userId);
-
+                if (chatInvitation != null)
+                {
+                    await _invationRepository.DeleteChatInvitation(chatInvitation);
+                }
+                await _chatRepository.RemoveUserFromChat(chatId, userId);              
                 _logger.LogInformation($"User {userId} removed from chat {chatId} by {currentUserId}");
                 return new RemoveUserFromChatResponse { IsSuccess = true };
             }

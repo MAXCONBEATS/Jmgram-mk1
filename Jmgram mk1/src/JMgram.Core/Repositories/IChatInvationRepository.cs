@@ -17,9 +17,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     {
         Task AddChatInvitation(ChatInvitation chatInvitation);
         Task<ChatInvitation> GetChatInvitation(string chatId, string senderUserId, string recipientUserId);
+        Task<ChatInvitation> GetChatInvitation(string recipientUserId);
         Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId);
         Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId);
         Task UpdateChatInvitation(ChatInvitation chatInvitation);
+        Task DeleteChatInvitation(ChatInvitation chatInvitation);
     }
     public class ChatInvationRepository : IChatInvationRepository
     {
@@ -40,6 +42,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.ChatInvitations.FirstOrDefaultAsync(ch => ch.ChatId == chatId && ch.SenderUserId == senderUserId && ch.RecipientUserId == recipientUserId);
         }
+        public async Task<ChatInvitation> GetChatInvitation(string recipientUserId)
+        {
+            return await _dbContext.ChatInvitations.FirstOrDefaultAsync(ch => ch.RecipientUserId == recipientUserId);
+        }
         public async Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId)
         {
             return await _dbContext.ChatInvitations.FindAsync(chatInvitationId);
@@ -57,6 +63,15 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             _dbContext.ChatInvitations.Update(chatInvitation);
             await _dbContext.SaveChangesAsync();
 
+        }
+        public async Task DeleteChatInvitation(ChatInvitation chatInvitation)
+        {
+            if (chatInvitation == null)
+            {
+                throw new ArgumentNullException(nameof(chatInvitation));
+            }
+            _dbContext.ChatInvitations.Remove(chatInvitation);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

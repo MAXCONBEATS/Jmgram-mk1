@@ -65,8 +65,9 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     _logger.LogInformation($"RespondToChatInviteUseCase.Execute: User {userId} declined invite to chat {chatId}.");
                     chatInvitation.Status = ChatInvationStatus.Rejected;
                 }
-                await _chatInvationRepository.UpdateChatInvitation(chatInvitation);
+                await _chatInvationRepository.UpdateChatInvitation(chatInvitation);      
                 return new RespondToChatInviteResponse { IsSuccess = true, SuccessMessage = accepted ? "Вы приняли приглашение в чат." : "Вы отклонили приглашение в чат." };
+                
             }
             catch (Exception ex)
             {
