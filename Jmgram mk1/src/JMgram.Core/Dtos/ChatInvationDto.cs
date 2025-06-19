@@ -8,6 +8,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Dtos
         public string ChatId {  get; set; }
         public string? SenderUserId { get; set; }
         public string? RecipientUserId { get; set; }
-        public ContactRequestStatus Status { get; set; }
+        public ChatInvationStatus Status { get; set; }
     }
 }

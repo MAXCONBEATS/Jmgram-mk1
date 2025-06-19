@@ -16,6 +16,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task AddChatInvitation(ChatInvitation chatInvitation);
         Task<ChatInvitation> GetChatInvitation(string chatId, string senderUserId, string recipientUserId);
         Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId);
+        Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId);
     }
     public class ChatInvationRepository : IChatInvationRepository
     {
@@ -38,6 +39,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         public async Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId)
         {
             return await _dbContext.ChatInvitations.FindAsync(chatInvitationId);
+        }
+        public async Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId)
+        {
+            return await _dbContext.ChatInvitations.Where(ch => ch.RecipientUserId == userId).ToListAsync();
         }
     }
 }

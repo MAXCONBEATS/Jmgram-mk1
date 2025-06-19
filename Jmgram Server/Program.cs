@@ -105,6 +105,7 @@ builder.Services.AddScoped<IGetChatListUseCase, GetChatListUseCase>();
 builder.Services.AddScoped<ISendMessageUseCase,SendMessageUseCase>();
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
 builder.Services.AddScoped<GetChatMessagesUseCase>();
+builder.Services.AddScoped<GetChatInvitationsUseCase>();
 builder.Services.AddScoped<AddContactUseCase>();
 builder.Services.AddScoped<CreateChatInvitationUseCase>();
 builder.Services.AddScoped<SendNotificationUseCase>();

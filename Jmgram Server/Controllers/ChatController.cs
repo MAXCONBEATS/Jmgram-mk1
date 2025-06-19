@@ -19,10 +19,11 @@ public class ChatController : ControllerBase
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IChatRepository _chatRepository;
     private readonly IUserRepository _userRepository;
-
+    private readonly IChatInvationRepository _chatInvationRepository;
     private readonly CreateChatUseCase _createChatUseCase;
     private readonly CreateChatInvitationUseCase _createChatInvitationUseCase;
     private readonly AddUserToChatUseCase _addUserToChatUseCase;
+    private readonly GetChatInvitationsUseCase _getChatInvitationsUseCase;
     private readonly IGetChatListUseCase _getChatListUseCase;
     private readonly ISendMessageUseCase _sendMessageUseCase;
     private readonly SendNotificationUseCase _sendNotificationUseCase;
@@ -37,19 +38,21 @@ public class ChatController : ControllerBase
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
-     IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase,
+     IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase, GetChatInvitationsUseCase getChatInvitationsUseCase,
      ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase, CreateChatInvitationUseCase createChatInvitationUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
-     RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository)
+     RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository, IChatInvationRepository chatInvationRepository)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _chatInvationRepository = chatInvationRepository ?? throw new ArgumentNullException(nameof(chatInvationRepository));
         _createChatUseCase = createChatUseCase ?? throw new ArgumentNullException(nameof(createChatUseCase));
         _addUserToChatUseCase = addUserToChatUseCase ?? throw new ArgumentNullException(nameof(addUserToChatUseCase));
         _getChatListUseCase = getChatListUseCase ?? throw new ArgumentNullException(nameof(getChatListUseCase));
+        _getChatInvitationsUseCase = getChatInvitationsUseCase ?? throw new ArgumentNullException(nameof(getChatInvitationsUseCase));
         _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
         _createChatInvitationUseCase = createChatInvitationUseCase ?? throw new ArgumentNullException(nameof(createChatInvitationUseCase));
         _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
@@ -154,6 +157,36 @@ public class ChatController : ControllerBase
 
     //    return Ok(response.SuccessMessage);
     //}
+    [HttpGet("ChatInvites")]
+    [Authorize]
+    public async Task<IActionResult> GetChatInvitations()
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
+
+        var response = await _getChatInvitationsUseCase.Execute(userId);
+        if (!response.IsSuccess)
+        {
+            _logger.LogError($"ChatController.GetContactRequests: Failed to retrieve contact requests: {response.ErrorMessage}");
+            return BadRequest(response.ErrorMessage);
+        }
+        var incomingRequestsDto = response.IncomingRequests.Select(cr => new ChatInvationDto
+        {
+            Id = cr.Id,
+            ChatId = cr.ChatId,
+            SenderUserId = cr.SenderUserId,
+            RecipientUserId = cr.RecipientUserId,
+            Status = cr.Status
+        }).ToList();
+
+        return Ok(new
+        {
+            IncomingRequests = incomingRequestsDto
+        });
+    }
     [HttpGet("UserChats")]
     [Authorize]
     public async Task<IActionResult> GetUserChats()
