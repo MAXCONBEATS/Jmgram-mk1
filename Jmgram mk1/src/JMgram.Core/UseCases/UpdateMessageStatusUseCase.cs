@@ -33,12 +33,12 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 };
             }
 
-            if (request.MessageId <= 0)
+            if (request.MessageId == null)
             {
                 return new UpdateMessageStatusResponse
                 {
                     IsSuccess = false,
-                    ErrorMessage = "MessageId must be greater than 0.",
+                    ErrorMessage = "Message not found",
                 };
             }
 

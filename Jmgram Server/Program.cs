@@ -104,6 +104,8 @@ builder.Services.AddScoped<AddUserToChatUseCase>();
 builder.Services.AddScoped<IGetChatListUseCase, GetChatListUseCase>();
 builder.Services.AddScoped<ISendMessageUseCase,SendMessageUseCase>();
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
+builder.Services.AddScoped<UpdateUserProfileUseCase>();
+builder.Services.AddScoped<UpdateMessageTextUseCase>();
 builder.Services.AddScoped<GetChatMessagesUseCase>();
 builder.Services.AddScoped<GetChatInvitationsUseCase>();
 builder.Services.AddScoped<AddContactUseCase>();

@@ -147,4 +147,64 @@ export async function getChatUsersList(chatId) {
  }
 }
 
-
+export async function InviteToChat(chatId, senderUserId, recipientUserId) {
+    try{
+        const response = await axios.post('/Chat/InviteToChat', {
+            withCredentials: true,
+            params: {
+                ChatId: chatId,
+                SenderId: senderUserId,
+                RecipientId: recipientUserId
+            }
+        });
+        return response.data;
+    }
+    catch(error){
+        console.error('Ошибка при отправке приглашения в чат', error);
+        throw error;
+    }
+}
+export async function ResponseToInvite(chatInvitationId, accepted) {
+    try{
+        const response = await axios.post('/Chat/RespondToInvite', {
+            withCredentials: true,
+            params: {
+                ChatInvitationId: chatInvitationId,
+                Accepted: accepted
+            }
+        });
+        return response.data;
+    }
+    catch(error){
+        console.error('Ошибка при принятии приглашения в чат', error);
+        throw error;
+    }
+}
+export async function GetChatInvites() {
+    try{
+        const response = await axios.post('/Chat/ChatInvites', {
+            withCredentials: true
+        });
+        return response.data;
+    }
+    catch(error){
+        console.error('Ошибка при получении списка приглашений в чат', error);
+        throw error;
+    }
+}
+export async function UpdateMessageText(messageId, text) {
+    try{
+        const response = await axios.patch('/Chat/UpdateMessageText', {
+            withCredentials: true,
+            params: {
+                MessageId: messageId,
+                Text: text
+            }
+        });
+        return response.data;
+    }
+    catch(error){
+        console.error('Ошибка при изменении текста сообщения', error);
+        throw error;
+    }
+}

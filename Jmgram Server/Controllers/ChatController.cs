@@ -32,13 +32,14 @@ public class ChatController : ControllerBase
     private readonly GetChatMessagesUseCase _getChatMessagesUseCase;
     private readonly GetUserChatsUseCase _getUserChatsUseCase;
     private readonly IGetLastChatMessageUseCase _getLastChatMessageUseCase;
+    private readonly UpdateMessageTextUseCase _updateMessageTextUseCase;
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
     private readonly IChatService _chatService;
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
-     IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase, GetChatInvitationsUseCase getChatInvitationsUseCase,
+     IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase, GetChatInvitationsUseCase getChatInvitationsUseCase, UpdateMessageTextUseCase updateMessageTextUseCase,
      ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase, CreateChatInvitationUseCase createChatInvitationUseCase,
      UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
@@ -58,6 +59,7 @@ public class ChatController : ControllerBase
         _sendNotificationUseCase = sendNotificationUseCase ?? throw new ArgumentNullException(nameof(sendNotificationUseCase));
         _respondToChatInviteUseCase = respondToChatInviteUseCase ?? throw new ArgumentNullException(nameof(respondToChatInviteUseCase));
         _updateMessageStatusUseCase = updateMessageStatusUseCase ?? throw new ArgumentNullException(nameof(updateMessageStatusUseCase));
+        _updateMessageTextUseCase = updateMessageTextUseCase ?? throw new ArgumentNullException(nameof(updateMessageTextUseCase));
         _getChatMessagesUseCase = getChatMessagesUseCase ?? throw new ArgumentNullException(nameof(getChatMessagesUseCase));
         _getUserChatsUseCase = getUserChatsUseCase ?? throw new ArgumentNullException(nameof(getUserChatsUseCase));       
         _getLastChatMessageUseCase = getLastChatMessageUseCase ?? throw new ArgumentNullException(nameof(getLastChatMessageUseCase));
@@ -344,6 +346,24 @@ public class ChatController : ControllerBase
 
         return Ok(response);
     }
+    [HttpPatch("UpdateMessageText")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMessageText([FromBody]UpdateMessageTextRequest updateMessageTextRequest)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId == null)
+        {
+            return Unauthorized();
+        }
+        var response = await _updateMessageTextUseCase.Execute(updateMessageTextRequest);
+        if (!response.IsSuccess)
+        {
+            return BadRequest(response.ErrorMessage);
+        }
+
+        return Ok(response);
+
+    }
     [HttpDelete("RemoveUserFromChat")]
     [Authorize]
     public async Task<IActionResult> RemoveUserFromChat(string chatId, string userId)
@@ -389,28 +409,28 @@ public class ChatController : ControllerBase
             return StatusCode(500, "An unexpected error occurred. Please check the server logs.");
         }
     }
-    //[HttpDelete("DeleteMessage")]
-    //public async Task<IActionResult> DeleteMessage(int messageId)
-    //{
-    //    _logger.LogInformation($"ChatController.DeleteMessage: Attempting to delete message with ID {messageId}.");
+    [HttpDelete("DeleteMessage")]
+    public async Task<IActionResult> DeleteMessage(int messageId)
+    {
+        _logger.LogInformation($"ChatController.DeleteMessage: Attempting to delete message with ID {messageId}.");
 
-    //    try
-    //    {
-    //        if (messageId <= 0)
-    //        {
-    //            _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
-    //            return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
-    //        }
+        try
+        {
+            if (messageId <= 0)
+            {
+                _logger.LogError("ChatController.DeleteMessage: Invalid input data - MessageId is invalid.");
+                return BadRequest("Неверные входные данные: MessageId должен быть больше 0.");
+            }
 
-    //        await _chatRepository.DeleteMessage(messageId);
+            await _chatRepository.DeleteMessage(messageId);
 
-    //        _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
-    //        return NoContent();
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
-    //        return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
-    //    }
-    //}
+            _logger.LogInformation($"ChatController.DeleteMessage: Message with ID {messageId} deleted successfully.");
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
+            return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
+        }
+    }
 }

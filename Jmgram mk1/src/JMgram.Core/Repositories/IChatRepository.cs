@@ -4,6 +4,7 @@ using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Storage;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using System.Security.Claims;
 
 namespace Jmgram_mk1.src.JMgram.Core.Repositories
@@ -21,10 +22,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         Task DeleteChat(string chatId);
         Task<List<Chat>> GetUserChats (string userId);
         Task<LastChatMessageDto> GetLastChatMessage(string chatId);
+        Task<Entities.Message> GetMessageById (int id);
         Task<Chat> GetChatBetweenUsers(string userId1, string userId2);
         Task<string> GetChatNameForUser(string userId, string chatId);
         Task SetChatNameForUser(string userId, string chatId, string chatName);
         Task UpdateChatNamesForUser(string userId, string newName);
+        Task UpdateMessageText(Entities.Message message);
         Task DeleteMessage(int messageId);
     }
     public class ChatRepository : IChatRepository
@@ -116,7 +119,10 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
 
             return lastMessage;
         }
-
+        public async Task<Entities.Message> GetMessageById(int userId)
+        {
+            return await _dbContext.Messages.FindAsync(userId);
+        }
         public async Task<Chat> CreateChat(Chat chat)
         {
             var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -198,6 +204,11 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
                     ChatName = cu.ChatName
                 })
                 .ToListAsync();
+        }
+        public async Task UpdateMessageText(Entities.Message message)
+        {
+            _dbContext.Messages.Update(message);
+            await _dbContext.SaveChangesAsync();
         }
         public async Task DeleteMessage(int messageId)
         {

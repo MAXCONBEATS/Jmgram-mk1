@@ -16,12 +16,14 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
     public class ChatHub : Hub
     {
         private readonly ISendMessageUseCase _sendMessageUseCase;
+        private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
         private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger)
+        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger, UpdateMessageStatusUseCase updateMessageStatusUseCase)
         {
             _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _updateMessageStatusUseCase = updateMessageStatusUseCase;
         }
 
         public async Task SendMessage(string chatId, string message)

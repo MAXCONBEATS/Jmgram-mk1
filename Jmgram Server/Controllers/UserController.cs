@@ -14,13 +14,15 @@ public class UserController : ControllerBase
 {
     private readonly GetUserProfileUseCase _getUserProfileUseCase;
     private readonly IChangePasswordUseCase _changePasswordUseCase;
+    private readonly UpdateUserProfileUseCase _updateUserProfileUseCase;
     private readonly ILogger<UserController> _logger;
     private readonly IUserRepository _userRepository;
 
-    public UserController(GetUserProfileUseCase getUserProfileUseCase, IChangePasswordUseCase changePasswordUseCase, ILogger<UserController> logger, IUserRepository userRepository)
+    public UserController(GetUserProfileUseCase getUserProfileUseCase, IChangePasswordUseCase changePasswordUseCase, UpdateUserProfileUseCase updateUserProfileUseCase, ILogger<UserController> logger, IUserRepository userRepository)
     {
         _getUserProfileUseCase = getUserProfileUseCase ?? throw new ArgumentNullException(nameof(getUserProfileUseCase));
         _changePasswordUseCase = changePasswordUseCase ?? throw new ArgumentNullException(nameof(changePasswordUseCase));
+        _updateUserProfileUseCase = updateUserProfileUseCase ?? throw new ArgumentNullException(nameof(updateUserProfileUseCase));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
@@ -57,54 +59,19 @@ public class UserController : ControllerBase
     [HttpPatch("/User/UpdateProfile")]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileRequest request, [FromServices] JMgramDbContext _context)
     {
-        if (request?.Profile == null)
-        {
-            return BadRequest("Profile data is required.");
-        }
 
         if (!ModelState.IsValid)
         {
             return BadRequest(ModelState);
         }
-
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (userId == null)
+        var response = await _updateUserProfileUseCase.Execute(request);
+        if (!response.IsSuccess)
         {
-            return Unauthorized();
+            return BadRequest(response.ErrorMessage);
         }
 
-        var userProfile = await _context.UserProfiles.FindAsync(userId);
+        return Ok(response);
 
-        if (userProfile == null)
-        {
-            return NotFound();
-        }
-
-        if (request.Profile.FirstName is not null)
-            userProfile.FirstName = request.Profile.FirstName;
-
-        if (request.Profile.LastName is not null)
-            userProfile.LastName = request.Profile.LastName;
-
-        if (request.Profile.AvatarPath is not null)
-            userProfile.AvatarPath = request.Profile.AvatarPath;
-
-        if (request.Profile.Bio is not null)
-            userProfile.Bio = request.Profile.Bio;
-
-        userProfile.LastSeen = DateTime.UtcNow;
-
-        try
-        {
-            await _context.SaveChangesAsync();
-            return Ok(new UpdateUserProfileResponse { IsSuccess = true });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating user profile");
-            return StatusCode(500, new UpdateUserProfileResponse { IsSuccess = false, ErrorMessage = "Internal server error" });
-        }
     }
     [HttpPost("/User/ChangePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request)
