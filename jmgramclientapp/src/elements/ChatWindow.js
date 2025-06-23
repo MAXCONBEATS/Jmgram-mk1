@@ -24,6 +24,8 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
   const [availableContacts, setAvailableContacts] = useState([])
   const [loadingContacts, setLoadingContacts] = useState(false)
 
+  const [replyingToMessage, setReplyingToMessage] = useState(null)
+
   const handleEmojiClick = (emojiData) => {
     setNewMessage((prev) => prev + emojiData.emoji)
     setShowEmojiPicker(false)
@@ -279,7 +281,16 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     }
     try {
       console.log("Sending message via SignalR:", newMessage)
-      await connection.invoke("SendMessage", chat.chatId || chat.id, newMessage)
+
+      // Если отвечаем на сообщение, добавляем информацию об ответе
+      if (replyingToMessage) {
+        const replyText = `[Ответ на: ${replyingToMessage.text.substring(0, 50)}${replyingToMessage.text.length > 50 ? "..." : ""}] ${newMessage}`
+        await connection.invoke("SendMessage", chat.chatId || chat.id, replyText)
+        setReplyingToMessage(null) // Сбрасываем ответ
+      } else {
+        await connection.invoke("SendMessage", chat.chatId || chat.id, newMessage)
+      }
+
       setNewMessage("")
     } catch (error) {
       console.error("Ошибка при отправке сообщения через SignalR:", error)
@@ -292,7 +303,19 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     setNewMessage(message.text)
   }
 
+  const startReplyToMessage = (message) => {
+    setReplyingToMessage(message)
+    // Фокусируемся на поле ввода
+    document.querySelector(".chat-input-area textarea")?.focus()
+  }
+
   if (!chat) return null
+
+  const participantNameMap = new Map()
+  participants.forEach((p) => {
+    const displayName = p.firstName || p.phone || "Участник"
+    participantNameMap.set(p.id, displayName)
+  })
 
   return (
     <div className="chat-window">
@@ -308,17 +331,19 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
               <p>Загрузка сообщений...</p>
             ) : messages.length > 0 ? (
               (() => {
-                const participantNameMap = new Map()
-                participants.forEach((p) => {
-                  const displayName = p.firstName || p.phone || "Участник"
-                  participantNameMap.set(p.id, displayName)
-                })
                 return messages.map((message, index) => {
                   const displayName = participantNameMap.get(message.senderName) || message.senderName || "Unknown"
                   const isEditing = editingMessageId === message.id
                   return (
                     <div key={index} className={`chat-message${isEditing ? " editing-message" : ""}`}>
                       <strong>{displayName}:</strong> {message.text}
+                      <button
+                        className="reply-message-button btn btn-link btn-sm"
+                        title="Ответить на сообщение"
+                        onClick={() => startReplyToMessage(message)}
+                      >
+                        <i className="bi bi-reply"></i>
+                      </button>
                       <button
                         className="edit-message-button btn btn-link btn-sm"
                         title="Редактировать сообщение"
@@ -336,6 +361,29 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
           </div>
 
           <div className="chat-input-area">
+            {replyingToMessage && (
+              <div className="reply-preview">
+                <div className="reply-content">
+                  <i className="bi bi-reply reply-icon"></i>
+                  <div className="reply-info">
+                    <div className="reply-to">
+                      В ответ{" "}
+                      {participantNameMap.get(replyingToMessage.senderName) ||
+                        replyingToMessage.senderName ||
+                        "Unknown"}
+                    </div>
+                    <div className="reply-text">
+                      {replyingToMessage.text.length > 100
+                        ? replyingToMessage.text.substring(0, 100) + "..."
+                        : replyingToMessage.text}
+                    </div>
+                  </div>
+                </div>
+                <button className="reply-cancel" onClick={() => setReplyingToMessage(null)} title="Отменить ответ">
+                  <i className="bi bi-x"></i>
+                </button>
+              </div>
+            )}
             <textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
