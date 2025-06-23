@@ -1,86 +1,176 @@
 .chat-invitations-list {
-    background-color: #212121;
-    color: #e0e0e0;
-    padding: 10px;
-    border-radius: 6px;
-    max-height: 300px;
-    overflow-y: auto;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  background-color: #212121;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid #555;
 }
 
 .chat-invitations-list h3 {
-    margin-top: 0;
-    margin-bottom: 12px;
-    font-size: 1.3rem;
-    border-bottom: 1px solid #444;
-    padding-bottom: 6px;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 1.4rem;
+  font-weight: 600;
+  border-bottom: 1px solid #555;
+  padding-bottom: 8px;
+  color: white;
+}
+
+.chat-invitations-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .chat-invitation-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: #1c131b;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 15px;
+  margin-bottom: 10px;
+  background-color: #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid #444;
 }
 
 .chat-invitation-item:hover {
-    background-color: #010122;
+  background-color: #404040;
+  border-color: #666;
+  transform: translateY(-1px);
 }
 
 .chat-invitation-item.selected {
-    background-color: #030306;
+  background-color: #007bff;
+  border-color: #0056b3;
 }
 
 .chat-invitation-info {
-    display: flex;
-    flex-direction: column;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
 }
 
 .chat-name {
-    font-weight: 600;
-    font-size: 1rem;
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: white;
+  margin-bottom: 2px;
 }
 
 .sender-name {
-    font-size: 0.85rem;
-    color: #a0a0b0;
+  font-size: 0.9rem;
+  color: #ccc;
+}
+
+.status-debug {
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 2px;
+}
+
+.chat-invitation-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .chat-invitation-actions button {
-    margin-left: 8px;
-    padding: 5px 14px;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 5px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
 }
 
 .accept-btn {
-    background-color: #4caf50;
-    color: white;
+  background-color: #28a745;
+  color: white;
 }
 
 .accept-btn:hover {
-    background-color: #3a8a36;
+  background-color: #218838;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
 }
 
 .reject-btn {
-    background-color: #f44336;
-    color: white;
+  background-color: #dc3545;
+  color: white;
 }
 
 .reject-btn:hover {
-    background-color: #b32e24;
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.3);
+}
+
+.chat-invitation-actions button:active {
+  transform: translateY(0);
 }
 
 .error {
-    color: #ff6b6b;
-    font-weight: 600;
+  color: #ff6b6b;
+  font-weight: 600;
+  text-align: center;
+  padding: 20px;
+  background-color: rgba(255, 107, 107, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* Стили для пустого состояния */
+.chat-invitations-list > p {
+  text-align: center;
+  color: #ccc;
+  font-style: italic;
+  margin: 20px 0;
+}
+
+/* Стили для скроллбара */
+.chat-invitations-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-invitations-list::-webkit-scrollbar-track {
+  background: #333;
+  border-radius: 4px;
+}
+
+.chat-invitations-list::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 4px;
+}
+
+.chat-invitations-list::-webkit-scrollbar-thumb:hover {
+  background: #666;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  .chat-invitation-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .chat-invitation-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .chat-invitation-actions button {
+    min-width: 70px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+  }
 }
