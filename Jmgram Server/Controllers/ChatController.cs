@@ -350,11 +350,11 @@ public class ChatController : ControllerBase
     [Authorize]
     public async Task<IActionResult> UpdateMessageText([FromBody]UpdateMessageTextRequest updateMessageTextRequest)
     {
-        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (userId == null)
-        {
-            return Unauthorized();
-        }
+        //var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        //if (userId == null)
+        //{
+        //    return Unauthorized();
+        //}
         var response = await _updateMessageTextUseCase.Execute(updateMessageTextRequest);
         if (!response.IsSuccess)
         {

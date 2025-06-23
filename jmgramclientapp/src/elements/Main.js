@@ -3,6 +3,7 @@ import '../css/Main.css';
 import '../css/ContextMenu.css';
 import axios from 'axios';
 import ChatListContainer from './ChatListContainer';
+import ChatInvitationsList from './ChatInvitationsList';
 import CreateChatButton from './CreateChatButton';
 import ChatWindow from './ChatWindow';
 import ContactsPanel from './ContactsPanel';
@@ -118,12 +119,12 @@ function Main({ error, onLogout }) {
           refreshContactsAndChats={refreshContactsAndChats}
         />
 
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minWidth: 0
-        }}>
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 0
+          }}>
           <h2 style={{
             marginTop: 0,
             marginBottom: '15px',
@@ -135,10 +136,17 @@ function Main({ error, onLogout }) {
             overflowY: 'auto',
             marginBottom: '15px'
           }}>
-            <ChatListContainer
-              key={refreshChats}
-              selectedChat={selectedChat}
-              setSelectedChat={setSelectedChat}
+            <div style={{ marginBottom: '20px' }}>
+              <ChatListContainer
+                key={refreshChats}
+                selectedChat={selectedChat}
+                setSelectedChat={setSelectedChat}
+              />
+            </div>
+            <ChatInvitationsList
+              selectedChatInvitation={null}
+              setSelectedChatInvitation={() => {}}
+              refreshTrigger={refreshChats}
             />
           </div>
 
@@ -159,6 +167,7 @@ function Main({ error, onLogout }) {
           senderId={userId}
           senderName={localStorage.getItem('UserName')}
           currentUserId={userId}
+          contacts={contacts}
         />
       )}
 

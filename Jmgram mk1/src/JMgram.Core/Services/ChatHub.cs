@@ -16,14 +16,18 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
     public class ChatHub : Hub
     {
         private readonly ISendMessageUseCase _sendMessageUseCase;
+        private readonly IChatRepository _chatRepository;
         private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
+        private readonly UpdateMessageTextUseCase _updateMessageTextUseCase;
         private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger, UpdateMessageStatusUseCase updateMessageStatusUseCase)
+        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger, UpdateMessageStatusUseCase updateMessageStatusUseCase, UpdateMessageTextUseCase updateMessageTextUseCase, IChatRepository chatRepository)
         {
             _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _updateMessageStatusUseCase = updateMessageStatusUseCase;
+            _updateMessageTextUseCase = updateMessageTextUseCase;
+            _chatRepository = chatRepository;
         }
 
         public async Task SendMessage(string chatId, string message)
@@ -65,7 +69,51 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
                 _logger.LogError(ex, "Exception occurred while sending message.");
             }
         }
+        public async Task UpdateMessage(int messageId, string newText)
+        {
+            _logger.LogInformation($"UpdateMessage request received. MessageId: {messageId}, NewText: {newText}, User: {Context.UserIdentifier}");
 
+            try
+            {
+                var userId = Context.UserIdentifier;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogError("User ID is null or empty.");
+                    return;
+                }
+
+                var request = new UpdateMessageTextRequest
+                {
+                    MessageId = messageId,
+                    Text = newText
+                };
+
+                var response = await _updateMessageTextUseCase.Execute(request);
+
+                if (response.IsSuccess)
+                {
+                    _logger.LogInformation($"Message update success. MessageId: {messageId}, User: {Context.UserIdentifier}");
+
+                    // Получаем chatId для сообщения (нужно добавить в use case или получить отдельно)
+                    var message = await _chatRepository.GetMessageById(messageId);
+                    if (message != null)
+                    {
+                        await Clients.Group(message.ChatId).SendAsync("MessageUpdated", messageId, newText, userId);
+                        _logger.LogInformation($"Sent message update to group {message.ChatId}");
+                    }
+                }
+                else
+                {
+                    _logger.LogError($"Message update failed. MessageId: {messageId}, User: {Context.UserIdentifier}, Error: {response.ErrorMessage}");
+                    await Clients.Caller.SendAsync("MessageUpdateFailed", messageId, response.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred while updating message.");
+                await Clients.Caller.SendAsync("MessageUpdateFailed", messageId, "Internal server error");
+            }
+        }
         public async Task JoinChat(string chatId)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, chatId);

@@ -256,3 +256,27 @@
     transform: translateX(-50%);
   }
 }
+
+/* Editing message style: white border and slight blur */
+.chat-message.editing-message {
+  border: 2px solid white;
+  filter: blur(1px);
+  padding: 5px;
+  border-radius: 8px;
+  position: relative;
+}
+
+/* Edit message button style */
+.edit-message-button {
+  margin-left: 10px;
+  color: #cccccc;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  vertical-align: middle;
+  padding: 0;
+}
+
+.edit-message-button:hover {
+  color: white;
+}

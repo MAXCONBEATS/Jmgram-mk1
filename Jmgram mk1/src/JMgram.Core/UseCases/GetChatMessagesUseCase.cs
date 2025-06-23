@@ -55,6 +55,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                 var senderName = await _userRepository.GetUserFirstNameById(m.SenderId);
                 messageDtos.Add(new MessageDto
                 {
+                    Id = m.Id,
                     ChatId = m.ChatId,
                     Text = m.Text,
                     Timestamp = m.Timestamp,

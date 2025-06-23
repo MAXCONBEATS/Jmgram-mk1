@@ -34,12 +34,6 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         {
             try
             {
-                var userId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null)
-                {
-                    _logger.LogError("UserId not found in claims");
-                    return new UpdateMessageTextResponse { IsSuccess = false, ErrorMessage = "Unauthorized" };
-                }
                 var message = await _chatRepository.GetMessageById(updateMessageTextRequest.MessageId);
                 if (message == null)
                 {

@@ -166,13 +166,18 @@ export async function InviteToChat(chatId, senderUserId, recipientUserId) {
 }
 export async function ResponseToInvite(chatInvitationId, accepted) {
     try{
-        const response = await axios.post('/Chat/RespondToInvite', {
-            withCredentials: true,
-            params: {
-                ChatInvitationId: chatInvitationId,
-                Accepted: accepted
+        const response = await axios.post('/Chat/RespondToInvite',
+            {
+                chatInvitationId: chatInvitationId,
+                accepted: accepted
+            },
+            {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
-        });
+        );
         return response.data;
     }
     catch(error){
@@ -182,10 +187,11 @@ export async function ResponseToInvite(chatInvitationId, accepted) {
 }
 export async function GetChatInvites() {
     try{
-        const response = await axios.post('/Chat/ChatInvites', {
+        const response = await axios.get('/Chat/ChatInvites', {
             withCredentials: true
         });
-        return response.data;
+        // Extract incomingRequests array from response data
+        return response.data.incomingRequests || [];
     }
     catch(error){
         console.error('Ошибка при получении списка приглашений в чат', error);
@@ -194,13 +200,18 @@ export async function GetChatInvites() {
 }
 export async function UpdateMessageText(messageId, text) {
     try{
-        const response = await axios.patch('/Chat/UpdateMessageText', {
-            withCredentials: true,
-            params: {
+        const response = await axios.patch('/Chat/UpdateMessageText', 
+            {
                 MessageId: messageId,
                 Text: text
+            },
+            {
+                withCredentials: true,
+                headers: {
+                    'Content-Type': 'application/json'
+                }
             }
-        });
+        );
         return response.data;
     }
     catch(error){
