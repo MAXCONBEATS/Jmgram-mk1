@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react"
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr"
 import EmojiPicker from "emoji-picker-react"
-import { getMessages, getChatUsersList, removeUserFromChat } from "../controllers/ChatController"
+import { getMessages, getChatUsersList, removeUserFromChat, InviteToChat } from "../controllers/ChatController"
+import { getContactList } from "../controllers/ContactController"
 import "../css/ChatWindow.css"
 
 function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
@@ -18,6 +19,10 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
 
   const [connection, setConnection] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
+
+  const [showInviteModal, setShowInviteModal] = useState(false)
+  const [availableContacts, setAvailableContacts] = useState([])
+  const [loadingContacts, setLoadingContacts] = useState(false)
 
   const handleEmojiClick = (emojiData) => {
     setNewMessage((prev) => prev + emojiData.emoji)
@@ -208,6 +213,41 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     }
   }
 
+  const loadAvailableContacts = async () => {
+    setLoadingContacts(true)
+    try {
+      const allContacts = await getContactList()
+      // Фильтруем контакты, исключая уже участвующих в чате
+      const participantIds = participants.map((p) => p.id)
+      const availableForInvite = allContacts.filter((contact) => !participantIds.includes(contact.id))
+      setAvailableContacts(availableForInvite)
+    } catch (error) {
+      console.error("Ошибка при загрузке контактов:", error)
+      alert("Ошибка при загрузке контактов")
+    }
+    setLoadingContacts(false)
+  }
+
+  const handleInviteToChat = async (contactId) => {
+    try {
+      await InviteToChat(chat.chatId || chat.id, currentUserId, contactId)
+      alert("Приглашение отправлено!")
+      setShowInviteModal(false)
+      // Обновляем список участников
+      const users = await getChatUsersList(chat.chatId || chat.id)
+      const uniqueUsers = Array.from(new Map(users.map((u) => [u.id, u])).values())
+      setParticipants(uniqueUsers)
+    } catch (error) {
+      console.error("Ошибка при отправке приглашения:", error)
+      alert("Ошибка при отправке приглашения")
+    }
+  }
+
+  const openInviteModal = () => {
+    setShowInviteModal(true)
+    loadAvailableContacts()
+  }
+
   const handleUpdateMessage = async () => {
     if (newMessage.trim() === "") {
       alert("Введите сообщение перед изменением.")
@@ -354,8 +394,39 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
               <li>Нет участников</li>
             )}
           </ul>
+          <button className="invite-button" onClick={openInviteModal}>
+            Пригласить в чат
+          </button>
         </div>
       </div>
+      {showInviteModal && (
+        <div className="modal-overlay" onClick={() => setShowInviteModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3>Пригласить в чат</h3>
+            {loadingContacts ? (
+              <p>Загрузка контактов...</p>
+            ) : availableContacts.length > 0 ? (
+              <div className="contacts-list">
+                {availableContacts.map((contact) => (
+                  <div key={contact.id} className="contact-item">
+                    <span>{contact.firstName || contact.phone || "Контакт"}</span>
+                    <button onClick={() => handleInviteToChat(contact.id)} className="invite-contact-button">
+                      Пригласить
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p>Нет доступных контактов для приглашения</p>
+            )}
+            <div className="buttons-container">
+              <button onClick={() => setShowInviteModal(false)} className="cancel-button">
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

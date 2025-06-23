@@ -150,12 +150,11 @@ export async function getChatUsersList(chatId) {
 export async function InviteToChat(chatId, senderUserId, recipientUserId) {
     try{
         const response = await axios.post('/Chat/InviteToChat', {
-            withCredentials: true,
-            params: {
-                ChatId: chatId,
-                SenderId: senderUserId,
-                RecipientId: recipientUserId
-            }
+            chatId: chatId,
+            senderId: senderUserId,
+            recipientId: recipientUserId
+        }, {
+            withCredentials: true
         });
         return response.data;
     }
