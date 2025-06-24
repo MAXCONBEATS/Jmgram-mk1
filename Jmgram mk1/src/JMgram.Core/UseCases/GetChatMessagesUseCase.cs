@@ -60,7 +60,8 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     Text = m.Text,
                     Timestamp = m.Timestamp,
                     SenderId = m.SenderId,
-                    SenderName = senderName
+                    SenderName = senderName,
+                    Status = m.Status.ToString()
                 });
             }
 

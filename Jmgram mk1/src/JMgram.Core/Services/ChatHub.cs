@@ -2,6 +2,7 @@
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using System;
@@ -17,22 +18,24 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
     {
         private readonly ISendMessageUseCase _sendMessageUseCase;
         private readonly IChatRepository _chatRepository;
+        private readonly IUserRepository _userRepository;
         private readonly UpdateMessageStatusUseCase _updateMessageStatusUseCase;
         private readonly UpdateMessageTextUseCase _updateMessageTextUseCase;
         private readonly ILogger<ChatHub> _logger;
 
-        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger, UpdateMessageStatusUseCase updateMessageStatusUseCase, UpdateMessageTextUseCase updateMessageTextUseCase, IChatRepository chatRepository)
+        public ChatHub(ISendMessageUseCase sendMessageUseCase, ILogger<ChatHub> logger, UpdateMessageStatusUseCase updateMessageStatusUseCase, UpdateMessageTextUseCase updateMessageTextUseCase, IChatRepository chatRepository, IUserRepository userRepository)
         {
             _sendMessageUseCase = sendMessageUseCase ?? throw new ArgumentNullException(nameof(sendMessageUseCase));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _updateMessageStatusUseCase = updateMessageStatusUseCase;
             _updateMessageTextUseCase = updateMessageTextUseCase;
             _chatRepository = chatRepository;
+            _userRepository = userRepository;
         }
 
         public async Task SendMessage(string chatId, string message)
         {
-            _logger.LogInformation($"SendMessage request received. ChatId: {chatId}, Message: {message}, User: {Context.UserIdentifier}");
+            string status = "Sent";
             try
             {
                 var userId = Context.UserIdentifier;
@@ -48,6 +51,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
                     {
                         ChatId = chatId,
                         Text = message,
+                        Status = status
                     }
                 };
 
@@ -56,7 +60,19 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
                 if (response.IsSuccess)
                 {
                     _logger.LogInformation($"Message sending success. ChatId: {chatId}, User: {Context.UserIdentifier}");
-                    await Clients.Group(chatId).SendAsync("ReceiveMessage", userId, message);
+
+                    var user = await _userRepository.GetById(userId);
+                    var senderName = user?.FirstName ?? user?.Phone ?? "Unknown";
+
+                    await Clients.Group(chatId).SendAsync(
+                        "ReceiveMessage",
+                        senderName,                    
+                        message,                       
+                        response.Id.ToString() ?? Guid.NewGuid().ToString(),
+                        userId,                          
+                        status                         
+                    );
+
                     _logger.LogInformation($"Sent to group {chatId} User: {Context.UserIdentifier} Message: {message}");
                 }
                 else

@@ -98,6 +98,20 @@ export async function deleteChat(chatId) {
   throw error;
  }
 }
+export async function deleteMessage(messageId) {
+ try {
+  const response = await axios.delete('https://localhost:5087/Chat/DeleteMessage', {
+   withCredentials: true,
+   params: {
+    messageId: messageId,
+   },
+  });
+  return response.data;
+ } catch (error) {
+   console.error('Ошибка при удалении чата:', error.message);
+    throw error;
+ }
+}
 export async function removeUserFromChat(chatId, userId) {
     console.log(`Removing user ${userId} from chat ${chatId}...`);
     try {
@@ -189,7 +203,6 @@ export async function GetChatInvites() {
         const response = await axios.get('/Chat/ChatInvites', {
             withCredentials: true
         });
-        // Extract incomingRequests array from response data
         return response.data.incomingRequests || [];
     }
     catch(error){

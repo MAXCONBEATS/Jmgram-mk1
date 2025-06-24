@@ -477,4 +477,434 @@
     padding: 6px 10px;
   }
 }
+.message-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
 
+.chat-message:hover .message-actions {
+  opacity: 1;
+}
+
+/* Delete message button */
+.delete-message-button {
+  color: #dc3545 !important;
+  padding: 2px 6px !important;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.delete-message-button:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #c82333 !important;
+}
+
+/* Update existing button styles to work with the container */
+.reply-message-button,
+.edit-message-button {
+  padding: 2px 6px !important;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.reply-message-button {
+  color: #007bff !important;
+}
+
+.reply-message-button:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  color: #0056b3 !important;
+}
+
+.edit-message-button {
+  color: #28a745 !important;
+}
+
+.edit-message-button:hover {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #1e7e34 !important;
+}
+
+/* Responsive design for message actions */
+@media (max-width: 768px) {
+  .message-actions {
+    opacity: 1; /* Always show on mobile */
+  }
+
+  .message-actions button {
+    padding: 4px 8px !important;
+  }
+}
+
+/* Animation for message deletion */
+.chat-message.deleting {
+  opacity: 0.5;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+.message-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 4px;
+}
+
+.message-content .message-text-container {
+  order: 1;
+}
+
+.message-content .message-actions {
+  order: 2;
+  align-self: flex-end;
+}
+
+/* Message actions container */
+.message-actions {
+  display: inline-flex;
+  gap: 2px;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chat-message:hover .message-actions {
+  opacity: 1;
+}
+
+/* Delete message button */
+.delete-message-button {
+  color: #dc3545 !important;
+  padding: 2px 6px !important;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.delete-message-button:hover {
+  background-color: rgba(220, 53, 69, 0.1) !important;
+  color: #c82333 !important;
+}
+
+/* Update existing button styles to work with the container */
+.reply-message-button,
+.edit-message-button {
+  padding: 2px 6px !important;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.reply-message-button {
+  color: #007bff !important;
+}
+
+.reply-message-button:hover {
+  background-color: rgba(0, 123, 255, 0.1) !important;
+  color: #0056b3 !important;
+}
+
+.edit-message-button {
+  color: #28a745 !important;
+}
+
+.edit-message-button:hover {
+  background-color: rgba(40, 167, 69, 0.1) !important;
+  color: #1e7e34 !important;
+}
+
+/* Reaction button */
+.reaction-message-button {
+  color: #ffc107 !important;
+  padding: 2px 6px !important;
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.reaction-message-button:hover {
+  background-color: rgba(255, 193, 7, 0.1) !important;
+  color: #e0a800 !important;
+}
+
+/* Reaction picker */
+.reaction-picker {
+  position: absolute;
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 20px;
+  padding: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  margin-top: 5px;
+  animation: fadeInUp 0.2s ease;
+}
+
+.quick-reaction {
+  background: none;
+  border: none;
+  font-size: 1.5em;
+  padding: 6px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+.quick-reaction:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.2);
+}
+
+/* Message reactions display */
+.message-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  margin-left: 8px;
+}
+
+.reaction-badge {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #ccc;
+}
+
+.reaction-badge:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+.reaction-badge.user-reacted {
+  background-color: rgba(0, 123, 255, 0.3);
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.reaction-badge.user-reacted:hover {
+  background-color: rgba(0, 123, 255, 0.4);
+}
+
+.reaction-emoji {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.reaction-count {
+  font-size: 0.9em;
+  font-weight: 500;
+  min-width: 12px;
+  text-align: center;
+}
+
+/* Animation for reaction picker */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive design for reactions */
+@media (max-width: 768px) {
+  .reaction-picker {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 12px;
+  }
+
+  .quick-reaction {
+    width: 45px;
+    height: 45px;
+    font-size: 1.6em;
+  }
+
+  .message-reactions {
+    margin-left: 0;
+  }
+
+  .reaction-badge {
+    padding: 4px 8px;
+  }
+}
+
+/* Responsive design for message actions */
+@media (max-width: 768px) {
+  .message-actions {
+    opacity: 1; /* Always show on mobile */
+  }
+
+  .message-actions button {
+    padding: 4px 8px !important;
+  }
+}
+
+/* Animation for message deletion */
+.chat-message.deleting {
+  opacity: 0.5;
+  transform: translateX(-10px);
+  transition: all 0.3s ease;
+}
+
+/* Update message structure */
+.chat-message {
+  position: relative;
+  padding-bottom: 8px;
+}
+
+.chat-message:hover .message-actions {
+  opacity: 1;
+}
+
+/* Message text container */
+.message-text-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 2px;
+  min-height: 20px;
+}
+
+/* Ensure message text takes full width */
+.message-text {
+  flex: 1;
+  word-wrap: break-word;
+}
+
+/* Message meta container (time + status) */
+.message-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+/* Message time styles */
+.message-time {
+  font-size: 0.7em;
+  color: #888;
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* Message status styles */
+.message-status {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  font-size: 0.75em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* Single check (Sent) */
+.message-status-sent {
+  color: #8e8e93;
+  font-size: 1em;
+}
+
+/* Double check (Delivered) */
+.message-status-delivered {
+  color: #8e8e93;
+  font-size: 1em;
+  position: relative;
+}
+
+.message-status-delivered-second {
+  color: #8e8e93;
+  font-size: 1em;
+  margin-left: -6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Double check (Read) */
+.message-status-read {
+  color: #34c759;
+  font-size: 1em;
+  position: relative;
+}
+
+.message-status-read-second {
+  color: #34c759;
+  font-size: 1em;
+  margin-left: -6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Animation for status changes */
+.message-status i {
+  transition: color 0.3s ease;
+}
+
+/* Hover effects */
+.chat-message:hover .message-status-sent,
+.chat-message:hover .message-status-delivered {
+  color: #a0a0a0;
+}
+
+.chat-message:hover .message-status-read {
+  color: #30d158;
+}
+
+/* Hover effects for time */
+.chat-message:hover .message-time {
+  color: #aaa;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .message-time {
+    font-size: 0.65em;
+  }
+
+  .message-meta {
+    gap: 4px;
+  }
+
+  .message-status {
+    font-size: 0.7em;
+    margin-left: 4px;
+  }
+
+  .message-status-delivered-second,
+  .message-status-read-second {
+    margin-left: -5px;
+  }
+}
+
+/* Dark theme adjustments */
+.chat-message.editing-message .message-status {
+  opacity: 0.6;
+}
+
+.chat-message.editing-message .message-time {
+  opacity: 0.6;
+}
+
+/* Ensure status doesn't interfere with message actions */
+.chat-message:hover .message-actions {
+  opacity: 1;
+}

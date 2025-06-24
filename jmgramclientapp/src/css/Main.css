@@ -1,5 +1,5 @@
- /* Общий контейнер */
- .main-container {
+/* Общий контейнер */
+.main-container {
   background-color: #181818;
   color: white;
   min-height: 100vh;
@@ -7,19 +7,21 @@
   flex-direction: column;
   align-items: center;
   padding: 20px;
- }
- 
- /* Контейнер для контента (контакты и чаты) */
- .main-content {
+}
+
+/* Контейнер для контента (��онтакты и чаты) */
+.main-content {
   display: flex;
   width: 100%;
-  max-width: 1200px; /* Максимальная ширина контента */
-  margin: 0 auto; /* Центрирование по горизонтали */
-  position: relative; /* Добавляем relative для позиционирования заголовка */
-  gap: 20px; /* Добавляем промежуток между колонками */
-  align-items: flex-start; /* Выравнивание по верхнему краю */
- }
- 
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative;
+  gap: 20px;
+  align-items: flex-start;
+  flex: 1;
+  overflow: hidden;
+}
+
 /* Новый контейнер для UserSearch */
 .user-search-container {
   width: 250px;
@@ -29,104 +31,180 @@
   height: fit-content;
   position: fixed;
   top: 92px;
-  left: 20px; /* Перемещен к левому краю */
+  left: 20px;
   color: white;
   box-sizing: border-box;
   overflow-y: auto;
   max-height: calc(100vh - 100px);
 }
- 
- /* Контейнер для контактов */
+
+/* Контейнер для контактов */
 .contacts-container {
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  padding: 15px;
+  max-height: none;
+  overflow: visible;
+  border: 1px solid #444;
+  color: white;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.contacts-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 220px;
   background-color: #212121;
   border-radius: 10px;
-  padding: 20px;
-  width: 200px; /* Уменьшаем ширину колонки контактов */
-  /* Убираем margin-right, так как будем позиционировать заголовок абсолютно */
-  /* position: fixed;  Убрано фиксированное позиционирование */
-  top: 92px;
-  /* left: 290px;  Убрано */
-  height: fit-content; /* Автоматическая высота */
-  flex-grow: 1;
-  /* overflow-y: auto;  Убрано */
-  border-bottom: 1px solid #ccc;
-  padding-bottom: 10px;
-  /* max-height: 50%;  Убрано */
+  padding: 10px;
+  gap: 10px;
+  max-height: 80vh;
+  overflow: visible;
+  box-sizing: border-box;
 }
- 
- /* Заголовок "Контакты" */
+
+/* Заголовок "Контакты" */
 .main-content .contacts-header {
-  /* position: fixed;  Убрано фиксированное позиционирование */
-  /* top: 100px;  Убрано */
-  /* left: 290px;  Убрано */
-  width: 100%; /* Занимает всю ширину родителя */
-  text-align: center; /* Центрирование текста */
-  margin: 0 0 10px 0; /* Отступ снизу для разделения с контейнерами */
-  padding-top: 10px; /* Добавляем отступ сверху и снизу */
+  width: 100%;
+  text-align: center;
+  margin: 0 0 10px 0;
+  padding-top: 10px;
   padding-bottom: 10px;
   box-sizing: border-box;
 }
- 
- /* Список контактов */
- .contact-list {
+
+/* Список контактов */
+.contact-list {
   list-style: none;
   padding: 0;
- }
- 
- .contact-list li {
+}
+
+.contact-list li {
   margin-bottom: 5px;
-  cursor: pointer; /* Добавляем изменение курсора */
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Плавный переход */
- }
- 
- .contact-list li:hover {
-  background-color: #333; /* Цвет фона при наведении */
-  transform: scale(1.05); /* Увеличение размера фона */
- }
- 
- /* Контейнер для чатов */
- .chat-container {
-  flex-grow: 1; /* Занимает оставшееся пространство */
-  margin-left: 260px; /* Добавлено */
- }
- 
- /* Контейнер списка чатов */
- .chat-list {
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+  padding: 8px;
+  border-radius: 5px;
+}
+
+.contact-list li:hover {
+  background-color: #333;
+  transform: scale(1.05);
+}
+
+.contact-requests-container {
+  background-color: #2a2a2a;
+  border-radius: 6px;
+  padding: 15px;
+  max-height: none;
+  overflow: visible;
+  border: 1px solid #444;
+  color: white;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.contact-requests-container h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.1em;
+  color: white;
+}
+
+.contact-requests-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin: 0;
+  overflow: visible;
+  max-height: none;
+}
+
+.contact-requests-list li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 6px 0;
+  border-bottom: 1px solid #555;
+  overflow: visible;
+  max-height: none;
+}
+
+.contact-requests-list li button {
+  margin-top: 6px;
+}
+
+.contact-requests-list li:last-child {
+  border-bottom: none;
+}
+
+.contact-requests-list button {
+  background-color: #4caf50;
+  border: none;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.3s ease;
+}
+
+.contact-requests-list button:hover {
+  background-color: #45a049;
+}
+
+/* Контейнер для чатов */
+.chat-container {
+  flex-grow: 1;
+  margin-left: 260px;
+}
+
+/* Контейнер списка чатов */
+.chat-list {
   background-color: #212121;
   border-radius: 10px;
   padding: 20px;
   width: 100%;
- }
- 
+}
+
 /* Элемент чата */
 .chat-item {
   padding: 10px;
   border-bottom: 1px solid #333;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease; /* Плавный переход */
+  transition: background-color 0.3s ease, transform 0.3s ease;
   position: relative;
   z-index: 1;
+  border-radius: 8px;
+  margin-bottom: 5px;
 }
 
 .chat-item:hover {
   background-color: #333;
-  /* Removed transform scale to prevent context menu displacement */
 }
- 
- /* Название чата */
- .chat-name {
+
+.chat-item.selected {
+  background-color: #007bff;
+  border-color: #0056b3;
+}
+
+/* Название чата */
+.chat-name {
   font-size: 1.2em;
   margin-bottom: 5px;
- }
- 
- /* Последнее сообщение */
- .last-message {
+  font-weight: 600;
+  color: white;
+}
+
+/* Последнее сообщение */
+.last-message {
   font-size: 0.9em;
   color: #ccc;
- }
- 
- /* Иконка выхода */
- .logout-icon {
+}
+
+/* Иконка выхода */
+.logout-icon {
   width: 30px;
   height: 30px;
   cursor: pointer;
@@ -135,27 +213,26 @@
   right: 20px;
   font-size: 1.5rem;
   color: #fff;
-  cursor: pointer;
   transition: color 0.2s;
- }
+}
 
 .logout-icon:hover {
   color: #ccc;
 }
- 
- /* Сообщение об ошибке */
- .error-message {
+
+/* Сообщение об ошибке */
+.error-message {
   color: red;
   font-weight: bold;
- }
- 
- /* Стили для контейнера кнопки создания чата */
+}
+
+/* Стили для контейнера кнопки создания чата */
 .chat-container .create-chat-container {
   display: flex;
-  justify-content: flex-end; /* Выравниваем кнопку по правому краю */
-  margin-top: 10px; /* Добавляем отступ сверху */
-  padding-right: 20px; /* Отступ справа для отделения от края */
-  width: 100%; /* Занимает всю ширину контейнера */
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-right: 20px;
+  width: 100%;
 }
 
 .create-chat-button-wrapper {
@@ -182,106 +259,28 @@
 .create-chat-button:hover {
   background-color: #0056b3;
 }
- 
- /* Стили для поля ввода "Название чата" */
- .chat-container .create-chat-container input {
+
+/* Стили для поля ввода "Название чата" */
+.chat-container .create-chat-container input {
   padding: 10px;
   border: 1px solid #555;
   border-radius: 5px;
   background-color: #333;
   color: white;
   box-sizing: border-box;
- }
-.main-content > div:first-child {
-display: flex;
-flex-direction: column;
-max-height: 80vh;
-overflow-y: auto;
+  transition: border-color 0.3s ease;
 }
 
-.contacts-wrapper {
+.chat-container .create-chat-container input:focus {
+  border-color: #007bff;
+  outline: none;
+}
+
+.main-content > div:first-child {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  max-width: 220px;
-  background-color: #212121;
-  border-radius: 10px;
-  padding: 10px;
-  gap: 10px;
   max-height: 80vh;
-  overflow: visible;
-  box-sizing: border-box;
-}
-
-.contacts-container {
-  background-color: #2a2a2a;
-  border-radius: 6px;
-  padding: 15px;
-  max-height: none;
-  overflow: visible;
-  border: 1px solid #444;
-  color: white;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.contact-requests-container {
-  background-color: #2a2a2a;
-  border-radius: 6px;
-  padding: 15px;
-  max-height: none;
-  overflow: visible;
-  border: 1px solid #444;
-  color: white;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.contact-requests-container h3 {
-margin-top: 0;
-margin-bottom: 10px;
-font-size: 1.1em;
-color: #333;
-}
-
-.contact-requests-list {
-  list-style-type: none;
-  padding-left: 0;
-  margin: 0;
-  overflow: visible; /* Убираем скролл */
-  max-height: none; /* Убираем ограничение высоты */
-}
-
-.contact-requests-list li {
-  display: flex;
-  flex-direction: column; /* Изменено на колонку для кнопки под текстом */
-  align-items: flex-start; /* Выравнивание по левому краю */
-  padding: 6px 0;
-  border-bottom: 1px solid #ddd;
-  overflow: visible; /* Убираем скролл */
-  max-height: none; /* Убираем ограничение высоты */
-}
-
-.contact-requests-list li button {
-  margin-top: 6px; /* Отступ сверху для кнопки */
-}
-
-.contact-requests-list li:last-child {
-  border-bottom: none;
-}
-
-.contact-requests-list button {
-  background-color: #4CAF50;
-  border: none;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 0.9em;
-}
-
-.contact-requests-list button:hover {
-  background-color: #45a049;
+  overflow-y: auto;
 }
 
 .chat-overlay {
@@ -295,4 +294,124 @@ color: #333;
   justify-content: center;
   align-items: center;
   z-index: 1000;
+}
+
+/* Перенесенные стили из инлайн-кода Main.js */
+
+/* Стили для кнопки профиля */
+.btn.btn-outline-light.btn-sm {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  cursor: pointer;
+}
+
+/* Стили для контейнера выхода */
+.main-container > div:nth-child(2) {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+}
+
+/* Стили для сообщения об ошибке в центре */
+.error-message[style*="text-align: center"] {
+  text-align: center;
+  color: #ff5555;
+  margin: 10px 0;
+}
+
+/* Стили для основного контента с flex */
+.main-content[style*="display: flex"] {
+  display: flex;
+  flex: 1;
+  gap: 30px;
+  padding: 20px;
+  overflow: hidden;
+}
+
+/* Стили для правой части с чатами */
+.main-content > div:last-child {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Стили для заголовка чатов */
+.main-content > div:last-child > h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: white;
+}
+
+/* Стили для контейнера списка чатов */
+.main-content > div:last-child > div:first-of-type {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 15px;
+}
+
+/* Стили для контейнера списка чатов внутри */
+.main-content > div:last-child > div:first-of-type > div:first-child {
+  margin-bottom: 20px;
+}
+
+/* Стили для кнопки создания чата внизу */
+.main-content > div:last-child > div:last-child {
+  margin-top: auto;
+  padding-top: 15px;
+}
+
+/* Scrollbar Styles */
+.contacts-section::-webkit-scrollbar,
+.chats-list-container::-webkit-scrollbar,
+.invitations-section::-webkit-scrollbar,
+.user-search-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.contacts-section::-webkit-scrollbar-track,
+.chats-list-container::-webkit-scrollbar-track,
+.invitations-section::-webkit-scrollbar-track,
+.user-search-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.contacts-section::-webkit-scrollbar-thumb,
+.chats-list-container::-webkit-scrollbar-thumb,
+.invitations-section::-webkit-scrollbar-thumb,
+.user-search-container::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.contacts-section::-webkit-scrollbar-thumb:hover,
+.chats-list-container::-webkit-scrollbar-thumb:hover,
+.invitations-section::-webkit-scrollbar-thumb:hover,
+.user-search-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .main-content {
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .chat-container {
+    margin-left: 0;
+  }
+
+  .user-search-container {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    margin-bottom: 10px;
+  }
+
+  .contacts-wrapper {
+    max-width: 100%;
+  }
 }

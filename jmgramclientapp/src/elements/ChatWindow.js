@@ -1,9 +1,61 @@
 import { useState, useEffect, useRef } from "react"
 import { HubConnectionBuilder, LogLevel } from "@microsoft/signalr"
 import EmojiPicker from "emoji-picker-react"
-import { getMessages, getChatUsersList, removeUserFromChat, InviteToChat } from "../controllers/ChatController"
+import {
+  getMessages,
+  getChatUsersList,
+  removeUserFromChat,
+  InviteToChat,
+  deleteMessage,
+} from "../controllers/ChatController"
 import { getContactList } from "../controllers/ContactController"
 import "../css/ChatWindow.css"
+
+// Функция для форматирования времени с добавлением 5 часов
+const formatMessageTime = (timestamp) => {
+  if (!timestamp) return ""
+
+const correctedDate = new Date(timestamp)
+
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const messageDate = new Date(correctedDate.getFullYear(), correctedDate.getMonth(), correctedDate.getDate())
+
+  const timeString = correctedDate.toLocaleTimeString("ru-RU", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+
+  // Если сообщение сегодня - показываем только время
+  if (messageDate.getTime() === today.getTime()) {
+    return timeString
+  }
+
+  // Если вчера
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+  if (messageDate.getTime() === yesterday.getTime()) {
+    return `вчера ${timeString}`
+  }
+
+  // Если в этом году - показываем дату без года
+  if (correctedDate.getFullYear() === now.getFullYear()) {
+    return (
+      correctedDate.toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+      }) + ` ${timeString}`
+    )
+  }
+
+  // Полная дата
+  return (
+    correctedDate.toLocaleDateString("ru-RU", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }) + ` ${timeString}`
+  )
+}
 
 function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
   const [messages, setMessages] = useState([])
@@ -25,11 +77,6 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
   const [loadingContacts, setLoadingContacts] = useState(false)
 
   const [replyingToMessage, setReplyingToMessage] = useState(null)
-
-  const handleEmojiClick = (emojiData) => {
-    setNewMessage((prev) => prev + emojiData.emoji)
-    setShowEmojiPicker(false)
-  }
 
   useEffect(() => {
     async function fetchMessages() {
@@ -86,11 +133,20 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
               .then(() => console.log("Joined chat group:", chat.chatId || chat.id))
               .catch((err) => console.error("JoinChat error:", err))
 
-            connection.on("ReceiveMessage", (user, message) => {
-              console.log("Received message from SignalR:", user, message)
+            connection.on("ReceiveMessage", (user, message, messageId, senderId, status) => {
+              console.log("Received message from SignalR:", user, message, "Status:", status, "SenderId:", senderId)
               setMessages((prevMessages) => {
-                const newMessages = [...prevMessages, { senderName: user, text: message }]
-                console.log("Updated messages:", newMessages)
+                const newMessage = {
+                  id: messageId || Date.now().toString(),
+                  senderName: user,
+                  senderId: senderId,
+                  text: message,
+                  status: status || "Sent",
+                  timestamp: new Date().toISOString(), // Текущее время для новых сообщений
+                  chatId: chat.chatId || chat.id,
+                }
+                const newMessages = [...prevMessages, newMessage]
+                console.log("Updated messages with status:", newMessages)
                 return newMessages
               })
             })
@@ -285,9 +341,11 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
       // Если отвечаем на сообщение, добавляем информацию об ответе
       if (replyingToMessage) {
         const replyText = `[Ответ на: ${replyingToMessage.text.substring(0, 50)}${replyingToMessage.text.length > 50 ? "..." : ""}] ${newMessage}`
+        console.log("Sending reply message:", replyText)
         await connection.invoke("SendMessage", chat.chatId || chat.id, replyText)
         setReplyingToMessage(null) // Сбрасываем ответ
       } else {
+        console.log("Sending regular message:", newMessage)
         await connection.invoke("SendMessage", chat.chatId || chat.id, newMessage)
       }
 
@@ -307,6 +365,38 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
     setReplyingToMessage(message)
     // Фокусируемся на поле ввода
     document.querySelector(".chat-input-area textarea")?.focus()
+  }
+
+  const handleDeleteMessage = async (message) => {
+    // Подтверждение удаления
+    const confirmDelete = window.confirm(
+      `Вы уверены, что хотите удалить это сообщение?\n\n"${message.text.substring(0, 100)}${message.text.length > 100 ? "..." : ""}"`,
+    )
+
+    if (!confirmDelete) return
+
+    try {
+      await deleteMessage(message.id)
+
+      // Удаляем сообщение из локального состояния
+      setMessages((prevMessages) => prevMessages.filter((msg) => msg.id !== message.id))
+
+      // Если удаляемое сообщение редактировалось, сбрасываем режим редактирования
+      if (editingMessageId === message.id) {
+        setEditingMessageId(null)
+        setNewMessage("")
+      }
+
+      // Если удаляемое сообщение было выбрано для ответа, сбрасываем ответ
+      if (replyingToMessage && replyingToMessage.id === message.id) {
+        setReplyingToMessage(null)
+      }
+
+      console.log("Message deleted successfully:", message.id)
+    } catch (error) {
+      console.error("Ошибка при удалении сообщения:", error)
+      alert("Ошибка при удалении сообщения. Попробуйте еще раз.")
+    }
   }
 
   if (!chat) return null
@@ -334,23 +424,70 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
                 return messages.map((message, index) => {
                   const displayName = participantNameMap.get(message.senderName) || message.senderName || "Unknown"
                   const isEditing = editingMessageId === message.id
+                  const isOwnMessage = message.senderId === currentUserId
+
+                  console.log(`Message ${index}:`, {
+                    id: message.id,
+                    senderId: message.senderId,
+                    currentUserId: currentUserId,
+                    isOwnMessage: isOwnMessage,
+                    status: message.status,
+                  })
+
                   return (
                     <div key={index} className={`chat-message${isEditing ? " editing-message" : ""}`}>
-                      <strong>{displayName}:</strong> {message.text}
-                      <button
-                        className="reply-message-button btn btn-link btn-sm"
-                        title="Ответить на сообщение"
-                        onClick={() => startReplyToMessage(message)}
-                      >
-                        <i className="bi bi-reply"></i>
-                      </button>
-                      <button
-                        className="edit-message-button btn btn-link btn-sm"
-                        title="Редактировать сообщение"
-                        onClick={() => startEditingMessage(message)}
-                      >
-                        <i className="bi bi-pencil"></i>
-                      </button>
+                      <div className="message-content">
+                        <div className="message-text-container">
+                          <span className="message-text">
+                            <strong>{displayName}:</strong> {message.text}
+                          </span>
+                          <div className="message-meta">
+                            <span className="message-time">{formatMessageTime(message.timestamp)}</span>
+                            {isOwnMessage && (
+                              <span className="message-status">
+                                {(message.status === "Sent" || message.status === undefined) && (
+                                  <i className="bi bi-check message-status-sent" title="Отправлено"></i>
+                                )}
+                                {message.status === "Delivered" && (
+                                  <>
+                                    <i className="bi bi-check message-status-delivered" title="Доставлено"></i>
+                                    <i className="bi bi-check message-status-delivered-second"></i>
+                                  </>
+                                )}
+                                {message.status === "Read" && (
+                                  <>
+                                    <i className="bi bi-check message-status-read" title="Прочитано"></i>
+                                    <i className="bi bi-check message-status-read-second"></i>
+                                  </>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="message-actions">
+                          <button
+                            className="reply-message-button btn btn-link btn-sm"
+                            title="Ответить на сообщение"
+                            onClick={() => startReplyToMessage(message)}
+                          >
+                            <i className="bi bi-reply"></i>
+                          </button>
+                          <button
+                            className="edit-message-button btn btn-link btn-sm"
+                            title="Редактировать сообщение"
+                            onClick={() => startEditingMessage(message)}
+                          >
+                            <i className="bi bi-pencil"></i>
+                          </button>
+                          <button
+                            className="delete-message-button btn btn-link btn-sm"
+                            title="Удалить сообщение"
+                            onClick={() => handleDeleteMessage(message)}
+                          >
+                            <i className="bi bi-trash"></i>
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   )
                 })
