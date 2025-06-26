@@ -13,11 +13,13 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
     {
         private readonly IChatRepository _chatRepository;
         private readonly ILogger<DeleteChatUseCase> _logger;
+        private readonly IChatInvationRepository _chatInvationRepository;
 
-        public DeleteChatUseCase(IChatRepository chatRepository, ILogger<DeleteChatUseCase> logger)
+        public DeleteChatUseCase(IChatRepository chatRepository, ILogger<DeleteChatUseCase> logger, IChatInvationRepository chatInvationRepository)
         {
             _chatRepository = chatRepository ?? throw new ArgumentNullException(nameof(chatRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _chatInvationRepository = chatInvationRepository;
         }
 
         public async Task<DeleteChatResponse> Execute(string chatId)
@@ -31,6 +33,9 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     _logger.LogError($"DeleteChatUseCase.Execute: Chat with id {chatId} does not exist.");
                     return new DeleteChatResponse { IsSuccess = false, ErrorMessage = $"Chat with id {chatId} does not exist." };
                 }
+
+                await _chatInvationRepository.DeleteChatInvitationsByChatId(chatId);
+                _logger.LogInformation($"DeleteChatUseCase.Execute: ChatInvitations of {chatId} deleted successfully.");
 
                 await _chatRepository.DeleteChat(chatId);
 

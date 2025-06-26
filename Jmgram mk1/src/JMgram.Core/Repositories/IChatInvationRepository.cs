@@ -17,11 +17,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
     {
         Task AddChatInvitation(ChatInvitation chatInvitation);
         Task<ChatInvitation> GetChatInvitation(string chatId, string senderUserId, string recipientUserId);
-        Task<ChatInvitation> GetChatInvitation(string recipientUserId);
+        Task<ChatInvitation> GetChatInvitation(string chatId);
+        Task<List<ChatInvitation>> GetChatInvitationsByChatId(string recipientUserId);
         Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId);
         Task<List<ChatInvitation>> GetIncomingChatInvitations(string userId);
         Task UpdateChatInvitation(ChatInvitation chatInvitation);
         Task DeleteChatInvitation(ChatInvitation chatInvitation);
+        Task DeleteChatInvitationsByChatId(string chatId);
     }
     public class ChatInvationRepository : IChatInvationRepository
     {
@@ -42,9 +44,13 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         {
             return await _dbContext.ChatInvitations.FirstOrDefaultAsync(ch => ch.ChatId == chatId && ch.SenderUserId == senderUserId && ch.RecipientUserId == recipientUserId);
         }
-        public async Task<ChatInvitation> GetChatInvitation(string recipientUserId)
+        public async Task<ChatInvitation> GetChatInvitation(string chatId)
         {
-            return await _dbContext.ChatInvitations.FirstOrDefaultAsync(ch => ch.RecipientUserId == recipientUserId);
+            return await _dbContext.ChatInvitations.FirstOrDefaultAsync(ch => ch.ChatId == chatId);
+        }
+        public async Task<List<ChatInvitation>> GetChatInvitationsByChatId(string recipientUserId)
+        {
+            return await _dbContext.ChatInvitations.Where(ch => ch.RecipientUserId == recipientUserId).ToListAsync();
         }
         public async Task<ChatInvitation> GetChatInvitationById(Guid chatInvitationId)
         {
@@ -72,6 +78,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
             }
             _dbContext.ChatInvitations.Remove(chatInvitation);
             await _dbContext.SaveChangesAsync();
+        }
+        public async Task DeleteChatInvitationsByChatId(string chatId)
+        {
+            await _dbContext.ChatInvitations
+                .Where(ci => ci.ChatId == chatId)
+                .ExecuteDeleteAsync();
         }
     }
 }
