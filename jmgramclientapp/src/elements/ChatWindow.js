@@ -10,12 +10,15 @@ import {
 } from "../controllers/ChatController"
 import { getContactList } from "../controllers/ContactController"
 import "../css/ChatWindow.css"
+import ProfileModal from "../elements/ProfileModal"
 
 // Функция для форматирования времени с добавлением 5 часов
 const formatMessageTime = (timestamp) => {
   if (!timestamp) return ""
 
-const correctedDate = new Date(timestamp)
+  const date = new Date(timestamp)
+  // Добавляем 5 часов (5 * 60 * 60 * 1000 миллисекунд)
+  const correctedDate = new Date(date.getTime() + 5 * 60 * 60 * 1000)
 
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -77,6 +80,8 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
   const [loadingContacts, setLoadingContacts] = useState(false)
 
   const [replyingToMessage, setReplyingToMessage] = useState(null)
+
+  const [profileUserId, setProfileUserId] = useState(null)
 
   useEffect(() => {
     async function fetchMessages() {
@@ -563,15 +568,29 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
                     style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}
                   >
                     <span>{participant.firstName || participant.phone || "Участник"}</span>
-                    {currentUserId === chat.creatorUserId && participant.id !== chat.creatorUserId && (
+                    <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
+                      {/* Кнопка профиля участника */}
                       <button
-                        onClick={() => handleRemoveUser(participant)}
-                        className="chat-header-button"
-                        style={{ marginLeft: "10px" }}
+                        onClick={() => setProfileUserId(participant.id)}
+                        className="btn btn-link btn-sm"
+                        style={{ padding: "2px 6px", color: "#007bff" }}
+                        title="Открыть профиль"
                       >
-                        Удалить из чата
+                        <i className="bi bi-person-circle"></i>
                       </button>
-                    )}
+
+                      {/* Кнопка удаления из чата (только для создателя чата) */}
+                      {currentUserId === chat.creatorUserId && participant.id !== chat.creatorUserId && (
+                        <button
+                          onClick={() => handleRemoveUser(participant)}
+                          className="btn btn-link btn-sm"
+                          style={{ padding: "2px 6px", color: "#dc3545" }}
+                          title="Удалить из чата"
+                        >
+                          <i className="bi bi-x-lg"></i>
+                        </button>
+                      )}
+                    </div>
                   </li>
                 )
               })
@@ -611,6 +630,26 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
             </div>
           </div>
         </div>
+      )}
+      {profileUserId && (
+        <ProfileModal
+          userId={profileUserId}
+          onClose={() => setProfileUserId(null)}
+          onContactDeleted={() => {
+            // Обновляем список участников после удаления контакта
+            const fetchParticipants = async () => {
+              try {
+                const users = await getChatUsersList(chat.chatId || chat.id)
+                const uniqueUsers = Array.from(new Map(users.map((u) => [u.id, u])).values())
+                setParticipants(uniqueUsers)
+              } catch (error) {
+                console.error("Ошибка при загрузке участников чата:", error)
+              }
+            }
+            fetchParticipants()
+            setProfileUserId(null)
+          }}
+        />
       )}
     </div>
   )
