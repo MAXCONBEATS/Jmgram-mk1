@@ -415,3 +415,19 @@
     max-width: 100%;
   }
 }
+
+.header-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.header-buttons .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.header-buttons .btn i {
+  font-size: 0.9rem;
+}

@@ -9,6 +9,7 @@ import ChatWindow from "./ChatWindow"
 import ContactsPanel from "./ContactsPanel"
 import NotificationsPanel from "./NotificationsPanel"
 import ProfileModal from "./ProfileModal"
+import SettingsModal from "./SettingsModal"
 import { getContactList, getContactRequests, acceptContactRequest } from "../controllers/ContactController"
 
 axios.defaults.baseURL = "https://localhost:5087"
@@ -19,6 +20,7 @@ function Main({ error, onLogout }) {
   const [refreshChats, setRefreshChats] = useState(false)
   const [refreshInvitations, setRefreshInvitations] = useState(0)
   const [profileUserId, setProfileUserId] = useState(null)
+  const [showSettings, setShowSettings] = useState(false)
   const [refreshContacts, setRefreshContacts] = useState(false)
 
   const [contacts, setContacts] = useState([])
@@ -116,12 +118,14 @@ function Main({ error, onLogout }) {
 
   return (
     <div className="main-container">
-      <button onClick={() => setProfileUserId(userId)} className="btn btn-outline-light btn-sm">
-        Мой профиль
-      </button>
-
-      <div>
-        <i className="bi bi-box-arrow-right logout-icon" onClick={onLogout} title="Выйти"></i>
+      <div className="header-buttons">
+        <button onClick={() => setProfileUserId(userId)} className="btn btn-outline-light btn-sm">
+          Мой профиль
+        </button>
+        
+        <button onClick={() => setShowSettings(true)} className="btn btn-outline-light btn-sm">
+          <i className="bi bi-gear"></i> Настройки
+        </button>
       </div>
 
       {error && <p className="error-message">{error}</p>}
@@ -175,6 +179,13 @@ function Main({ error, onLogout }) {
           userId={profileUserId}
           onClose={() => setProfileUserId(null)}
           onContactDeleted={refreshContactsAndChats}
+        />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          onClose={() => setShowSettings(false)}
+          onLogout={onLogout}
         />
       )}
     </div>
