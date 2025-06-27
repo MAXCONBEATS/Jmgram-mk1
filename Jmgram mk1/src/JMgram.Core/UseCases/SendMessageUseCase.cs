@@ -100,7 +100,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     SenderId = senderUserId,
                     SenderName = senderName,
                     Text = request.Message.Text,
-                    Timestamp = DateTime.Now.AddHours(5)
+                    Timestamp = DateTime.Now
                 };
 
                 var id = await _messageRepository.Add(messageEntity);

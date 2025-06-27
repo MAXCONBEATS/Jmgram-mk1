@@ -7,6 +7,7 @@ import {
   removeUserFromChat,
   InviteToChat,
   deleteMessage,
+  getChatNameForUser,
 } from "../controllers/ChatController"
 import { getContactList } from "../controllers/ContactController"
 import "../css/ChatWindow.css"
@@ -16,9 +17,7 @@ import ProfileModal from "../elements/ProfileModal"
 const formatMessageTime = (timestamp) => {
   if (!timestamp) return ""
 
-  const date = new Date(timestamp)
-  // Добавляем 5 часов (5 * 60 * 60 * 1000 миллисекунд)
-  const correctedDate = new Date(date.getTime() + 5 * 60 * 60 * 1000)
+  const correctedDate = new Date(timestamp)
 
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -83,28 +82,63 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
 
   const [profileUserId, setProfileUserId] = useState(null)
 
+  // Добавляем состояние для названия чата
+  const [chatName, setChatName] = useState("")
+  const [loadingChatName, setLoadingChatName] = useState(false)
+
+  // Добавляем useEffect для загрузки названия чата
   useEffect(() => {
-    async function fetchMessages() {
+    async function fetchChatName() {
       if (!chat) {
-        setMessages([])
+        setChatName("")
         return
       }
-      setLoading(true)
+      
+      setLoadingChatName(true)
       try {
-        const response = await getMessages(chat.chatId || chat.id, 1, 20)
-        const mappedMessages = (response.chat || []).map((msg) => ({
-          ...msg,
-          senderName: msg.senderName || "Unknown",
-        }))
-        setMessages(mappedMessages)
+        const name = await getChatNameForUser(chat.chatId || chat.id)
+        setChatName(name || "Чат")
       } catch (error) {
-        console.error("Ошибка при загрузке сообщений:", error)
-        setMessages([])
+        console.error("Ошибка при загрузке названия чата:", error)
+        setChatName(chat?.name || chat?.chatName || "Чат")
       }
-      setLoading(false)
+      setLoadingChatName(false)
     }
-    fetchMessages()
+    
+    fetchChatName()
   }, [chat])
+
+  // В useEffect для загрузки сообщений
+useEffect(() => {
+  async function fetchMessages() {
+    if (!chat) {
+      setMessages([])
+      return
+    }
+    setLoading(true)
+    try {
+      const response = await getMessages(chat.chatId || chat.id, 1, 20)
+      const mappedMessages = (response.chat || []).map((msg) => ({
+        ...msg,
+        senderName: msg.senderName || "Unknown",
+      }))
+      
+      const sortedMessages = mappedMessages.sort((a, b) => {
+        if (!isNaN(a.id) && !isNaN(b.id)) {
+          return parseInt(a.id) - parseInt(b.id)
+        }
+        return a.id.localeCompare(b.id)
+      })
+      
+      setMessages(sortedMessages)
+    } catch (error) {
+      console.error("Ошибка при загрузке сообщений:", error)
+      setMessages([])
+    }
+    setLoading(false)
+  }
+  fetchMessages()
+}, [chat])
 
   useEffect(() => {
     if (!chat) return
@@ -139,22 +173,33 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
               .catch((err) => console.error("JoinChat error:", err))
 
             connection.on("ReceiveMessage", (user, message, messageId, senderId, status) => {
-              console.log("Received message from SignalR:", user, message, "Status:", status, "SenderId:", senderId)
-              setMessages((prevMessages) => {
-                const newMessage = {
-                  id: messageId || Date.now().toString(),
-                  senderName: user,
-                  senderId: senderId,
-                  text: message,
-                  status: status || "Sent",
-                  timestamp: new Date().toISOString(), // Текущее время для новых сообщений
-                  chatId: chat.chatId || chat.id,
-                }
-                const newMessages = [...prevMessages, newMessage]
-                console.log("Updated messages with status:", newMessages)
-                return newMessages
-              })
-            })
+  console.log("Received message from SignalR:", user, message, "Status:", status, "SenderId:", senderId)
+  setMessages((prevMessages) => {
+    const newMessage = {
+      id: messageId || Date.now().toString(),
+      senderName: user,
+      senderId: senderId,
+      text: message,
+      status: status || "Sent",
+      timestamp: new Date().toISOString(),
+      chatId: chat.chatId || chat.id,
+    }
+    
+    const updatedMessages = [...prevMessages, newMessage]
+    
+    const sortedMessages = updatedMessages.sort((a, b) => {
+      if (!isNaN(a.id) && !isNaN(b.id)) {
+        return parseInt(a.id) - parseInt(b.id)
+      }
+      const dateA = new Date(a.timestamp || 0)
+      const dateB = new Date(b.timestamp || 0)
+      return dateA - dateB
+    })
+    
+    console.log("Updated messages with status:", sortedMessages)
+    return sortedMessages
+  })
+})
 
             connection.on("MessageUpdated", (messageId, newText, userId) => {
               console.log("Message updated via SignalR:", messageId, newText)
@@ -415,7 +460,10 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
   return (
     <div className="chat-window">
       <div className="chat-header">
-        <h3>{chat?.name || chat?.chatName || chat?.chatName || "Чат"}</h3>
+        {/* Обновляем отображение названия чата */}
+        <h3>
+          {loadingChatName ? "Загрузка..." : chatName}
+        </h3>
         <button onClick={onClose}>Закрыть</button>
       </div>
 

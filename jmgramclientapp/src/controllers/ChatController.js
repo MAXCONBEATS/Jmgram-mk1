@@ -160,6 +160,20 @@ export async function getChatUsersList(chatId) {
   throw error;
  }
 }
+export async function getChatNameForUser(chatId) {
+ try {
+  const response = await axios.get('/Chat/GetChatNameForUser', {
+   withCredentials: true,
+   params: {
+    chatId: chatId,
+   },
+  });
+  return response.data;
+ } catch (error) {
+  console.error('Ошибка при получении имени чата:', error);
+  throw error;
+ }
+}
 
 export async function InviteToChat(chatId, senderUserId, recipientUserId) {
     try{

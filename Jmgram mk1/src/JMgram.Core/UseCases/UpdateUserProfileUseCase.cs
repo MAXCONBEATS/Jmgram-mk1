@@ -61,7 +61,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     userProfile.Bio = request.Profile.Bio;
 
                 await _context.SaveChangesAsync();
-                userProfile.LastSeen = DateTime.UtcNow;
+                userProfile.LastSeen = DateTime.UtcNow.AddHours(5);
                 await _context.SaveChangesAsync();
 
                 return new UpdateUserProfileResponse { IsSuccess = true };
