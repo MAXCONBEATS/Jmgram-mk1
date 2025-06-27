@@ -526,18 +526,36 @@ function ChatWindow({ chat, onClose, senderId, senderName, currentUserId }) {
                 </button>
               </div>
             )}
-            <textarea
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Введите сообщение"
-              rows={3}
-            />
-            <button ref={emojiButtonRef} className="emoji-trigger" onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
-              😊
-            </button>
-            <button onClick={editingMessageId ? handleUpdateMessage : handleSendMessage}>
-              {editingMessageId ? "Изменить" : "Отправить"}
-            </button>
+            <div className="input-controls">
+              <textarea
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                placeholder="Введите сообщение"
+                rows={3}
+              />
+              <div className="input-buttons">
+                <button
+                  className="attachment-button"
+                  onClick={() => {
+                    // TODO: Добавить функционал прикрепления файлов
+                    console.log("Attachment button clicked")
+                  }}
+                  title="Прикрепить файл"
+                >
+                  <i className="bi bi-paperclip"></i>
+                </button>
+                <button
+                  ref={emojiButtonRef}
+                  className="emoji-trigger"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                >
+                  😊
+                </button>
+                <button onClick={editingMessageId ? handleUpdateMessage : handleSendMessage}>
+                  {editingMessageId ? "Изменить" : "Отправить"}
+                </button>
+              </div>
+            </div>
             {showEmojiPicker && (
               <div className="emoji-picker-wrapper">
                 <EmojiPicker

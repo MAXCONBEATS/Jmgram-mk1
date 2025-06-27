@@ -26,5 +26,22 @@ export const UserController = {
       console.error('Error updating profile:', error);
       throw error;
     }
+  },
+
+  // Изменение пароля
+  changePassword: async (oldPassword, newPassword) => {
+    try {
+      const response = await axios.post(
+        'https://localhost:5087/User/ChangePassword',
+        {
+          oldPassword: oldPassword,
+          newPassword: newPassword
+        }
+      );
+      return response.data;
+    } catch (error) {
+      console.error('Error changing password:', error);
+      throw error;
+    }
   }
 };

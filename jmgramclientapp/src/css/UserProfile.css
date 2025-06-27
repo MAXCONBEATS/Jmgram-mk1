@@ -59,7 +59,8 @@
 
 .save-btn,
 .cancel-btn,
-.edit-btn {
+.edit-btn,
+.delete-btn {
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 4px;
@@ -73,21 +74,133 @@
   color: white;
 }
 
+.save-btn:hover {
+  background-color: #45a049;
+}
+
 .cancel-btn {
   background-color: #f44336;
   color: white;
 }
 
+.cancel-btn:hover {
+  background-color: #da190b;
+}
+
 .edit-btn {
+  background-color: #2196f3;
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.edit-btn:hover {
+  background-color: #1976d2;
+}
+
+.delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.delete-btn:hover {
+  background-color: #da190b;
+}
+
+/* Контейнер для действий с контактом */
+.contact-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Кнопка изменения имени контакта - теперь рядом с кнопкой удаления */
+.edit-contact-name-btn {
   padding: 0.75rem 1.5rem;
+  background-color: #007bff;
+  color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.2s;
-  display: inline-flex; /* Выравниваем иконку и текст по вертикали */
-  align-items: center;
-  gap: 0.5rem; /* Расстояние между иконкой и текстом */
+}
+
+.edit-contact-name-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Форма редактирования имени контакта */
+.contact-name-edit-form {
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #616161;
+  border-radius: 8px;
+  background-color: #2a2a2a;
+}
+
+.contact-name-edit-form h3 {
+  margin: 0 0 15px 0;
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+.contact-name-edit-form .form-group input {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #616161;
+  border-radius: 4px;
+  background-color: #424242;
+  color: #ffffff;
+}
+
+.contact-name-edit-form .form-actions {
+  margin-top: 10px;
+}
+
+.contact-name-edit-form .save-btn {
+  padding: 8px 16px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  margin-right: 10px;
+  cursor: pointer;
+}
+
+.contact-name-edit-form .save-btn:hover {
+  background-color: #218838;
+}
+
+.contact-name-edit-form .cancel-btn {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.contact-name-edit-form .cancel-btn:hover {
+  background-color: #545b62;
+}
+
+/* Информация о профиле */
+.profile-info h2 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.profile-info h2 small {
+  display: block;
+  font-size: 0.8em;
+  color: #bdbdbd;
+  font-weight: normal;
+  margin-top: 0.5rem;
 }
 
 /* Текст профиля */
@@ -95,10 +208,53 @@
   white-space: pre-line;
   line-height: 1.6;
   margin: 1rem 0;
+  color: #e0e0e0;
 }
 
 .last-seen {
   color: #bdbdbd;
   font-size: 0.85rem;
   margin-top: 1rem;
+}
+
+/* Кнопка закрытия */
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #bdbdbd;
+  cursor: pointer;
+  padding: 5px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.close-btn:hover {
+  color: #ffffff;
+}
+
+/* Состояние загрузки */
+.user-profile-loading {
+  color: #ffffff;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+  .contact-actions {
+    flex-direction: column;
+  }
+  
+  .edit-contact-name-btn,
+  .delete-btn {
+    width: 100%;
+  }
+  
+  .user-profile-container {
+    padding: 1rem;
+  }
 }

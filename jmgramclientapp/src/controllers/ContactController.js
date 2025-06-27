@@ -57,3 +57,15 @@ export async function addContact(contactUserId, senderId) {
     throw error;
   }
 }
+export async function updateContactName(contactUserId, newName) {
+  try {
+    const response = await axios.post('/Contact/UpdateName', 
+      { contactUserId: contactUserId, newName: newName }, 
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Ошибка при обновлении имени контакта:', error);
+    throw error;
+  }
+}

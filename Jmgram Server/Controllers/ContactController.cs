@@ -136,30 +136,30 @@ public class ContactController : ControllerBase
     }
 
 
-    //[HttpPost("UpdateName")]
-    //public async Task<IActionResult> UpdateName([FromBody] UpdateContactNameRequest request)
-    //{
-    //    var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-    //    if (string.IsNullOrEmpty(userId))
-    //    {
-    //        return Unauthorized("Не удалось получить UserId из claims.");
-    //    }
+    [HttpPost("UpdateName")]
+    public async Task<IActionResult> UpdateName([FromBody] UpdateContactNameRequest request)
+    {
+        var userId = _httpContextAccessor.HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized("Не удалось получить UserId из claims.");
+        }
 
-    //    _logger.LogInformation($"ContactController.UpdateName: Updating contact name for UserId: {userId}, ContactUserId: {request.ContactUserId} to Name: {request.NewName}");
+        _logger.LogInformation($"ContactController.UpdateName: Updating contact name for UserId: {userId}, ContactUserId: {request.ContactUserId} to Name: {request.NewName}");
 
-    //    var result = await _updateContactNameUseCase.Execute(userId, request.ContactUserId, request.NewName);
+        var result = await _updateContactNameUseCase.Execute(userId, request.ContactUserId, request.NewName);
 
-    //    if (result)
-    //    {
-    //        _logger.LogInformation($"ContactController.UpdateName: Contact name updated successfully for UserId: {userId}, ContactUserId: {request.ContactUserId}");
-    //        return Ok("Имя контакта успешно изменено.");
-    //    }
-    //    else
-    //    {
-    //        _logger.LogError($"ContactController.UpdateName: Failed to update contact name for UserId: {userId}, ContactUserId: {request.ContactUserId}.");
-    //        return BadRequest("Не удалось изменить имя контакта.");
-    //    }
-    //}
+        if (result)
+        {
+            _logger.LogInformation($"ContactController.UpdateName: Contact name updated successfully for UserId: {userId}, ContactUserId: {request.ContactUserId}");
+            return Ok("Имя контакта успешно изменено.");
+        }
+        else
+        {
+            _logger.LogError($"ContactController.UpdateName: Failed to update contact name for UserId: {userId}, ContactUserId: {request.ContactUserId}.");
+            return BadRequest("Не удалось изменить имя контакта.");
+        }
+    }
     [HttpGet("List")]
     public async Task<IActionResult> List()
     {
