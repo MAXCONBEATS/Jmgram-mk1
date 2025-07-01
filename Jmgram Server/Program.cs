@@ -80,6 +80,9 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Jmgram Chat API", Version = "v1" });
     c.EnableAnnotations();
+
+    // Добавляем поддержку загрузки файлов
+    c.OperationFilter<FileUploadOperationFilter>();
 });
 
 builder.Services.AddAuthorization();
@@ -99,6 +102,7 @@ builder.Services.AddScoped<GetUserProfileUseCase>();
 builder.Services.AddScoped<IChangePasswordUseCase, ChangePasswordUseCase>();
 builder.Services.AddScoped<IGetLastChatMessageUseCase, GetLastChatMessageUseCase>();
 builder.Services.AddScoped<IGetContactRequestsUseCase, GetContactRequestsUseCase>();
+builder.Services.AddScoped<IUploadFileUseCase, UploadFileUseCase>();
 builder.Services.AddScoped<CreateChatUseCase>();
 builder.Services.AddScoped<AddUserToChatUseCase>();
 builder.Services.AddScoped<IGetChatListUseCase, GetChatListUseCase>();
