@@ -34,7 +34,18 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         private readonly ILogger<UploadFileUseCase> _logger;
         private readonly string _uploadPath = @"C:\Users\maxco\source\repos\Jmgram mk1\Jmgram Server\Uploaded Files";
         private readonly long _maxFileSize = 10 * 1024 * 1024; // 10MB
-        private readonly string[] _allowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".mp4", ".avi", ".pdf", ".doc", ".docx" };
+        private readonly string[] _allowedExtensions = { 
+            // Изображения
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp",
+            // Видео
+            ".mp4", ".avi", ".mov", ".webm", ".mkv",
+            // Аудио
+            ".mp3", ".wav", ".ogg", ".aac", ".flac", ".m4a",
+            // Документы
+            ".pdf", ".doc", ".docx", ".txt", ".rtf",
+            // Архивы
+            ".zip", ".rar", ".7z"
+        };
 
         public UploadFileUseCase(ILogger<UploadFileUseCase> logger)
         {
