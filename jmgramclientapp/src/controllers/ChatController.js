@@ -62,20 +62,38 @@ export async function updateMessageStatus(request) {
 }
 
 export async function getMessages(chatId, pageNumber = 1, pageSize = 20) {
- try {
-  const response = await axios.get('https://localhost:5087/Chat/GetMessages', {
-   withCredentials: true,
-   params: {
-    ChatId: chatId,
-    PageNumber: pageNumber,
-    PageSize: pageSize,
-   },
-  });
-  return response.data;
- } catch (error) {
-  console.error('Ошибка при получении сообщений чата:', error);
-  throw error;
- }
+  try {
+    console.log("ChatController.getMessages: запрос сообщений", { chatId, pageNumber, pageSize })
+
+    const response = await axios.get("https://localhost:5087/Chat/GetMessages", {
+      withCredentials: true,
+      params: {
+        ChatId: chatId,
+        PageNumber: pageNumber,
+        PageSize: pageSize,
+      },
+    })
+
+    console.log("ChatController.getMessages: ответ получен", {
+      status: response.status,
+      dataType: typeof response.data,
+      isArray: Array.isArray(response.data),
+      dataLength: Array.isArray(response.data) ? response.data.length : "не массив",
+    })
+    console.log("ChatController.getMessages: полные данные:", response.data)
+
+    return response.data
+  } catch (error) {
+    console.error("ChatController.getMessages: ошибка при получении сообщений чата:", error)
+    console.error("ChatController.getMessages: детали ошибки:", {
+      message: error.message,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      url: error.config?.url,
+      params: error.config?.params,
+    })
+    throw error
+  }
 }
 
 export async function deleteChat(chatId) {

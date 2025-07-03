@@ -25,7 +25,6 @@ function MessageList({
         const isEditing = editingMessageId === message.id
         const isOwnMessage = message.senderId === currentUserId
 
-        console.log(`Рендерим сообщение ${index}:`, message);
 
         return (
           <div key={index} className={`chat-message${isEditing ? " editing-message" : ""}`}>
