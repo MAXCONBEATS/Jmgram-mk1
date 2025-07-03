@@ -62,19 +62,20 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReactApps", builder =>
     {
         builder.WithOrigins("https://localhost:3000", "https://localhost:3001")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 
-options.AddPolicy("AllowReactAppWebSocket", builder =>
+    options.AddPolicy("AllowReactAppWebSocket", builder =>
     {
         builder.WithOrigins("https://localhost:3000", "https://localhost:3001")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+             .AllowAnyMethod()
+             .AllowAnyHeader()
+             .AllowCredentials();
     });
-});
+}); ;
+
 
 builder.Services.AddSwaggerGen(c =>
 {
@@ -92,6 +93,7 @@ builder.Host.UseDefaultServiceProvider(options =>
     options.ValidateScopes = true;
     options.ValidateOnBuild = true;
 });
+
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -134,6 +136,9 @@ builder.Services.AddScoped<IContactRequestRepository, ContactRequestRepository>(
 builder.Services.AddScoped<IChatInvationRepository, ChatInvationRepository>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
+// Добавляем кэширование
+builder.Services.AddResponseCaching();
+builder.Services.AddMemoryCache();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -149,6 +154,15 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseResponseCaching();
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = ctx =>
+    {
+        ctx.Context.Response.Headers.Append("Cache-Control", "public,max-age=3600");
+    }
+});
 app.UseStaticFiles();
 app.UseRouting();
 
