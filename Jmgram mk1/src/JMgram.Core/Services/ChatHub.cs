@@ -1,4 +1,5 @@
 ﻿using Jmgram_mk1.src.JMgram.Core.Dtos;
+using Jmgram_mk1.src.JMgram.Core.Entities;
 using Jmgram_mk1.src.JMgram.Core.Repositories;
 using Jmgram_mk1.src.JMgram.Core.Requestes;
 using Jmgram_mk1.src.JMgram.Core.UseCases;
@@ -39,12 +40,66 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
             try
             {
                 var userId = Context.UserIdentifier;
+                var userName = Context.User?.Identity?.Name ?? "Unknown";
+
+                _logger.LogInformation($"SendMessage attempt - User: {userName} ({userId}), Chat: {chatId}");
+
                 if (string.IsNullOrEmpty(userId))
                 {
                     _logger.LogError("User ID is null or empty.");
+                    await Clients.Caller.SendAsync("MessageSendFailed", "Пользователь не авторизован");
                     return;
                 }
 
+                // ДОБАВЛЯЕМ: Проверка прав на отправку сообщений
+                var chat = await _chatRepository.GetById(chatId);
+                if (chat == null)
+                {
+                    _logger.LogWarning($"Chat not found: {chatId}");
+                    await Clients.Caller.SendAsync("MessageSendFailed", "Чат не найден");
+                    return;
+                }
+
+                // Проверяем права в зависимости от типа чата
+                bool canSend = false;
+                string errorMessage = "";
+
+                switch (chat.ChatType)
+                {
+                    case ChatType.Channel:
+                        // В канале писать может только создатель
+                        canSend = chat.CreatorUserId == userId;
+                        errorMessage = canSend ? "" : "В канале может писать только создатель";
+                        break;
+
+                    case ChatType.Group:
+                        // В группе могут писать все участники
+                        canSend = await _chatRepository.IsUserInChat(chatId, userId);
+                        errorMessage = canSend ? "" : "Вы не являетесь участником группы";
+                        break;
+
+                    case ChatType.Private:
+                        // В приватном чате могут писать оба участника
+                        canSend = await _chatRepository.IsUserInChat(chatId, userId);
+                        errorMessage = canSend ? "" : "Вы не являетесь участником чата";
+                        break;
+
+                    default:
+                        canSend = false;
+                        errorMessage = "Неизвестный тип чата";
+                        break;
+                }
+
+                _logger.LogInformation($"Permission check - User: {userId}, Chat: {chatId}, ChatType: {chat.ChatType}, CanSend: {canSend}");
+
+                if (!canSend)
+                {
+                    _logger.LogWarning($"User {userId} denied sending message to chat {chatId}: {errorMessage}");
+                    await Clients.Caller.SendAsync("MessageSendFailed", errorMessage);
+                    return;
+                }
+
+                // Отправляем сообщение
                 var request = new SendMessageRequest
                 {
                     Message = new MessageForSendingDto
@@ -59,30 +114,32 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
 
                 if (response.IsSuccess)
                 {
-                    _logger.LogInformation($"Message sending success. ChatId: {chatId}, User: {Context.UserIdentifier}");
+                    _logger.LogInformation($"Message sent successfully - ChatId: {chatId}, User: {userId}");
 
                     var user = await _userRepository.GetById(userId);
                     var senderName = user?.FirstName ?? user?.Phone ?? "Unknown";
 
                     await Clients.Group(chatId).SendAsync(
                         "ReceiveMessage",
-                        senderName,                    
-                        message,                       
+                        senderName,
+                        message,
                         response.Id.ToString() ?? Guid.NewGuid().ToString(),
-                        userId,                          
-                        status                         
+                        userId,
+                        status
                     );
 
-                    _logger.LogInformation($"Sent to group {chatId} User: {Context.UserIdentifier} Message: {message}");
+                    _logger.LogInformation($"Message broadcasted to group {chatId}");
                 }
                 else
                 {
-                    _logger.LogError($"Message sending failed. ChatId: {chatId}, User: {Context.UserIdentifier}, Error: {response.ErrorMessage}");
+                    _logger.LogError($"Message sending failed - ChatId: {chatId}, User: {userId}, Error: {response.ErrorMessage}");
+                    await Clients.Caller.SendAsync("MessageSendFailed", response.ErrorMessage ?? "Ошибка отправки сообщения");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Exception occurred while sending message.");
+                _logger.LogError(ex, $"Exception in SendMessage - ChatId: {chatId}");
+                await Clients.Caller.SendAsync("MessageSendFailed", "Произошла ошибка при отправке сообщения");
             }
         }
         public async Task UpdateMessage(int messageId, string newText)
@@ -144,9 +201,20 @@ namespace Jmgram_mk1.src.JMgram.Core.Services
 
         public override async Task OnConnectedAsync()
         {
-            var userId = Context.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            _logger.LogInformation($"User connected with connection ID: {Context.ConnectionId} and UserId: {userId}");
+            var userId = Context.UserIdentifier;
+            var userName = Context.User?.Identity?.Name ?? "Unknown";
+
+            _logger.LogInformation($"User connected - {userName} ({userId})");
             await base.OnConnectedAsync();
+        }
+
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            var userId = Context.UserIdentifier;
+            var userName = Context.User?.Identity?.Name ?? "Unknown";
+
+            _logger.LogInformation($"User disconnected - {userName} ({userId})");
+            await base.OnDisconnectedAsync(exception);
         }
     }
 }

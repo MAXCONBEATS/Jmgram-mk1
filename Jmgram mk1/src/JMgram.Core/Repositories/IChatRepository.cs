@@ -88,8 +88,7 @@ namespace Jmgram_mk1.src.JMgram.Core.Repositories
         }
         public async Task<List<Chat>> GetUserChats(string userId)
         {
-            var chats = await _dbContext.Chats
-             .Join(
+            var chats = await _dbContext.Chats.Join(
               _dbContext.ChatUsers,
               chat => chat.Id,
               chatUser => chatUser.ChatId,

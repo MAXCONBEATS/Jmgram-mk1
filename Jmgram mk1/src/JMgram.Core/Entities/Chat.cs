@@ -10,5 +10,12 @@ namespace Jmgram_mk1.src.JMgram.Core.Entities
         public DateTime CreatedAt { get; set; }
         public ICollection<ChatUser> ChatUsers { get; set; } = new List<ChatUser>();
         public string CreatorUserId { get; set; }
+        public ChatType ChatType { get; set; } = ChatType.Group;
+    }
+    public enum ChatType
+    {
+        Group = 0,
+        Channel = 1,
+        Private = 2 
     }
 }

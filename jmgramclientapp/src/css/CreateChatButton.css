@@ -1,7 +1,26 @@
+.create-chat-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.create-chat-button:hover {
+  background-color: #0056b3;
+}
+
 .modal-overlay {
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background-color: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -9,63 +28,231 @@
 }
 
 .modal-content {
-  background-color: #212121;
-  padding: 20px;
-  border-radius: 10px;
-  width: 400px;
+  background-color: #2a2a2a;
+  color: #ffffff;
+  padding: 25px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
   max-height: 80vh;
   overflow-y: auto;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  color: #ffffff;
+  text-align: center;
+  font-size: 20px;
 }
 
 .modal-input {
-  padding: 10px;
-  border-radius: 5px;
+  width: 100%;
+  padding: 12px;
   border: 1px solid #555;
-  background-color: #333;
-  color: white;
-  font-size: 1em;
+  border-radius: 8px;
+  background-color: #3a3a3a;
+  color: #ffffff;
+  font-size: 14px;
+  margin-bottom: 20px;
+  box-sizing: border-box;
 }
 
+.modal-input::placeholder {
+  color: #aaa;
+}
+
+.modal-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* НОВЫЕ стили для выбора типа чата */
+.chat-type-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.chat-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  padding: 12px;
+  border: 2px solid #555;
+  border-radius: 8px;
+  transition: all 0.2s;
+  background-color: #3a3a3a;
+}
+
+.radio-label:hover {
+  border-color: #007bff;
+  background-color: #404040;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+  accent-color: #007bff;
+}
+
+.radio-label input[type="radio"]:checked + .radio-text {
+  color: #007bff;
+}
+
+.radio-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.radio-text strong {
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.radio-text small {
+  font-size: 12px;
+  color: #aaa;
+  line-height: 1.3;
+}
+
+/* Стили для списка контактов */
 .contacts-list {
+  margin-bottom: 20px;
+}
+
+.contacts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   max-height: 200px;
   overflow-y: auto;
-  border: 1px solid #555;
-  border-radius: 5px;
   padding: 10px;
+  background-color: #3a3a3a;
+  border-radius: 8px;
+  border: 1px solid #555;
 }
 
 .checkbox-label {
-  display: block;
-  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
 }
 
+.checkbox-label:hover {
+  background-color: #4a4a4a;
+}
+
+.checkbox-label input[type="checkbox"] {
+  accent-color: #007bff;
+}
+
+.contact-name {
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.no-contacts {
+  color: #aaa;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Информационный блок */
+.chat-info {
+  margin-bottom: 20px;
+}
+
+.info-box {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.channel-info {
+  background-color: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.group-info {
+  background-color: rgba(40, 167, 69, 0.1);
+  border: 1px solid rgba(40, 167, 69, 0.3);
+  color: #28a745;
+}
+
+/* Кнопки */
 .buttons-container {
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
-  gap: 10px;
 }
 
 .create-button {
-  background-color: #007bff;
+  background-color: #28a745;
   color: white;
   border: none;
-  border-radius: 5px;
   padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1em;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.create-button:hover {
+  background-color: #218838;
 }
 
 .cancel-button {
-  background-color: #555;
+  background-color: #6c757d;
   color: white;
   border: none;
-  border-radius: 5px;
   padding: 10px 20px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1em;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #5a6268;
+}
+
+/* Адаптивность */
+@media (max-width: 600px) {
+  .modal-content {
+    width: 95%;
+    padding: 20px;
+    margin: 10px;
+  }
+
+  .buttons-container {
+    flex-direction: column;
+  }
+
+  .create-button,
+  .cancel-button {
+    width: 100%;
+  }
 }

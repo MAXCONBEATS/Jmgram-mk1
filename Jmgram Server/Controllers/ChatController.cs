@@ -36,12 +36,13 @@ public class ChatController : ControllerBase
     private readonly RemoveUserFromChatUseCase _removeUserFromChatUseCase;
     private readonly DeleteChatUseCase _deleteChatUseCase;
     private readonly IChatService _chatService;
+    private readonly IMessageValidationService _messageValidationService;
 
 
     public ChatController(ILogger<ChatController> logger, CreateChatUseCase createChatUseCase, AddUserToChatUseCase addUserToChatUseCase,
      IHttpContextAccessor httpContextAccessor, IGetChatListUseCase getChatListUseCase, GetChatInvitationsUseCase getChatInvitationsUseCase, UpdateMessageTextUseCase updateMessageTextUseCase,
      ISendMessageUseCase sendMessageUseCase, SendNotificationUseCase sendNotificationUseCase, IGetLastChatMessageUseCase getLastChatMessageUseCase, CreateChatInvitationUseCase createChatInvitationUseCase,
-     UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService,
+     UpdateMessageStatusUseCase updateMessageStatusUseCase, GetChatMessagesUseCase getChatMessagesUseCase, GetUserChatsUseCase getUserChatsUseCase, IChatService chatService, IMessageValidationService messageValidationService,
      RemoveUserFromChatUseCase removeUserFromChatUseCase, DeleteChatUseCase deleteChatUseCase,
      RespondToChatInviteUseCase respondToChatInviteUseCase, IChatRepository chatRepository, IUserRepository userRepository, IChatInvationRepository chatInvationRepository)
     {
@@ -66,6 +67,7 @@ public class ChatController : ControllerBase
         _removeUserFromChatUseCase = removeUserFromChatUseCase ?? throw new ArgumentNullException(nameof(removeUserFromChatUseCase));
         _deleteChatUseCase = deleteChatUseCase ?? throw new ArgumentNullException(nameof(deleteChatUseCase));
         _chatService = chatService ?? throw new ArgumentNullException(nameof(chatService));
+        _messageValidationService = messageValidationService ?? throw new ArgumentNullException(nameof(_messageValidationService));
 
     }
 
@@ -207,6 +209,56 @@ public class ChatController : ControllerBase
         }
 
         return Ok(response.Chats);
+    }
+
+    [HttpGet("can-send-message/{chatId}")]
+    [Authorize]
+    public async Task<IActionResult> CanSendMessage(string chatId)
+    {
+        try
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            _logger.LogInformation($"Checking send permissions - User: {userId}, Chat: {chatId}");
+
+            var canSend = await _messageValidationService.CanUserSendMessage(userId, chatId);
+
+            if (canSend)
+            {
+                return Ok(new
+                {
+                    canSend = true,
+                    message = "Разрешено отправлять сообщения"
+                });
+            }
+            else
+            {
+                var chat = await _chatRepository.GetById(chatId);
+                string message = "Нет прав для отправки сообщений";
+
+                if (chat?.ChatType == ChatType.Channel)
+                {
+                    message = $"В канале \"{chat.Name}\" может писать только создатель";
+                }
+
+                return Ok(new
+                {
+                    canSend = false,
+                    message = message,
+                    chatType = chat?.ChatType.ToString()
+                });
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error checking send permissions for chat {chatId}");
+
+            return Ok(new
+            {
+                canSend = false,
+                message = "Ошибка проверки прав"
+            });
+        }
     }
     [HttpPost("SetChatName")] 
     public async Task<IActionResult> SetChatName(string chatId, string chatName)
@@ -432,5 +484,11 @@ public class ChatController : ControllerBase
             _logger.LogError($"ChatController.DeleteMessage: An error occurred while deleting message with ID {messageId}: {ex.Message}");
             return StatusCode(500, $"An error occurred while deleting message: {ex.Message}");
         }
+    }
+    public class CreateChannelRequest
+    {
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public ChatType ChatType { get; set; } = ChatType.Channel;
     }
 }

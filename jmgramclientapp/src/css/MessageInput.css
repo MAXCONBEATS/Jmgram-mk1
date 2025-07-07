@@ -15,6 +15,28 @@
   font-size: 12px;
 }
 
+/* ДОБАВЛЯЕМ стили для новых предупреждений */
+.auth-error-warning {
+  background-color: #dc3545;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.permission-warning {
+  background-color: #ffc107;
+  color: #212529;
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .input-wrapper {
   display: flex;
   align-items: center;

@@ -108,7 +108,9 @@ builder.Services.AddScoped<IUploadFileUseCase, UploadFileUseCase>();
 builder.Services.AddScoped<CreateChatUseCase>();
 builder.Services.AddScoped<AddUserToChatUseCase>();
 builder.Services.AddScoped<IGetChatListUseCase, GetChatListUseCase>();
-builder.Services.AddScoped<ISendMessageUseCase,SendMessageUseCase>();
+builder.Services.AddScoped<ISendMessageUseCase, SendMessageUseCase>();
+builder.Services.AddScoped<IMessageValidationService, MessageValidationService>();
+
 builder.Services.AddScoped<UpdateMessageStatusUseCase>();
 builder.Services.AddScoped<UpdateUserProfileUseCase>();
 builder.Services.AddScoped<UpdateMessageTextUseCase>();

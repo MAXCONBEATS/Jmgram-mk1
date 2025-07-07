@@ -62,3 +62,24 @@ export const login = async (phone, password) => {
    return false;
   }
  };
+ export const getCurrentUser = async () => {
+  try {
+    console.log("AccountController: получаем текущего пользователя...")
+
+    const response = await axios.get("/Account/Me")
+
+    console.log("AccountController: ответ от /Account/Me:", response.data)
+
+    return {
+      id: response.data.id,
+      userId: response.data.id, // Дублируем для совместимости
+      userName: response.data.userName,
+      phoneNumber: response.data.phoneNumber,
+      firstName: response.data.firstName || response.data.userName,
+      phone: response.data.phoneNumber,
+    }
+  } catch (error) {
+    console.error("AccountController: ошибка получения пользователя:", error)
+    throw error
+  }
+}

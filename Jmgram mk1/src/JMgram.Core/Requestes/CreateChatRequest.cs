@@ -7,7 +7,6 @@ namespace Jmgram_mk1.src.JMgram.Core.Requestes
     {
         public ChatDto Chat { get; set; }
         public List<string> Phones { get; set; }
-
     }
 
 

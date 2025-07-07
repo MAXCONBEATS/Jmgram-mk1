@@ -22,15 +22,29 @@ export async function getLastChatMessage(chatId) {
 }
 
 export async function createChat(request) {
- try {
-  const response = await axios.post('https://localhost:5087/Chat/Create', request, { withCredentials: true });
-  return response.data; 
- } catch (error) {
-  console.error('Ошибка при создании чата:', error);
-  throw error;
- }
-}
+  try {
+    console.log("ChatController.createChat: отправляем запрос", request)
+    console.log("ChatController.createChat: chat.chatType =", request.chat.chatType, typeof request.chat.chatType)
 
+    const response = await axios.post("https://localhost:5087/Chat/Create", request, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    console.log("ChatController.createChat: ответ получен", response.data)
+    return response.data
+  } catch (error) {
+    console.error("ChatController.createChat: ошибка при создании чата:", error)
+    console.error("Детали ошибки:", {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      data: error.response?.data,
+    })
+    throw error
+  }
+}
 export async function sendMessage(request) {
  try {
   const messagePayload = {
@@ -95,6 +109,37 @@ export async function getMessages(chatId, pageNumber = 1, pageSize = 20) {
     throw error
   }
 }
+export async function canSendMessage(chatId) {
+  try {
+    console.log("ChatController.canSendMessage: проверяем права для чата", chatId)
+
+    // ИСПРАВЛЯЕМ URL: используем /Chat/ вместо /api/chat/
+    const response = await axios.get(`https://localhost:5087/Chat/can-send-message/${chatId}`, {
+      withCredentials: true,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+
+    console.log("ChatController.canSendMessage: ответ получен", response.data)
+
+    return {
+      canSend: response.data.canSend,
+      message: response.data.message,
+      chatType: response.data.chatType,
+    }
+  } catch (error) {
+    console.error("ChatController.canSendMessage: ошибка проверки прав:", error)
+
+    // В случае ошибки возвращаем безопасное значение
+    return {
+      canSend: false,
+      message: error.response?.data?.message || "Ошибка проверки прав",
+      error: true,
+    }
+  }
+}
+
 
 export async function deleteChat(chatId) {
  try {

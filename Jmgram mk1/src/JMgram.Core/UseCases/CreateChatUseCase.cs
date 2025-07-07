@@ -29,6 +29,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
         public async Task<CreateChatResponse> Execute(CreateChatRequest request)
         {
             _logger.LogInformation("CreateChatUseCase.Execute: Starting execution");
+
             try
             {
                 if (request.Chat == null || string.IsNullOrWhiteSpace(request.Chat.Name) || request.Phones == null || request.Phones.Count == 0)
@@ -37,7 +38,7 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new CreateChatResponse { IsSuccess = false, ErrorMessage = "Неверные входные данные" };
                 }
 
-                _logger.LogInformation($"CreateChatUseCase.Execute: Chat name = {request.Chat.Name}, Phones = {string.Join(", ", request.Phones)}");
+                _logger.LogInformation($"CreateChatUseCase.Execute: Chat name = {request.Chat.Name}, ChatType = {request.Chat.ChatType}, Phones = {string.Join(", ", request.Phones)}");
 
                 var creatorUserId = _httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(creatorUserId))
@@ -48,22 +49,24 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
 
                 _logger.LogInformation($"CreateChatUseCase.Execute: CreatorUserId = {creatorUserId}");
 
+                // ПРЕОБРАЗУЕМ int в enum
+                ChatType chatType = (ChatType)request.Chat.ChatType;
+                _logger.LogInformation($"CreateChatUseCase.Execute: Converted ChatType = {chatType} ({request.Chat.ChatType})");
+
                 var chat = new Chat
                 {
                     Name = request.Chat.Name,
                     CreatedAt = DateTime.UtcNow,
                     CreatorUserId = creatorUserId,
+                    ChatType = chatType // ← ИСПОЛЬЗУЕМ преобразованный enum
                 };
 
-                _logger.LogInformation($"CreateChatUseCase.Execute: About to create chat in database");
                 var createdChat = await _chatRepository.CreateChat(chat);
-                _logger.LogInformation($"CreateChatUseCase.Execute: Chat created with ID = {createdChat.Id}");
+                _logger.LogInformation($"CreateChatUseCase.Execute: Chat created with ID = {createdChat.Id}, Type = {createdChat.ChatType}");
 
-                _logger.LogInformation($"CreateChatUseCase.Execute: Getting users by phones: {string.Join(", ", request.Phones)}");
+                // Остальной код остается без изменений...
                 var users = await _userRepository.GetByPhones(request.Phones);
-
                 var contacts = await _userRepository.GetContactsForUser(creatorUserId);
-
                 var contactPhones = contacts.Select(c => c.Phone).ToList();
 
                 if (users == null || users.Count() != request.Phones.Count() || !request.Phones.All(phone => contactPhones.Contains(phone)))
@@ -72,27 +75,17 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                     return new CreateChatResponse { IsSuccess = false, ErrorMessage = "Не все пользователи найдены или не являются вашими контактами." };
                 }
 
-                _logger.LogInformation($"CreateChatUseCase.Execute: Found {users?.Count() ?? 0} users and all are contacts");
-
-                if (users == null || users.Count() != request.Phones.Count())
-                {
-                    _logger.LogWarning($"CreateChatUseCase.Execute: Not all users were found for phones: {string.Join(", ", request.Phones)}");
-                }
-
-                _logger.LogInformation($"CreateChatUseCase.Execute: Found {users?.Count() ?? 0} users");
-
+                // Добавляем создателя
                 var creatorChatUser = new ChatUser
                 {
                     ChatId = createdChat.Id,
                     UserId = creatorUserId,
                     JoinedAt = DateTime.UtcNow,
                     ChatName = createdChat.Name
-                    
                 };
-                _logger.LogInformation($"CreateChatUseCase.Execute: Adding creator {creatorUserId} to chat {createdChat.Id}");
                 await _chatRepository.AddUserToChat(creatorChatUser);
-                _logger.LogInformation($"CreateChatUseCase.Execute: Creator added to chat");
 
+                // Добавляем остальных пользователей
                 if (users != null)
                 {
                     foreach (var user in users)
@@ -105,30 +98,29 @@ namespace Jmgram_mk1.src.JMgram.Core.UseCases
                                 UserId = user.Id,
                                 JoinedAt = DateTime.UtcNow,
                                 ChatName = createdChat.Name
-
                             };
-
-                            _logger.LogInformation($"CreateChatUseCase.Execute: Adding user {user.Id} to chat {createdChat.Id}");
                             await _chatRepository.AddUserToChat(chatUser);
-                            _logger.LogInformation($"CreateChatUseCase.Execute: User {user.Id} added to chat");
                         }
                     }
                 }
 
                 var chatDto = new ChatDto
                 {
-                    ChatId= createdChat.Id,
-                    Name = createdChat.Name
+                    ChatId = createdChat.Id,
+                    Name = createdChat.Name,
+                    ChatType = createdChat.ChatType
                 };
 
-                _logger.LogInformation("CreateChatUseCase.Execute: Successfully completed");
+                _logger.LogInformation($"CreateChatUseCase.Execute: Successfully completed. Created {chatType} with ID {chatDto.ChatId}");
                 return new CreateChatResponse { IsSuccess = true, Chat = chatDto };
             }
             catch (Exception ex)
             {
                 _logger.LogError($"CreateChatUseCase.Execute: An error occurred: {ex.Message}");
+                _logger.LogError($"CreateChatUseCase.Execute: Stack trace: {ex.StackTrace}");
                 return new CreateChatResponse { IsSuccess = false, ErrorMessage = "An error occurred while creating the chat." };
             }
         }
+
     }
 }
