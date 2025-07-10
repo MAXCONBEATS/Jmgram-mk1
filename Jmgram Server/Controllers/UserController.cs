@@ -108,5 +108,89 @@ public class UserController : ControllerBase
             phone = user.Phone
         });
     }
+    [HttpPut("avatar")]
+    public async Task<IActionResult> UpdateAvatar([FromBody] UpdateAvatarRequest request)
+    {
+        try
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userRepository.GetUserProfileById(userId);
 
+            if (user == null)
+            {
+                return NotFound(new { message = "Пользователь не найден" });
+            }
+
+            _logger.LogInformation($"Updating avatar for user {userId}: {request.AvatarFileName}");
+
+            user.AvatarPath = request.AvatarFileName;
+            await _userRepository.UpdateProfile(user);
+
+            return Ok(new { success = true, message = "Аватарка обновлена" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating avatar");
+            return StatusCode(500, new { success = false, message = "Ошибка сервера" });
+        }
+    }
+
+    [HttpDelete("avatar")]
+    public async Task<IActionResult> RemoveAvatar()
+    {
+        try
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _userRepository.GetUserProfileById(userId);
+
+            if (user == null)
+            {
+                return NotFound(new { message = "Пользователь не найден" });
+            }
+
+            _logger.LogInformation($"Removing avatar for user {userId}");
+
+            user.AvatarPath = null;
+            await _userRepository.UpdateProfile(user);
+
+            return Ok(new { success = true, message = "Аватарка удалена" });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error removing avatar");
+            return StatusCode(500, new { success = false, message = "Ошибка сервера" });
+        }
+    }
+
+    [HttpGet("avatar/{userId}")]
+    public async Task<IActionResult> GetUserAvatar(string userId)
+    {
+        try
+        {
+            var user = await _userRepository.GetUserProfileById(userId);
+            if (user == null)
+            {
+                return NotFound(new { message = "Пользователь не найден" });
+            }
+
+            return Ok(new { avatarFileName = user.AvatarPath });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, $"Error getting avatar for user {userId}");
+            return StatusCode(500, new { message = "Ошибка сервера" });
+        }
+    }
+}
+
+public class UpdateProfileRequest
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+    public string Bio { get; set; }
+}
+
+public class UpdateAvatarRequest
+{
+    public string AvatarFileName { get; set; }
 }
