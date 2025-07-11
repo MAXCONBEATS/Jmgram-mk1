@@ -82,7 +82,6 @@ export const UserController = {
       throw error
     }
   },
-  // --- МЕТОД getUserAvatar УДАЛЕН ---
   // async getUserAvatar(userId) {
   //   try {
   //     const response = await axios.get(`https://localhost:5087/User/GetUserAvatar/avatar/${userId}`, {

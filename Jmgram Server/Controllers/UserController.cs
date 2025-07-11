@@ -162,25 +162,25 @@ public class UserController : ControllerBase
         }
     }
 
-    [HttpGet("avatar/{userId}")]
-    public async Task<IActionResult> GetUserAvatar(string userId)
-    {
-        try
-        {
-            var user = await _userRepository.GetUserProfileById(userId);
-            if (user == null)
-            {
-                return NotFound(new { message = "Пользователь не найден" });
-            }
+    //[HttpGet("avatar/{userId}")]
+    //public async Task<IActionResult> GetUserAvatar(string userId)
+    //{
+    //    try
+    //    {
+    //        var user = await _userRepository.GetUserProfileById(userId);
+    //        if (user == null)
+    //        {
+    //            return NotFound(new { message = "Пользователь не найден" });
+    //        }
 
-            return Ok(new { avatarFileName = user.AvatarPath });
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, $"Error getting avatar for user {userId}");
-            return StatusCode(500, new { message = "Ошибка сервера" });
-        }
-    }
+    //        return Ok(new { avatarFileName = user.AvatarPath });
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        _logger.LogError(ex, $"Error getting avatar for user {userId}");
+    //        return StatusCode(500, new { message = "Ошибка сервера" });
+    //    }
+    //}
 }
 
 public class UpdateProfileRequest

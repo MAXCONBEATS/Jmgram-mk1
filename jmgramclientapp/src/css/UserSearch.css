@@ -1,111 +1,258 @@
-.user-search {
-  background-color: #181818;
-  color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  padding: 20px;
-  direction: rtl; /* Enable right-to-left direction to move scrollbar to left */
+
+/* Основная "карточка" компонента поиска - теперь это корневой элемент UserSearch.js */
+.user-search-card {
+    background-color: #212121; /* Чуть светлее темный фон для контраста с фоном панели */
+    color: white;
+    border-radius: 12px; /* Более скругленные углы */
+    padding: 20px; /* Уменьшаем padding для боковой панели */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); /* Меньшая тень, так как это часть панели */
+    width: 100%; /* Занимает всю доступную ширину родителя */
+    /* max-width: 450px; -- УДАЛЕН, КОМПОНЕНТ АДАПТИРУЕТСЯ ПО ШИРИНЕ РОДИТЕЛЯ */
+    display: flex;
+    flex-direction: column;
+    gap: 12px; /* Отступы между основными элементами карточки */
 }
 
-.user-search > * {
-  direction: ltr; /* Reset direction for child elements */
+.user-search-card h2 {
+    text-align: center;
+    color: #ffffff; /* Синий цвет для заголовка */
+    margin-top: 0; /* Убираем верхний маргин, т.к. карточка имеет padding */
+    margin-bottom: 15px; /* Уменьшаем нижний маргин */
+    font-size: 1.6em; /* Чуть меньше размер шрифта */
+    font-weight: 600;
 }
 
-.user-search input[type="tel"] {
-  padding: 10px;
-  border: 1px solid #555;
-  border-radius: 5px;
-  background-color: #333;
-  color: white;
-  box-sizing: border-box;
-  margin-bottom: 10px;
-  width: 100%;
-  max-width: 300px;
+/* Группа для поля ввода и кнопки поиска */
+.search-input-group {
+    display: flex;
+    gap: 8px; /* Промежуток между полем ввода и кнопкой */
+    width: 100%;
 }
 
-.user-search button {
-  background-color: #007bff;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1em;
-  margin-bottom: 10px;
-  transition: background-color 0.3s ease;
+.search-input-group input[type="tel"] {
+    flex-grow: 1; /* Поле ввода занимает все доступное пространство */
+    padding: 10px 12px; /* Чуть уменьшаем padding */
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #333;
+    color: white;
+    box-sizing: border-box;
+    font-size: 0.95em;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.user-search button:hover {
-  background-color: #0056b3;
+.search-input-group input[type="tel"]::placeholder {
+    color: #bbb;
 }
 
-.user-search .error-message {
-  color: red;
-  font-weight: bold;
-  margin-bottom: 10px;
+.search-input-group input[type="tel"]:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2); /* Легкое свечение при фокусе */
 }
 
-.user-search ul {
-  list-style: none;
-  padding: 0;
-  width: 280px; /* Reduced width to fit inside search container */
-  max-width: 280px;
-  margin-bottom: 20px;
-  max-height: 250px; /* Reduced height */
-  overflow-y: auto;
-  position: absolute;
-  top: 110px; /* Positioned below search input and button */
-  left: 0;
-  right: 0;
-  background-color: #181818;
-  border-radius: 5px;
-  padding: 10px;
-  box-sizing: border-box;
-  direction: rtl; /* Scrollbar on left */
+.search-button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px; /* Чуть уменьшаем padding */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 45px; /* Минимальная ширина для кнопки */
 }
 
-.user-search ul li {
-  direction: ltr; /* Reset text direction */
+.search-button i {
+    margin: 0;
 }
 
-.user-search ul li {
-  background-color: #212121;
-  border-radius: 5px;
-  padding: 10px;
-  margin-bottom: 5px;
-  color: white;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  cursor: pointer;
-  max-width: 240px; /* Further reduced max width to fit container */
-  word-wrap: break-word; /* Wrap long text */
+.search-button:hover:not(:disabled) {
+    background-color: #0056b3;
+    transform: translateY(-1px); /* Легкий эффект поднятия */
 }
 
-.user-search ul li button {
-  margin-top: 5px;
-  align-self: flex-start;
+.search-button:active:not(:disabled) {
+    transform: translateY(0);
 }
 
-.user-search ul li:hover {
-  background-color: #333;
-  transform: scale(1.05);
+.search-button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
-.user-search ul li button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-  font-size: 0.9em;
-  transition: background-color 0.3s ease;
+/* Спиннер загрузки */
+.spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 16px; /* Чуть меньше */
+    height: 16px; /* Чуть меньше */
+    animation: spin 1s linear infinite;
 }
 
-.user-search ul li button:hover {
-  background-color: #0056b3;
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Сообщения об ошибках и статусе */
+.error-message {
+    color: #ff6347;
+    font-weight: 500;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 0.9em; /* Чуть меньше */
+}
+
+.loading-message, .no-results-message {
+    color: #a0a0a0;
+    margin-top: 5px;
+    text-align: center;
+    font-size: 0.9em; /* Чуть меньше */
+}
+
+/* Секция результатов поиска */
+.search-results-section {
+    margin-top: 15px; /* Отступ от блока поиска */
+    max-height: 200px; /* Ограничиваем высоту для прокрутки в панели */
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+/* Кастомный скроллбар для Webkit-браузеров (Chrome, Safari, Edge) */
+.search-results-section::-webkit-scrollbar {
+    width: 6px; /* Чуть тоньше скроллбар */
+}
+.search-results-section::-webkit-scrollbar-track {
+    background: #333;
+    border-radius: 3px;
+}
+.search-results-section::-webkit-scrollbar-thumb {
+    background-color: #555;
+    border-radius: 3px;
+    border: 1px solid #333;
+}
+.search-results-section::-webkit-scrollbar-thumb:hover {
+    background-color: #777;
+}
+
+.search-results-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Отдельный элемент результата поиска */
+.user-result-item {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    padding: 12px; /* Чуть меньше padding */
+    margin-bottom: 8px; /* Чуть меньше отступ */
+    color: white;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    cursor: default;
+}
+
+.user-result-item:last-child {
+    margin-bottom: 0; /* Убираем маргин у последнего элемента */
+}
+
+.user-result-item:hover {
+    background-color: #313131;
+    transform: translateY(-1px); /* Небольшой подъем */
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex-grow: 1;
+    margin-right: 12px; /* Отступ от кнопки */
+    word-break: break-word;
+}
+
+.user-name {
+    font-weight: bold;
+    font-size: 1em; /* Чуть меньше */
+    margin-bottom: 4px; /* Чуть меньше */
+    display: flex;
+    align-items: center;
+}
+
+.user-name i, .user-phone i {
+    margin-right: 6px; /* Отступ для иконки */
+    color: #007bff;
+    font-size: 0.85em; /* Чуть меньше */
+}
+
+.user-phone {
+    color: #a0a0a0;
+    font-size: 0.85em; /* Чуть меньше */
+    display: flex;
+    align-items: center;
+}
+
+.add-contact-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 6px 10px; /* Чуть меньше padding */
+    cursor: pointer;
+    font-size: 0.85em; /* Чуть меньше */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px; /* Зазор между иконкой и текстом */
+    flex-shrink: 0;
+}
+
+.add-contact-button:hover:not(:disabled) {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+.add-contact-button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+/* Медиа-запросы для адаптивности (если нужно) */
+@media (max-width: 500px) {
+    .user-search-card {
+        padding: 15px;
+    }
+
+    .search-input-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .search-button {
+        width: 100%;
+    }
+
+    .user-result-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .user-info {
+        margin-right: 0;
+        width: 100%;
+    }
+
+    .add-contact-button {
+        width: 100%;
+        justify-content: center;
+    }
 }
