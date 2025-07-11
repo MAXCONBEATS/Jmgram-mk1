@@ -3,6 +3,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Cors;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using System.IO;
+using Image = SixLabors.ImageSharp.Image;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -12,11 +17,19 @@ public class FileController : ControllerBase
     private readonly IUploadFileUseCase _uploadFileUseCase;
     private readonly ILogger<FileController> _logger;
     private readonly string _uploadPath = @"C:\Users\maxco\source\repos\Jmgram mk1\Jmgram Server\Uploaded Files";
+    private readonly string _thumbnailCachePath;
 
     public FileController(IUploadFileUseCase uploadFileUseCase, ILogger<FileController> logger)
     {
         _uploadFileUseCase = uploadFileUseCase;
         _logger = logger;
+
+        _thumbnailCachePath = Path.Combine(_uploadPath, "Thumbnails");
+        if (!Directory.Exists(_thumbnailCachePath))
+        {
+            Directory.CreateDirectory(_thumbnailCachePath);
+            _logger.LogInformation($"Папка для кеша миниатюр создана: {_thumbnailCachePath}");
+        }
     }
 
     [HttpPost("upload")]
@@ -65,99 +78,50 @@ public class FileController : ControllerBase
         }
     }
 
-    // УПРОЩЕННАЯ версия для диагностики
     [HttpGet("download/{fileName}")]
-    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)]
+    [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.Client)] // <--- ЭТОТ АТРИБУТ УЖЕ ДОБАВЛЯЕТ Cache-Control
     [AllowAnonymous]
     public IActionResult DownloadFile(string fileName)
     {
         try
         {
-            _logger.LogError($"=== ДИАГНОСТИКА DOWNLOAD ===");
-            _logger.LogError($"1. Запрошенный файл: '{fileName}'");
-            _logger.LogError($"2. Папка загрузок: '{_uploadPath}'");
+            _logger.LogInformation($"=== ДИАГНОСТИКА DOWNLOAD ===");
+            _logger.LogInformation($"1. Запрошенный файл: '{fileName}'");
+            _logger.LogInformation($"2. Папка загрузок: '{_uploadPath}'");
 
-            // CORS заголовки
-            Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            // Response.Headers.Add("Access-Control-Allow-Origin", "*"); // Можно оставить, если CORS не настроен глобально, но лучше настроить CorsPolicy
 
-            // Проверка имени файла
             if (string.IsNullOrWhiteSpace(fileName))
             {
                 _logger.LogError("3. ОШИБКА: Имя файла пустое");
                 return BadRequest(new { message = "Имя файла пустое" });
             }
 
-            // Декодирование
             string decodedFileName;
             try
             {
                 decodedFileName = Uri.UnescapeDataString(fileName);
-                _logger.LogError($"4. Декодированное имя: '{decodedFileName}'");
+                _logger.LogInformation($"4. Декодированное имя: '{decodedFileName}'");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"4. ОШИБКА декодирования: {ex.Message}");
-                decodedFileName = fileName; // Используем как есть
+                _logger.LogError(ex, $"4. ОШИБКА декодирования: {ex.Message}");
+                decodedFileName = fileName;
             }
 
-            // Проверка папки
             if (!Directory.Exists(_uploadPath))
             {
                 _logger.LogError($"5. ОШИБКА: Папка не существует: '{_uploadPath}'");
                 return NotFound(new { message = "Папка не найдена", path = _uploadPath });
             }
-            _logger.LogError($"5. Папка существует: OK");
+            _logger.LogInformation($"5. Папка существует: OK");
 
-            // Список файлов в папке
-            try
-            {
-                var allFiles = Directory.GetFiles(_uploadPath);
-                _logger.LogError($"6. Файлов в папке: {allFiles.Length}");
-                for (int i = 0; i < Math.Min(allFiles.Length, 10); i++) // Показываем первые 10
-                {
-                    var fileInfo = new FileInfo(allFiles[i]);
-                    _logger.LogError($"   - '{Path.GetFileName(allFiles[i])}' ({fileInfo.Length} bytes)");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"6. ОШИБКА получения списка файлов: {ex.Message}");
-            }
-
-            // Полный путь к файлу
             var filePath = Path.Combine(_uploadPath, decodedFileName);
-            _logger.LogError($"7. Полный путь: '{filePath}'");
+            _logger.LogInformation($"7. Полный путь: '{filePath}'");
 
-            // Проверка существования файла
             if (!System.IO.File.Exists(filePath))
             {
                 _logger.LogError($"8. ОШИБКА: Файл не найден: '{filePath}'");
-
-                // Поиск похожих файлов
-                try
-                {
-                    var similarFiles = Directory.GetFiles(_uploadPath)
-                        .Where(f => Path.GetFileName(f).Contains(decodedFileName, StringComparison.OrdinalIgnoreCase))
-                        .ToList();
-
-                    if (similarFiles.Any())
-                    {
-                        _logger.LogError($"9. Найдены похожие файлы:");
-                        foreach (var similar in similarFiles)
-                        {
-                            _logger.LogError($"   - '{Path.GetFileName(similar)}'");
-                        }
-                    }
-                    else
-                    {
-                        _logger.LogError($"9. Похожих файлов не найдено");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError($"9. ОШИБКА поиска похожих файлов: {ex.Message}");
-                }
-
                 return NotFound(new
                 {
                     message = "Файл не найден",
@@ -165,70 +129,51 @@ public class FileController : ControllerBase
                     fullPath = filePath
                 });
             }
-            _logger.LogError($"8. Файл найден: OK");
+            _logger.LogInformation($"8. Файл найден: OK");
 
-            // Информация о файле
             FileInfo targetFileInfo;
             try
             {
                 targetFileInfo = new FileInfo(filePath);
-                _logger.LogError($"9. Размер файла: {targetFileInfo.Length} bytes");
-                _logger.LogError($"10. Создан: {targetFileInfo.CreationTime}");
-                _logger.LogError($"11. Изменен: {targetFileInfo.LastWriteTime}");
+                _logger.LogInformation($"9. Размер файла: {targetFileInfo.Length} bytes");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"9-11. ОШИБКА получения информации о файле: {ex.Message}");
+                _logger.LogError(ex, $"9-11. ОШИБКА получения информации о файле: {ex.Message}");
                 return StatusCode(500, new { message = "Ошибка получения информации о файле" });
             }
 
-            // Проверка доступа к файлу
             try
             {
-                using (var testStream = System.IO.File.OpenRead(filePath))
-                {
-                    _logger.LogError($"12. Доступ к файлу: OK (можно читать)");
-                }
+                using (var testStream = System.IO.File.OpenRead(filePath)) { /* Просто для проверки доступа */ }
+                _logger.LogInformation($"12. Доступ к файлу: OK (можно читать)");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"12. ОШИБКА доступа к файлу: {ex.Message}");
+                _logger.LogError(ex, $"12. ОШИБКА доступа к файлу: {ex.Message}");
                 return StatusCode(500, new { message = "Нет доступа к файлу", error = ex.Message });
             }
 
-            // Чтение файла
-            byte[] fileBytes;
-            try
-            {
-                fileBytes = System.IO.File.ReadAllBytes(filePath);
-                _logger.LogError($"13. Файл прочитан: {fileBytes.Length} bytes");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"13. ОШИБКА чтения файла: {ex.Message}");
-                return StatusCode(500, new { message = "Ошибка чтения файла", error = ex.Message });
-            }
-
-            // Тип контента
             var contentType = GetContentType(decodedFileName);
-            _logger.LogError($"14. Тип контента: {contentType}");
+            _logger.LogInformation($"14. Тип контента: {contentType}");
 
-            // Заголовки ответа
+            // --- ИСПРАВЛЕНИЕ ЗДЕСЬ: УДАЛИТЕ ИЛИ ЗАКОММЕНТИРУЙТЕ СТРОКИ, КОТОРЫЕ МОГУТ ДУБЛИРОВАТЬСЯ ---
             try
             {
-                Response.Headers.Add("Cache-Control", "public, max-age=3600");
-                Response.Headers.Add("ETag", $"\"{decodedFileName}\"");
-                Response.Headers.Add("Content-Disposition", $"inline; filename=\"{decodedFileName}\"");
-                _logger.LogError($"15. Заголовки установлены: OK");
+                Response.Headers.Add("Last-Modified", targetFileInfo.LastWriteTimeUtc.ToString("R")); 
+                                                                                                    
+                _logger.LogInformation($"15. Заголовки установлены: OK");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"15. ОШИБКА установки заголовков: {ex.Message}");
+                _logger.LogError(ex, $"15. ОШИБКА установки заголовков: {ex.Message}"); // Эта ошибка теперь должна исчезнуть
             }
 
-            _logger.LogError($"=== УСПЕШНОЕ ЗАВЕРШЕНИЕ ===");
+            _logger.LogInformation($"=== УСПЕШНОЕ ЗАВЕРШЕНИЕ ===");
 
-            return File(fileBytes, contentType, decodedFileName);
+
+            return PhysicalFile(filePath, contentType, decodedFileName);
+
         }
         catch (Exception ex)
         {
@@ -258,7 +203,7 @@ public class FileController : ControllerBase
     {
         try
         {
-            _logger.LogInformation($"HEAD ��апрос для файла: {fileName}");
+            _logger.LogInformation($"HEAD запрос для файла: {fileName}");
 
             var origin = Request.Headers["Origin"].ToString();
             if (!string.IsNullOrEmpty(origin))
@@ -292,6 +237,7 @@ public class FileController : ControllerBase
             Response.Headers.Add("Content-Length", fileInfo.Length.ToString());
             Response.Headers.Add("Cache-Control", "public, max-age=3600");
             Response.Headers.Add("ETag", $"\"{decodedFileName}\"");
+            Response.Headers.Add("Last-Modified", fileInfo.LastWriteTimeUtc.ToString("R"));
 
             _logger.LogInformation($"HEAD: Файл найден: {decodedFileName} ({fileInfo.Length} bytes)");
 
@@ -323,41 +269,61 @@ public class FileController : ControllerBase
             }
 
             var decodedFileName = Uri.UnescapeDataString(fileName);
-            var filePath = Path.Combine(_uploadPath, decodedFileName);
+            var originalFilePath = Path.Combine(_uploadPath, decodedFileName);
 
-            if (!System.IO.File.Exists(filePath))
+            if (!System.IO.File.Exists(originalFilePath))
             {
                 return NotFound();
             }
 
             var extension = Path.GetExtension(decodedFileName).ToLowerInvariant();
 
-            if (new[] { ".jpg", ".jpeg", ".png", ".gif" }.Contains(extension))
-            {
-                var thumbnailBytes = CreateImageThumbnail(filePath, width, height);
-                return File(thumbnailBytes, "image/jpeg");
-            }
-
             if (new[] { ".mp4", ".avi", ".mov" }.Contains(extension))
             {
                 return File(GetVideoIcon(), "image/svg+xml");
             }
-
             if (new[] { ".mp3", ".wav", ".ogg" }.Contains(extension))
             {
                 return File(GetAudioIcon(), "image/svg+xml");
             }
 
+            if (new[] { ".jpg", ".jpeg", ".png", ".gif" }.Contains(extension))
+            {
+                var thumbnailFileName = $"{Path.GetFileNameWithoutExtension(decodedFileName)}_{width}x{height}.jpeg";
+                var thumbnailFilePath = Path.Combine(_thumbnailCachePath, thumbnailFileName);
+
+                byte[] thumbnailBytes;
+
+                if (System.IO.File.Exists(thumbnailFilePath))
+                {
+                    _logger.LogInformation($"Отдаем кешированную миниатюру: {thumbnailFileName}");
+                    thumbnailBytes = System.IO.File.ReadAllBytes(thumbnailFilePath);
+                }
+                else
+                {
+                    _logger.LogInformation($"Генерируем новую миниатюру для: {decodedFileName} ({width}x{height})");
+                    thumbnailBytes = CreateImageThumbnail(originalFilePath, width, height);
+
+                    try
+                    {
+                        System.IO.File.WriteAllBytes(thumbnailFilePath, thumbnailBytes);
+                        _logger.LogInformation($"Миниатюра сохранена в кеше: {thumbnailFileName}");
+                    }
+                    catch (Exception saveEx)
+                    {
+                        _logger.LogError(saveEx, $"Ошибка при сохранении миниатюры в кеше: {thumbnailFileName}");
+                    }
+                }
+                return File(thumbnailBytes, "image/jpeg");
+            }
             return File(GetFileIcon(), "image/svg+xml");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error creating thumbnail: {fileName}");
+            _logger.LogError(ex, $"Ошибка при создании миниатюры: {fileName}");
             return StatusCode(500);
         }
     }
-
-    // Добавляем диагностический метод
     [HttpGet("debug/files")]
     [AllowAnonymous]
     public IActionResult ListFiles()
@@ -442,11 +408,24 @@ public class FileController : ControllerBase
     {
         try
         {
-            return System.IO.File.ReadAllBytes(imagePath);
+            using (Image image = Image.Load(imagePath))
+            {
+                image.Mutate(x => x.Resize(new ResizeOptions
+                {
+                    Size = new Size(width, height),
+                    Mode = ResizeMode.Max
+                }));
+
+                using (var ms = new MemoryStream())
+                {
+                    image.SaveAsJpeg(ms, new JpegEncoder { Quality = 75 });
+                    return ms.ToArray();
+                }
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, $"Error reading image {imagePath}");
+            _logger.LogError(ex, $"Ошибка при генерации миниатюры для {imagePath}");
             return GetFileIcon();
         }
     }
@@ -466,7 +445,7 @@ public class FileController : ControllerBase
             <path d=""M12 2C13.1 2 14 2.9 14 4V12C14 13.1 13.1 14 12 14C10.9 14 10 13.1 10 12V4C10 2.9 10.9 2 12 2Z"" stroke=""#666"" stroke-width=""2"" fill=""#f0f0f0""/>
             <path d=""M19 10V12C19 15.87 15.87 19 12 19C8.13 19 5 15.87 5 12V10"" stroke=""#666"" stroke-width=""2"" fill=""none""/>
             <path d=""M12 19V22"" stroke=""#666"" stroke-width=""2""/>
-            <path d=""M8 22H16"" stroke=""#666"" stroke-width=""2""/>
+            <path d=""M8 22H16"" stroke=""#666"" stroke=""2""/>
         </svg>";
         return System.Text.Encoding.UTF8.GetBytes(svgIcon);
     }
